@@ -4,6 +4,7 @@ import br.com.eventsports.minha_inscricao.dto.evento.*;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
+import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -43,6 +44,7 @@ public class EventoService {
     @CachePut(value = "eventos", key = "#result.id")
     @CacheEvict(value = "eventos", key = "'all'")
     public EventoResponseDTO save(EventoCreateDTO eventoCreateDTO) {
+        validateDateRange(eventoCreateDTO.getDataInicioDoEvento(), eventoCreateDTO.getDataFimDoEvento());
         EventoEntity evento = convertCreateDTOToEntity(eventoCreateDTO);
         EventoEntity savedEvento = eventoRepository.save(evento);
         return convertToResponseDTO(savedEvento);
@@ -51,6 +53,7 @@ public class EventoService {
     @CachePut(value = "eventos", key = "#id")
     @CacheEvict(value = "eventos", key = "'all'")
     public EventoResponseDTO update(Long id, EventoUpdateDTO eventoUpdateDTO) {
+        validateDateRange(eventoUpdateDTO.getDataInicioDoEvento(), eventoUpdateDTO.getDataFimDoEvento());
         EventoEntity existingEvento = eventoRepository.findById(id)
                 .orElseThrow(() -> new EventoNotFoundException("Evento não encontrado com ID: " + id));
 
@@ -108,7 +111,8 @@ public class EventoService {
         return EventoResponseDTO.builder()
                 .id(evento.getId())
                 .nome(evento.getNome())
-                .data(evento.getData())
+                .dataInicioDoEvento(evento.getDataInicioDoEvento())
+                .dataFimDoEvento(evento.getDataFimDoEvento())
                 .status(evento.getStatus() != null ? evento.getStatus().name() : null)
                 .descricaoStatus(evento.getDescricaoStatus())
                 .nomeOrganizador(evento.getNomeOrganizador())
@@ -127,7 +131,8 @@ public class EventoService {
         return EventoSummaryDTO.builder()
                 .id(evento.getId())
                 .nome(evento.getNome())
-                .data(evento.getData())
+                .dataInicioDoEvento(evento.getDataInicioDoEvento())
+                .dataFimDoEvento(evento.getDataFimDoEvento())
                 .status(evento.getStatus() != null ? evento.getStatus().name() : null)
                 .descricaoStatus(evento.getDescricaoStatus())
                 .nomeOrganizador(evento.getNomeOrganizador())
@@ -141,7 +146,8 @@ public class EventoService {
     private EventoEntity convertCreateDTOToEntity(EventoCreateDTO dto) {
         EventoEntity.EventoEntityBuilder builder = EventoEntity.builder()
                 .nome(dto.getNome())
-                .data(dto.getData())
+                .dataInicioDoEvento(dto.getDataInicioDoEvento())
+                .dataFimDoEvento(dto.getDataFimDoEvento())
                 .descricao(dto.getDescricao());
 
         // TODO: Implementar lógica para obter o organizador do usuário autenticado
@@ -156,7 +162,8 @@ public class EventoService {
 
     private void updateEventoFromUpdateDTO(EventoEntity evento, EventoUpdateDTO dto) {
         evento.setNome(dto.getNome());
-        evento.setData(dto.getData());
+        evento.setDataInicioDoEvento(dto.getDataInicioDoEvento());
+        evento.setDataFimDoEvento(dto.getDataFimDoEvento());
         evento.setDescricao(dto.getDescricao());
 
         // Update organizador if provided
@@ -164,6 +171,22 @@ public class EventoService {
             OrganizadorEntity organizador = new OrganizadorEntity();
             organizador.setId(dto.getOrganizadorId());
             evento.setOrganizador(organizador);
+        }
+    }
+
+    /**
+     * Valida se a data de fim é posterior à data de início do evento.
+     * @param dataInicio Data de início do evento
+     * @param dataFim Data de fim do evento
+     * @throws InvalidDateRangeException se a data de fim não for posterior à data de início
+     */
+    private void validateDateRange(LocalDateTime dataInicio, LocalDateTime dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            return; // Deixa as validações @NotNull dos DTOs cuidarem disso
+        }
+        
+        if (!dataFim.isAfter(dataInicio)) {
+            throw new InvalidDateRangeException("A data de fim do evento deve ser posterior à data de início");
         }
     }
 

@@ -36,20 +36,20 @@ public interface EventoRepository extends JpaRepository<EventoEntity, Long> {
     List<EventoEntity> findByNomeContainingIgnoreCase(String nome);
 
     @Cacheable(value = "eventos", key = "'byDataBetween:' + #inicio + ':' + #fim")
-    @Query("SELECT e FROM EventoEntity e WHERE e.data BETWEEN :inicio AND :fim ORDER BY e.data ASC")
+    @Query("SELECT e FROM EventoEntity e WHERE e.dataInicioDoEvento BETWEEN :inicio AND :fim ORDER BY e.dataInicioDoEvento ASC")
     List<EventoEntity> findEventosByDataBetween(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
     @Cacheable(value = "eventos", key = "'upcoming'")
-    @Query("SELECT e FROM EventoEntity e WHERE e.data > CURRENT_TIMESTAMP ORDER BY e.data ASC")
+    @Query("SELECT e FROM EventoEntity e WHERE e.dataInicioDoEvento > CURRENT_TIMESTAMP ORDER BY e.dataInicioDoEvento ASC")
     List<EventoEntity> findEventosUpcoming();
 
     @Cacheable(value = "eventos", key = "'past'")
-    @Query("SELECT e FROM EventoEntity e WHERE e.data < CURRENT_TIMESTAMP ORDER BY e.data DESC")
+    @Query("SELECT e FROM EventoEntity e WHERE e.dataFimDoEvento < CURRENT_TIMESTAMP ORDER BY e.dataFimDoEvento DESC")
     List<EventoEntity> findEventosPast();
 
     @Cacheable(value = "eventos", key = "'byDataAfter:' + #data")
-    List<EventoEntity> findByDataAfterOrderByDataAsc(LocalDateTime data);
+    List<EventoEntity> findByDataInicioDoEventoAfterOrderByDataInicioDoEventoAsc(LocalDateTime data);
 
     @Cacheable(value = "eventos", key = "'byDataBefore:' + #data")
-    List<EventoEntity> findByDataBeforeOrderByDataDesc(LocalDateTime data);
+    List<EventoEntity> findByDataFimDoEventoBeforeOrderByDataFimDoEventoDesc(LocalDateTime data);
 }

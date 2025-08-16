@@ -19,8 +19,11 @@ public class EventoDTO {
     @Schema(description = "Nome do evento", example = "CrossFit Games 2024")
     private String nome;
 
-    @Schema(description = "Data e hora do evento", example = "2024-12-15T10:00:00", type = "string", format = "date-time")
-    private LocalDateTime data;
+    @Schema(description = "Data e hora de início do evento", example = "2024-12-15T10:00:00", type = "string", format = "date-time")
+    private LocalDateTime dataInicioDoEvento;
+
+    @Schema(description = "Data e hora de fim do evento", example = "2024-12-15T18:00:00", type = "string", format = "date-time")
+    private LocalDateTime dataFimDoEvento;
     
     @Schema(description = "Descrição detalhada do evento", example = "Competição de CrossFit com atletas de elite")
     private String descricao;
@@ -32,9 +35,10 @@ public class EventoDTO {
     private LocalDateTime updatedAt;
 
     // Constructor customizado para campos essenciais
-    public EventoDTO(String nome, LocalDateTime data, String descricao) {
+    public EventoDTO(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao) {
         this.nome = nome;
-        this.data = data;
+        this.dataInicioDoEvento = dataInicioDoEvento;
+        this.dataFimDoEvento = dataFimDoEvento;
         this.descricao = descricao;
     }
 }

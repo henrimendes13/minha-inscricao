@@ -107,6 +107,16 @@ public class AtletaEntity {
     @Schema(description = "Lista de inscrições do atleta", accessMode = Schema.AccessMode.READ_ONLY)
     private List<InscricaoEntity> inscricoes = new ArrayList<>();
 
+    @ManyToMany(mappedBy = "atletas", fetch = FetchType.LAZY)
+    @Builder.Default
+    @Schema(description = "Lista de equipes das quais o atleta faz parte", accessMode = Schema.AccessMode.READ_ONLY)
+    private List<EquipeEntity> equipes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "capitao", fetch = FetchType.LAZY)
+    @Builder.Default
+    @Schema(description = "Lista de equipes que o atleta capitaneia", accessMode = Schema.AccessMode.READ_ONLY)
+    private List<EquipeEntity> equipesCapitaneadas = new ArrayList<>();
+
     // Lifecycle methods
     @PrePersist
     public void prePersist() {
@@ -170,5 +180,57 @@ public class AtletaEntity {
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
                    .count()
                : 0;
+    }
+
+    public int getTotalEquipes() {
+        return this.equipes != null ? this.equipes.size() : 0;
+    }
+
+    public long getEquipesAtivas() {
+        return this.equipes != null 
+               ? this.equipes.stream()
+                   .filter(EquipeEntity::getAtiva)
+                   .count()
+               : 0;
+    }
+
+    public int getTotalEquipesCapitaneadas() {
+        return this.equipesCapitaneadas != null ? this.equipesCapitaneadas.size() : 0;
+    }
+
+    public long getEquipesCapitaneadasAtivas() {
+        return this.equipesCapitaneadas != null 
+               ? this.equipesCapitaneadas.stream()
+                   .filter(EquipeEntity::getAtiva)
+                   .count()
+               : 0;
+    }
+
+    public boolean pertenceEquipe(EquipeEntity equipe) {
+        return this.equipes != null && this.equipes.contains(equipe);
+    }
+
+    public boolean isCapitaoDeEquipe(EquipeEntity equipe) {
+        return this.equipesCapitaneadas != null && this.equipesCapitaneadas.contains(equipe);
+    }
+
+    public boolean temEquipesAtivas() {
+        return getEquipesAtivas() > 0;
+    }
+
+    public boolean isCapitao() {
+        return getTotalEquipesCapitaneadas() > 0;
+    }
+
+    public List<EquipeEntity> getEquipesAtivasLista() {
+        return this.equipes != null 
+               ? this.equipes.stream()
+                   .filter(EquipeEntity::getAtiva)
+                   .toList()
+               : new ArrayList<>();
+    }
+
+    public boolean podeSerCapitao() {
+        return podeParticipar() && isMaiorIdade();
     }
 }

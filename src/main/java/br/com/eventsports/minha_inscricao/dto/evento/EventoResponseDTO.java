@@ -18,8 +18,11 @@ public class EventoResponseDTO {
     @Schema(description = "Nome do evento", example = "CrossFit Games 2024")
     private String nome;
 
-    @Schema(description = "Data e hora do evento", example = "2024-12-15T10:00:00", type = "string", format = "date-time")
-    private LocalDateTime data;
+    @Schema(description = "Data e hora de início do evento", example = "2024-12-15T10:00:00", type = "string", format = "date-time")
+    private LocalDateTime dataInicioDoEvento;
+
+    @Schema(description = "Data e hora de fim do evento", example = "2024-12-15T18:00:00", type = "string", format = "date-time")
+    private LocalDateTime dataFimDoEvento;
 
     @Schema(description = "Status atual do evento", example = "ABERTO")
     private String status;

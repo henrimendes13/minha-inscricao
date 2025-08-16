@@ -6,9 +6,7 @@ package br.com.eventsports.minha_inscricao.enums;
 public enum Genero {
     
     MASCULINO("Masculino", "M"),
-    FEMININO("Feminino", "F"),
-    OUTRO("Outro", "O"),
-    NAO_INFORMADO("Não Informado", "N");
+    FEMININO("Feminino", "F");
 
     private final String descricao;
     private final String sigla;

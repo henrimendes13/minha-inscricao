@@ -10,13 +10,12 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inscricoes", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"atleta_id", "evento_id"}))
+@Table(name = "inscricoes")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "Inscrição de um atleta em um evento específico")
+@Schema(description = "Inscrição individual ou de equipe em um evento específico")
 public class InscricaoEntity {
 
     @Id
@@ -24,10 +23,9 @@ public class InscricaoEntity {
     @Schema(description = "ID único da inscrição", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotNull(message = "Atleta é obrigatório")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atleta_id", nullable = false)
-    @Schema(description = "Atleta que está se inscrevendo")
+    @JoinColumn(name = "atleta_id")
+    @Schema(description = "Atleta que está se inscrevendo (null para inscrições de equipe)")
     private AtletaEntity atleta;
 
     @NotNull(message = "Evento é obrigatório")
@@ -39,8 +37,13 @@ public class InscricaoEntity {
     @NotNull(message = "Categoria é obrigatória")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "categoria_id", nullable = false)
-    @Schema(description = "Categoria em que o atleta está competindo")
+    @Schema(description = "Categoria em que o atleta/equipe está competindo")
     private CategoriaEntity categoria;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipe_id")
+    @Schema(description = "Equipe que está se inscrevendo (null para inscrições individuais)")
+    private EquipeEntity equipe;
 
     @NotNull(message = "Status da inscrição é obrigatório")
     @Enumerated(EnumType.STRING)
@@ -119,6 +122,12 @@ public class InscricaoEntity {
         if (this.status == null) {
             this.status = StatusInscricao.PENDENTE;
         }
+        
+        // Validação: deve ter atleta OU equipe, mas não ambos
+        if ((this.atleta == null && this.equipe == null) || 
+            (this.atleta != null && this.equipe != null)) {
+            throw new IllegalStateException("Inscrição deve ter exatamente um atleta OU uma equipe");
+        }
     }
 
     @PreUpdate
@@ -178,6 +187,16 @@ public class InscricaoEntity {
         return this.atleta != null ? this.atleta.getNomeCompleto() : "";
     }
 
+    public String getNomeParticipante() {
+        if (this.atleta != null) {
+            return this.atleta.getNomeCompleto();
+        }
+        if (this.equipe != null) {
+            return this.equipe.getNome();
+        }
+        return "";
+    }
+
     public String getNomeEvento() {
         return this.evento != null ? this.evento.getNome() : "";
     }
@@ -204,5 +223,33 @@ public class InscricaoEntity {
 
     public boolean isListaEspera() {
         return StatusInscricao.LISTA_ESPERA.equals(this.status);
+    }
+
+    public boolean isInscricaoIndividual() {
+        return this.atleta != null && this.equipe == null;
+    }
+
+    public boolean isInscricaoEquipe() {
+        return this.equipe != null && this.atleta == null;
+    }
+
+    public String getTipoInscricao() {
+        if (isInscricaoIndividual()) {
+            return "Individual";
+        }
+        if (isInscricaoEquipe()) {
+            return "Equipe";
+        }
+        return "Indefinido";
+    }
+
+    public int getNumeroParticipantes() {
+        if (isInscricaoIndividual()) {
+            return 1;
+        }
+        if (isInscricaoEquipe() && this.equipe != null) {
+            return this.equipe.getNumeroAtletas();
+        }
+        return 0;
     }
 }

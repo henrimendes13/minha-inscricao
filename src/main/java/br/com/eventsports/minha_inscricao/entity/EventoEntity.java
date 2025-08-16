@@ -24,8 +24,11 @@ public class EventoEntity {
     @Column(name = "nome", nullable = false, length = 200)
     private String nome;
 
-    @Column(name = "data", nullable = false)
-    private LocalDateTime data;
+    @Column(name = "data_inicio_evento", nullable = false)
+    private LocalDateTime dataInicioDoEvento;
+
+    @Column(name = "data_fim_evento", nullable = false)
+    private LocalDateTime dataFimDoEvento;
 
     @Lob
     @Column(name = "descricao", columnDefinition = "TEXT")
@@ -72,9 +75,10 @@ public class EventoEntity {
     private List<AnexoEntity> anexos = new ArrayList<>();
 
     // Constructor customizado para campos essenciais
-    public EventoEntity(String nome, LocalDateTime data, String descricao) {
+    public EventoEntity(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao) {
         this.nome = nome;
-        this.data = data;
+        this.dataInicioDoEvento = dataInicioDoEvento;
+        this.dataFimDoEvento = dataFimDoEvento;
         this.descricao = descricao;
         this.status = StatusEvento.RASCUNHO;
     }

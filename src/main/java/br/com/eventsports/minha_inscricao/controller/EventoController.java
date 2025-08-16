@@ -2,6 +2,7 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.evento.*;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
+import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.service.EventoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,8 +41,12 @@ public class EventoController {
 
     @PostMapping
     public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO) {
-        EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvento);
+        try {
+            EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdEvento);
+        } catch (InvalidDateRangeException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
@@ -51,6 +56,8 @@ public class EventoController {
             return ResponseEntity.ok(updatedEvento);
         } catch (EventoNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (InvalidDateRangeException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -95,6 +102,12 @@ public class EventoController {
     public ResponseEntity<Map<String, String>> handleEventoNotFoundException(EventoNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Evento não encontrado", "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidDateRangeException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidDateRangeException(InvalidDateRangeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Dados inválidos", "message", e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

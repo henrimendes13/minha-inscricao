@@ -7,10 +7,10 @@ public enum StatusInscricao {
     
     PENDENTE("Pendente", "Inscrição realizada, aguardando pagamento"),
     CONFIRMADA("Confirmada", "Inscrição paga e confirmada"),
-    CANCELADA("Cancelada", "Inscrição cancelada pelo atleta"),
-    LISTA_ESPERA("Lista de Espera", "Evento lotado, atleta na lista de espera"),
-    RECUSADA("Recusada", "Inscrição recusada pelo organizador"),
-    EXPIRADA("Expirada", "Prazo de pagamento expirado");
+    CANCELADA("Cancelada", "Inscrição cancelada"),
+    RECUSADA("Recusada", "Inscrição recusada"),
+    EXPIRADA("Expirada", "Prazo de pagamento expirado"),
+    LISTA_ESPERA("Lista de Espera", "Inscrição em lista de espera");
 
     private final String nome;
     private final String descricao;
@@ -32,12 +32,12 @@ public enum StatusInscricao {
         return this == CONFIRMADA;
     }
 
-    public boolean podePagar() {
-        return this == PENDENTE || this == LISTA_ESPERA;
-    }
-
     public boolean podeCancelar() {
         return this == PENDENTE || this == CONFIRMADA || this == LISTA_ESPERA;
+    }
+
+    public boolean podePagar() {
+        return this == PENDENTE;
     }
 
     @Override
