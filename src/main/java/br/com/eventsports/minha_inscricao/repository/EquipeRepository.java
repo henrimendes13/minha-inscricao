@@ -71,7 +71,7 @@ public interface EquipeRepository extends JpaRepository<EquipeEntity, Long> {
     @Cacheable(value = "equipes", key = "'equipesCompletasByCategoria:' + #categoriaId")
     List<EquipeEntity> findEquipesCompletasByCategoria(@Param("categoriaId") Long categoriaId);
 
-    @Query("SELECT e FROM EquipeEntity e JOIN e.atletas a WHERE a.id = :atletaId")
+    @Query("SELECT a.equipe FROM AtletaEntity a WHERE a.id = :atletaId AND a.equipe IS NOT NULL")
     @Cacheable(value = "equipes", key = "'byAtleta:' + #atletaId")
     List<EquipeEntity> findEquipesByAtleta(@Param("atletaId") Long atletaId);
 

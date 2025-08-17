@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"descricao", "inscricoes", "workouts", "leaderboards", "timeline", "anexos"})
+@ToString(exclude = {"descricao", "inscricoes", "workouts", "leaderboards", "timeline", "anexos", "atletas"})
 public class EventoEntity {
 
     @Id
@@ -73,6 +73,10 @@ public class EventoEntity {
     @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<AnexoEntity> anexos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<AtletaEntity> atletas = new ArrayList<>();
 
     // Constructor customizado para campos essenciais
     public EventoEntity(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao) {
@@ -179,7 +183,7 @@ public class EventoEntity {
         return this.inscricoes != null 
                ? this.inscricoes.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
-                   .map(InscricaoEntity::getAtleta)
+                   .flatMap(inscricao -> inscricao.getAtletas().stream())
                    .toList()
                : new ArrayList<>();
     }
@@ -224,5 +228,74 @@ public class EventoEntity {
 
     public String getDescricaoStatus() {
         return this.status != null ? this.status.getDescricao() : "";
+    }
+
+    // Métodos para gerenciar atletas do evento
+    public int getTotalAtletas() {
+        return this.atletas != null ? this.atletas.size() : 0;
+    }
+
+    public List<AtletaEntity> getAtletasAtivos() {
+        return this.atletas != null 
+               ? this.atletas.stream()
+                   .filter(AtletaEntity::podeParticipar)
+                   .sorted((a1, a2) -> a1.getNomeCompleto().compareTo(a2.getNomeCompleto()))
+                   .toList()
+               : new ArrayList<>();
+    }
+
+    public int getTotalAtletasAtivos() {
+        return getAtletasAtivos().size();
+    }
+
+    public void adicionarAtleta(AtletaEntity atleta) {
+        if (this.atletas == null) {
+            this.atletas = new ArrayList<>();
+        }
+        
+        if (!this.atletas.contains(atleta)) {
+            this.atletas.add(atleta);
+            atleta.setEvento(this);
+        }
+    }
+
+    public void removerAtleta(AtletaEntity atleta) {
+        if (this.atletas != null) {
+            this.atletas.remove(atleta);
+            if (atleta.getEvento() != null && atleta.getEvento().equals(this)) {
+                atleta.setEvento(null);
+            }
+        }
+    }
+
+    public boolean contemAtleta(AtletaEntity atleta) {
+        return this.atletas != null && this.atletas.contains(atleta);
+    }
+
+    public boolean contemAtletaPorId(Long atletaId) {
+        return this.atletas != null && 
+               this.atletas.stream().anyMatch(atleta -> atleta.getId().equals(atletaId));
+    }
+
+    public AtletaEntity buscarAtletaPorId(Long atletaId) {
+        return this.atletas != null 
+               ? this.atletas.stream()
+                   .filter(atleta -> atleta.getId().equals(atletaId))
+                   .findFirst()
+                   .orElse(null)
+               : null;
+    }
+
+    public List<String> getNomesAtletas() {
+        return this.atletas != null 
+               ? this.atletas.stream()
+                   .map(AtletaEntity::getNomeCompleto)
+                   .sorted()
+                   .toList()
+               : new ArrayList<>();
+    }
+
+    public boolean temAtletas() {
+        return this.atletas != null && !this.atletas.isEmpty();
     }
 }
