@@ -47,6 +47,28 @@ public class UsuarioController {
         }
     }
 
+    @PostMapping("/com-organizador")
+    @Operation(summary = "Criar usuário organizador completo", 
+               description = "Cria um usuário do tipo ORGANIZADOR junto com seu perfil de organizador em uma operação")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuário organizador criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos ou usuário não é do tipo ORGANIZADOR"),
+            @ApiResponse(responseCode = "409", description = "Email ou CNPJ já existe")
+    })
+    public ResponseEntity<UsuarioComOrganizadorResponseDTO> criarComOrganizador(
+            @Valid @RequestBody UsuarioComOrganizadorCreateDTO dto) {
+        log.info("POST /api/usuarios/com-organizador - Criando usuário organizador completo com email: {}", 
+                dto.getUsuario().getEmail());
+        
+        try {
+            UsuarioComOrganizadorResponseDTO resultado = usuarioService.criarComOrganizador(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+        } catch (IllegalArgumentException e) {
+            log.warn("Erro ao criar usuário organizador: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Buscar usuário por ID", description = "Busca um usuário específico pelo ID")
     @ApiResponses(value = {
@@ -59,6 +81,26 @@ public class UsuarioController {
         
         try {
             UsuarioResponseDTO usuario = usuarioService.buscarPorId(id);
+            return ResponseEntity.ok(usuario);
+        } catch (IllegalArgumentException e) {
+            log.warn("Usuário não encontrado: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{id}/com-organizador")
+    @Operation(summary = "Buscar usuário com informações de organizador", 
+               description = "Busca um usuário e suas informações de organizador (se aplicável)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<UsuarioComOrganizadorResponseDTO> buscarComOrganizador(
+            @Parameter(description = "ID do usuário") @PathVariable Long id) {
+        log.info("GET /api/usuarios/{}/com-organizador - Buscando usuário com informações de organizador", id);
+        
+        try {
+            UsuarioComOrganizadorResponseDTO usuario = usuarioService.buscarComOrganizador(id);
             return ResponseEntity.ok(usuario);
         } catch (IllegalArgumentException e) {
             log.warn("Usuário não encontrado: {}", e.getMessage());

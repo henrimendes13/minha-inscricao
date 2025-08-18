@@ -55,8 +55,6 @@ public class InscricaoEntity {
     @Column(name = "data_cancelamento")
     private LocalDateTime dataCancelamento;
 
-
-
     @Column(name = "termos_aceitos", nullable = false)
     private Boolean termosAceitos;
 

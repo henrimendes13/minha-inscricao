@@ -1,8 +1,11 @@
 package br.com.eventsports.minha_inscricao.service;
 
+import br.com.eventsports.minha_inscricao.dto.organizador.OrganizadorResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.usuario.*;
+import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
+import br.com.eventsports.minha_inscricao.repository.OrganizadorRepository;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordUtil passwordUtil;
+    private final OrganizadorRepository organizadorRepository;
 
     /**
      * Cria um novo usuário
@@ -52,6 +56,62 @@ public class UsuarioService {
         
         log.info("Usuário criado com sucesso. ID: {}", usuarioSalvo.getId());
         return mapToResponseDTO(usuarioSalvo);
+    }
+
+    /**
+     * Cria usuário e organizador em uma operação combinada
+     */
+    @CacheEvict(value = {"usuarios", "organizadores"}, allEntries = true)
+    public UsuarioComOrganizadorResponseDTO criarComOrganizador(UsuarioComOrganizadorCreateDTO dto) {
+        log.info("Criando usuário organizador completo com email: {}", dto.getUsuario().getEmail());
+        
+        // Validar que é do tipo ORGANIZADOR
+        if (!TipoUsuario.ORGANIZADOR.equals(dto.getUsuario().getTipo())) {
+            throw new IllegalArgumentException("Este endpoint é apenas para usuários do tipo ORGANIZADOR");
+        }
+        
+        // Validar que dados do organizador foram fornecidos
+        if (dto.getOrganizador() == null) {
+            throw new IllegalArgumentException("Dados do organizador são obrigatórios para usuários do tipo ORGANIZADOR");
+        }
+
+        try {
+            // Criar usuário primeiro
+            UsuarioResponseDTO usuario = criar(dto.getUsuario());
+            
+            // Validar CNPJ se informado
+            if (dto.getOrganizador().getCnpj() != null && organizadorRepository.existsByCnpj(dto.getOrganizador().getCnpj())) {
+                throw new IllegalArgumentException("CNPJ já está em uso: " + dto.getOrganizador().getCnpj());
+            }
+
+            // Buscar usuário criado
+            UsuarioEntity usuarioEntity = usuarioRepository.findById(usuario.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Erro interno: usuário não encontrado após criação"));
+
+            // Criar organizador diretamente
+            OrganizadorEntity organizador = OrganizadorEntity.builder()
+                    .usuario(usuarioEntity)
+                    .nomeEmpresa(dto.getOrganizador().getNomeEmpresa())
+                    .cnpj(dto.getOrganizador().getCnpj())
+                    .telefone(dto.getOrganizador().getTelefone())
+                    .endereco(dto.getOrganizador().getEndereco())
+                    .descricao(dto.getOrganizador().getDescricao())
+                    .site(dto.getOrganizador().getSite())
+                    .verificado(false)
+                    .build();
+
+            OrganizadorEntity organizadorSalvo = organizadorRepository.save(organizador);
+            OrganizadorResponseDTO organizadorResponse = mapOrganizadorToResponseDTO(organizadorSalvo);
+            
+            log.info("Usuário organizador criado com sucesso. Usuario ID: {}, Organizador ID: {}", 
+                    usuario.getId(), organizadorSalvo.getId());
+            
+            return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, organizadorResponse);
+            
+        } catch (Exception e) {
+            log.error("Erro ao criar usuário organizador: {}", e.getMessage());
+            throw new IllegalArgumentException("Erro ao criar perfil completo: " + e.getMessage());
+        }
     }
 
     /**
@@ -232,6 +292,39 @@ public class UsuarioService {
                 .build();
     }
 
+    /**
+     * Verifica se usuário organizador tem perfil completo
+     */
+    @Transactional(readOnly = true)
+    public boolean organizadorTemPerfilCompleto(Long usuarioId) {
+        return organizadorRepository.existsByUsuarioId(usuarioId);
+    }
+
+    /**
+     * Obtém resposta combinada para um usuário existente
+     */
+    @Transactional(readOnly = true)
+    public UsuarioComOrganizadorResponseDTO buscarComOrganizador(Long usuarioId) {
+        UsuarioResponseDTO usuario = buscarPorId(usuarioId);
+        
+        if (TipoUsuario.ORGANIZADOR.equals(usuario.getTipo())) {
+            OrganizadorEntity organizadorEntity = organizadorRepository.findByUsuarioId(usuarioId).orElse(null);
+            
+            if (organizadorEntity != null) {
+                OrganizadorResponseDTO organizador = mapOrganizadorToResponseDTO(organizadorEntity);
+                return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, organizador);
+            } else {
+                return UsuarioComOrganizadorResponseDTO.criarIncompleto(
+                    usuario, 
+                    "criar-organizador",
+                    "Usuário é do tipo ORGANIZADOR mas não possui perfil de organizador. Complete seu perfil para organizar eventos."
+                );
+            }
+        }
+        
+        return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, null);
+    }
+
     // Métodos auxiliares de mapeamento
     private UsuarioResponseDTO mapToResponseDTO(UsuarioEntity usuario) {
         return UsuarioResponseDTO.builder()
@@ -253,6 +346,33 @@ public class UsuarioService {
                 .nome(usuario.getNome())
                 .tipo(usuario.getTipo())
                 .ativo(usuario.getAtivo())
+                .build();
+    }
+
+    private OrganizadorResponseDTO mapOrganizadorToResponseDTO(OrganizadorEntity organizador) {
+        UsuarioSummaryDTO usuarioSummary = UsuarioSummaryDTO.builder()
+                .id(organizador.getUsuario().getId())
+                .email(organizador.getUsuario().getEmail())
+                .nome(organizador.getUsuario().getNome())
+                .tipo(organizador.getUsuario().getTipo())
+                .ativo(organizador.getUsuario().getAtivo())
+                .build();
+
+        return OrganizadorResponseDTO.builder()
+                .id(organizador.getId())
+                .usuario(usuarioSummary)
+                .nomeEmpresa(organizador.getNomeEmpresa())
+                .cnpj(organizador.getCnpj())
+                .telefone(organizador.getTelefone())
+                .endereco(organizador.getEndereco())
+                .descricao(organizador.getDescricao())
+                .site(organizador.getSite())
+                .verificado(organizador.getVerificado())
+                .createdAt(organizador.getCreatedAt())
+                .updatedAt(organizador.getUpdatedAt())
+                .nomeExibicao(organizador.getNomeExibicao())
+                .totalEventos(organizador.getTotalEventos())
+                .podeOrganizarEventos(organizador.podeOrganizarEventos())
                 .build();
     }
 
