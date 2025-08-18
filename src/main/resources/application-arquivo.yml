@@ -1,0 +1,52 @@
+# Configurações para upload de arquivos
+app:
+  arquivo:
+    # Diretório onde os arquivos serão salvos (relativo ao projeto)
+    diretorio-upload: "./uploads/anexos/"
+    
+    # Tamanho máximo para upload (em bytes)
+    tamanho-maximo-bytes: 10485760  # 10MB
+    
+    # Tipos MIME permitidos
+    tipos-permitidos:
+      - "application/pdf"
+      - "image/jpeg"
+      - "image/png"
+      - "image/gif"
+      - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"  # .docx
+      - "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"       # .xlsx
+      - "application/vnd.openxmlformats-officedocument.presentationml.presentation" # .pptx
+      - "application/msword"           # .doc
+      - "application/vnd.ms-excel"     # .xls
+      - "text/plain"                   # .txt
+      - "application/zip"
+      - "application/x-rar-compressed"
+    
+    # Extensões permitidas (validação adicional)
+    extensoes-permitidas:
+      - "pdf"
+      - "jpg"
+      - "jpeg"
+      - "png"
+      - "gif"
+      - "docx"
+      - "doc"
+      - "xlsx"
+      - "xls"
+      - "pptx"
+      - "txt"
+      - "zip"
+      - "rar"
+    
+    # Configurações do nome do arquivo
+    prefixo-nome-arquivo: "anexo"
+    manter-nome-original: false
+
+# Configurações do Spring para upload
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 50MB
+      file-size-threshold: 2KB

@@ -21,23 +21,46 @@ public class AnexoEntity {
     @Schema(description = "ID único do anexo", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotBlank(message = "Descrição do anexo é obrigatória")
+    @NotBlank(message = "Nome do arquivo é obrigatório")
+    @Size(max = 500, message = "Nome deve ter no máximo 500 caracteres")
+    @Column(name = "nome_arquivo", nullable = false, length = 500)
+    @Schema(description = "Nome original do arquivo", example = "regulamento-evento.pdf", required = true)
+    private String nomeArquivo;
+
     @Size(max = 1000, message = "Descrição deve ter no máximo 1000 caracteres")
-    @Column(name = "descricao", nullable = false, length = 1000)
-    @Schema(description = "Descrição ou nome do anexo", 
-            example = "Regulamento da competição, Termos de participação, Manual do atleta",
-            required = true)
+    @Column(name = "descricao", length = 1000)
+    @Schema(description = "Descrição opcional do anexo", example = "Regulamento oficial da competição")
     private String descricao;
+
+    @NotBlank(message = "Caminho do arquivo é obrigatório")
+    @Column(name = "caminho_arquivo", nullable = false, length = 1000)
+    @Schema(description = "Caminho onde o arquivo está armazenado", accessMode = Schema.AccessMode.READ_ONLY)
+    private String caminhoArquivo;
+
+    @NotBlank(message = "Tipo MIME é obrigatório")
+    @Column(name = "tipo_mime", nullable = false, length = 100)
+    @Schema(description = "Tipo MIME do arquivo", example = "application/pdf")
+    private String tipoMime;
+
+    @NotNull(message = "Tamanho do arquivo é obrigatório")
+    @Min(value = 1, message = "Tamanho deve ser maior que 0")
+    @Column(name = "tamanho_bytes", nullable = false)
+    @Schema(description = "Tamanho do arquivo em bytes", example = "2048576")
+    private Long tamanhoBytes;
+
+    @Size(max = 10, message = "Extensão deve ter no máximo 10 caracteres")
+    @Column(name = "extensao", length = 10)
+    @Schema(description = "Extensão do arquivo", example = "pdf")
+    private String extensao;
+
+    @Column(name = "checksum_md5", length = 32)
+    @Schema(description = "Hash MD5 do arquivo para verificação de integridade")
+    private String checksumMd5;
 
     @Column(name = "ativo", nullable = false)
     @Builder.Default
     @Schema(description = "Indica se o anexo está ativo/disponível", example = "true")
     private Boolean ativo = true;
-
-    @Min(value = 1, message = "Ordem deve ser maior que zero")
-    @Column(name = "ordem")
-    @Schema(description = "Ordem de exibição do anexo", example = "1")
-    private Integer ordem;
 
     // Relacionamento com Evento
     @NotNull(message = "Evento é obrigatório")
@@ -61,6 +84,9 @@ public class AnexoEntity {
         this.updatedAt = LocalDateTime.now();
         if (this.ativo == null) {
             this.ativo = true;
+        }
+        if (this.nomeArquivo != null && this.extensao == null) {
+            this.extensao = extrairExtensao(this.nomeArquivo);
         }
     }
 
@@ -86,45 +112,48 @@ public class AnexoEntity {
         return this.evento != null ? this.evento.getNome() : "";
     }
 
-    public String getDescricaoComOrdem() {
-        if (this.ordem != null) {
-            return this.ordem + ". " + this.descricao;
-        }
-        return this.descricao;
-    }
-
-    public boolean temOrdem() {
-        return this.ordem != null && this.ordem > 0;
+    /**
+     * Retorna o tamanho formatado em unidades legíveis
+     */
+    public String getTamanhoFormatado() {
+        if (this.tamanhoBytes == null) return "0 B";
+        
+        long bytes = this.tamanhoBytes;
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        if (bytes < 1024 * 1024 * 1024) return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+        return String.format("%.1f GB", bytes / (1024.0 * 1024.0 * 1024.0));
     }
 
     /**
-     * Retorna true se o anexo parece ser um arquivo (contém extensão)
+     * Verifica se é um arquivo de imagem
      */
-    public boolean pareceArquivo() {
-        if (this.descricao == null) return false;
-        
-        String desc = this.descricao.toLowerCase();
-        return desc.contains(".pdf") || desc.contains(".doc") || 
-               desc.contains(".xlsx") || desc.contains(".png") || 
-               desc.contains(".jpg") || desc.contains(".jpeg") ||
-               desc.contains(".zip") || desc.contains(".rar");
+    public boolean isImagem() {
+        if (this.tipoMime == null) return false;
+        return this.tipoMime.startsWith("image/");
     }
 
     /**
-     * Extrai a possível extensão do arquivo da descrição
+     * Verifica se é um PDF
      */
-    public String getExtensaoArquivo() {
-        if (!pareceArquivo() || this.descricao == null) return "";
-        
-        String desc = this.descricao.toLowerCase();
-        if (desc.contains(".pdf")) return "pdf";
-        if (desc.contains(".doc")) return "doc";
-        if (desc.contains(".xlsx")) return "xlsx";
-        if (desc.contains(".png")) return "png";
-        if (desc.contains(".jpg") || desc.contains(".jpeg")) return "jpg";
-        if (desc.contains(".zip")) return "zip";
-        if (desc.contains(".rar")) return "rar";
-        
-        return "";
+    public boolean isPdf() {
+        return "application/pdf".equals(this.tipoMime);
+    }
+
+    /**
+     * Extrai a extensão do nome do arquivo
+     */
+    private String extrairExtensao(String nomeArquivo) {
+        if (nomeArquivo == null || !nomeArquivo.contains(".")) return "";
+        return nomeArquivo.substring(nomeArquivo.lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    /**
+     * Gera um nome único para o arquivo baseado no ID e timestamp
+     */
+    public String gerarNomeArquivoUnico() {
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String ext = this.extensao != null ? "." + this.extensao : "";
+        return String.format("anexo_%d_%s%s", this.id != null ? this.id : 0, timestamp, ext);
     }
 }
