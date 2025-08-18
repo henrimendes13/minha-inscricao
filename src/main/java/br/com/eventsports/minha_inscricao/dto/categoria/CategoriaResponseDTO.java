@@ -5,6 +5,7 @@ import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -44,6 +45,9 @@ public class CategoriaResponseDTO {
 
     @Schema(description = "Quantidade exata de atletas que devem compor uma equipe nesta categoria", example = "3")
     private Integer quantidadeDeAtletasPorEquipe;
+
+    @Schema(description = "Valor da inscrição para esta categoria", example = "150.00")
+    private BigDecimal valorInscricao;
 
     @Schema(description = "Indica se a categoria está ativa para inscrições", example = "true")
     private Boolean ativa;

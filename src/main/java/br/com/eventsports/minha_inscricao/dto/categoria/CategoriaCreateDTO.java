@@ -6,6 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -48,6 +50,12 @@ public class CategoriaCreateDTO {
                          "Se não informado, será definido automaticamente (1 para individual, 3 para equipe).", 
             example = "3")
     private Integer quantidadeDeAtletasPorEquipe;
+
+    @NotNull(message = "Valor da inscrição é obrigatório")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Valor deve ser maior ou igual a zero")
+    @Digits(integer = 8, fraction = 2, message = "Valor deve ter no máximo 8 dígitos inteiros e 2 decimais")
+    @Schema(description = "Valor da inscrição para esta categoria", example = "150.00", required = true)
+    private BigDecimal valorInscricao;
 
     @Schema(description = "Indica se a categoria está ativa para inscrições", example = "true")
     private Boolean ativa;

@@ -68,14 +68,14 @@ public class AtletaController {
         }
     }
 
-    @Operation(summary = "Criar atleta para evento", description = "Cadastra um novo atleta vinculado a um evento específico")
+    @Operation(summary = "Criar atleta para inscrição em evento", description = "Cadastra um novo atleta no contexto de uma inscrição em evento")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Atleta criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
             @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
-    @PostMapping("/evento/{eventoId}")
-    public ResponseEntity<AtletaResponseDTO> createAtletaForEvento(
+    @PostMapping("/evento/{eventoId}/inscricao/atletas")
+    public ResponseEntity<AtletaResponseDTO> createAtletaForInscricao(
             @Parameter(description = "ID do evento") @PathVariable Long eventoId,
             @Valid @RequestBody AtletaCreateDTO atletaCreateDTO) {
         try {
@@ -89,14 +89,14 @@ public class AtletaController {
         }
     }
 
-    @Operation(summary = "Criar atleta para inscrição", description = "Cadastra um novo atleta vinculado a um evento e equipe específicos")
+    @Operation(summary = "Criar atleta para equipe em inscrição", description = "Cadastra um novo atleta vinculado a uma equipe específica na inscrição")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Atleta criado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
             @ApiResponse(responseCode = "404", description = "Evento ou equipe não encontrados")
     })
-    @PostMapping("/evento/{eventoId}/equipe/{equipeId}")
-    public ResponseEntity<AtletaResponseDTO> createAtletaForInscricao(
+    @PostMapping("/evento/{eventoId}/inscricao/equipe/{equipeId}/atletas")
+    public ResponseEntity<AtletaResponseDTO> createAtletaForEquipeInscricao(
             @Parameter(description = "ID do evento") @PathVariable Long eventoId,
             @Parameter(description = "ID da equipe") @PathVariable Long equipeId,
             @Valid @RequestBody AtletaCreateDTO atletaCreateDTO) {
@@ -189,6 +189,17 @@ public class AtletaController {
     })
     @GetMapping("/evento/{eventoId}")
     public ResponseEntity<List<AtletaSummaryDTO>> getAtletasByEventoId(
+            @Parameter(description = "ID do evento") @PathVariable Long eventoId) {
+        List<AtletaSummaryDTO> atletas = atletaService.findByEventoId(eventoId);
+        return ResponseEntity.ok(atletas);
+    }
+
+    @Operation(summary = "Listar atletas de inscrições em evento", description = "Retorna todos os atletas inscritos em um evento específico")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de atletas inscritos no evento")
+    })
+    @GetMapping("/evento/{eventoId}/inscricao/atletas")
+    public ResponseEntity<List<AtletaSummaryDTO>> getAtletasInscricaoByEvento(
             @Parameter(description = "ID do evento") @PathVariable Long eventoId) {
         List<AtletaSummaryDTO> atletas = atletaService.findByEventoId(eventoId);
         return ResponseEntity.ok(atletas);

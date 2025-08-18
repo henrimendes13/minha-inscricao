@@ -298,11 +298,6 @@ public class AtletaService {
         if (dto.getAceitaTermos() != null) {
             atleta.setAceitaTermos(dto.getAceitaTermos());
         }
-        if (dto.getEquipeId() != null) {
-            EquipeEntity equipe = equipeRepository.findById(dto.getEquipeId())
-                    .orElseThrow(() -> new RuntimeException("Equipe não encontrada com ID: " + dto.getEquipeId()));
-            atleta.setEquipe(equipe);
-        }
     }
 
     private void validateAtletaData(AtletaCreateDTO dto) {

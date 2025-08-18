@@ -166,6 +166,7 @@ public class CategoriaService {
                 .genero(categoria.getGenero())
                 .tipoParticipacao(categoria.getTipoParticipacao())
                 .quantidadeDeAtletasPorEquipe(categoria.getQuantidadeDeAtletasPorEquipe())
+                .valorInscricao(categoria.getValorInscricao())
                 .ativa(categoria.getAtiva())
                 .numeroInscricoesAtivas(categoria.getNumeroInscricoesAtivas())
                 .numeroEquipesAtivas(categoria.getNumeroEquipesAtivas())
@@ -184,6 +185,7 @@ public class CategoriaService {
                 .genero(categoria.getGenero())
                 .tipoParticipacao(categoria.getTipoParticipacao())
                 .quantidadeDeAtletasPorEquipe(categoria.getQuantidadeDeAtletasPorEquipe())
+                .valorInscricao(categoria.getValorInscricao())
                 .ativa(categoria.getAtiva())
                 .numeroInscricoesAtivas(categoria.getNumeroInscricoesAtivas())
                 .numeroEquipesAtivas(categoria.getNumeroEquipesAtivas())
@@ -200,7 +202,8 @@ public class CategoriaService {
                 .idadeMaxima(dto.getIdadeMaxima())
                 .genero(dto.getGenero())
                 .tipoParticipacao(dto.getTipoParticipacao())
-                .quantidadeDeAtletasPorEquipe(dto.getQuantidadeDeAtletasPorEquipe());
+                .quantidadeDeAtletasPorEquipe(dto.getQuantidadeDeAtletasPorEquipe())
+                .valorInscricao(dto.getValorInscricao());
 
         if (dto.getAtiva() != null) {
             builder.ativa(dto.getAtiva());
@@ -222,7 +225,11 @@ public class CategoriaService {
         categoria.setGenero(dto.getGenero());
         categoria.setTipoParticipacao(dto.getTipoParticipacao());
         categoria.setQuantidadeDeAtletasPorEquipe(dto.getQuantidadeDeAtletasPorEquipe());
-
+        
+        if (dto.getValorInscricao() != null) {
+            categoria.setValorInscricao(dto.getValorInscricao());
+        }
+        
         if (dto.getAtiva() != null) {
             categoria.setAtiva(dto.getAtiva());
         }

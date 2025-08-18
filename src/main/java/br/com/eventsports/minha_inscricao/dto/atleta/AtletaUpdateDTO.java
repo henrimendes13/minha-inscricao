@@ -55,7 +55,4 @@ public class AtletaUpdateDTO {
 
     @Schema(description = "Indica se aceitou os termos", example = "true")
     private Boolean aceitaTermos;
-
-    @Schema(description = "ID da equipe da qual o atleta fará parte", example = "1")
-    private Long equipeId;
 }

@@ -5,6 +5,7 @@ import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,9 @@ public class CategoriaEntity {
 
     @Column(name = "quantidade_atletas_por_equipe")
     private Integer quantidadeDeAtletasPorEquipe;
+
+    @Column(name = "valor_inscricao", nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorInscricao;
 
     @Builder.Default
     @Column(name = "ativa", nullable = false)

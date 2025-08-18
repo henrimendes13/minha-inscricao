@@ -1,0 +1,264 @@
+package br.com.eventsports.minha_inscricao.controller;
+
+import br.com.eventsports.minha_inscricao.dto.usuario.*;
+import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
+import br.com.eventsports.minha_inscricao.service.UsuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/usuarios")
+@RequiredArgsConstructor
+@Slf4j
+@Tag(name = "Usuários", description = "Operações relacionadas aos usuários do sistema")
+public class UsuarioController {
+
+    private final UsuarioService usuarioService;
+
+    @PostMapping
+    @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "409", description = "Email já existe")
+    })
+    public ResponseEntity<UsuarioResponseDTO> criar(@Valid @RequestBody UsuarioCreateDTO dto) {
+        log.info("POST /api/usuarios - Criando usuário com email: {}", dto.getEmail());
+        
+        try {
+            UsuarioResponseDTO usuario = usuarioService.criar(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(usuario);
+        } catch (IllegalArgumentException e) {
+            log.warn("Erro ao criar usuário: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar usuário por ID", description = "Busca um usuário específico pelo ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<UsuarioResponseDTO> buscarPorId(
+            @Parameter(description = "ID do usuário") @PathVariable Long id) {
+        log.info("GET /api/usuarios/{} - Buscando usuário por ID", id);
+        
+        try {
+            UsuarioResponseDTO usuario = usuarioService.buscarPorId(id);
+            return ResponseEntity.ok(usuario);
+        } catch (IllegalArgumentException e) {
+            log.warn("Usuário não encontrado: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/email/{email}")
+    @Operation(summary = "Buscar usuário por email", description = "Busca um usuário específico pelo email")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<UsuarioResponseDTO> buscarPorEmail(
+            @Parameter(description = "Email do usuário") @PathVariable String email) {
+        log.info("GET /api/usuarios/email/{} - Buscando usuário por email", email);
+        
+        try {
+            UsuarioResponseDTO usuario = usuarioService.buscarPorEmail(email);
+            return ResponseEntity.ok(usuario);
+        } catch (IllegalArgumentException e) {
+            log.warn("Usuário não encontrado: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping
+    @Operation(summary = "Listar usuários", description = "Lista usuários com paginação e filtros opcionais")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
+    })
+    public ResponseEntity<Page<UsuarioSummaryDTO>> listar(
+            @Parameter(description = "Tipo de usuário para filtrar") @RequestParam(required = false) TipoUsuario tipo,
+            @Parameter(description = "Nome para busca (contém)") @RequestParam(required = false) String nome,
+            @PageableDefault(size = 20, sort = "nome", direction = Sort.Direction.ASC) Pageable pageable) {
+        
+        log.info("GET /api/usuarios - Listando usuários. Tipo: {}, Nome: {}", tipo, nome);
+        
+        Page<UsuarioSummaryDTO> usuarios;
+        
+        if (nome != null && !nome.trim().isEmpty()) {
+            usuarios = usuarioService.buscarPorNome(nome.trim(), pageable);
+        } else if (tipo != null) {
+            usuarios = usuarioService.listarPorTipo(tipo, pageable);
+        } else {
+            usuarios = usuarioService.listarAtivos(pageable);
+        }
+        
+        return ResponseEntity.ok(usuarios);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "409", description = "Email já existe")
+    })
+    public ResponseEntity<UsuarioResponseDTO> atualizar(
+            @Parameter(description = "ID do usuário") @PathVariable Long id,
+            @Valid @RequestBody UsuarioUpdateDTO dto) {
+        log.info("PUT /api/usuarios/{} - Atualizando usuário", id);
+        
+        try {
+            UsuarioResponseDTO usuario = usuarioService.atualizar(id, dto);
+            return ResponseEntity.ok(usuario);
+        } catch (IllegalArgumentException e) {
+            log.warn("Erro ao atualizar usuário: {}", e.getMessage());
+            if (e.getMessage().contains("não encontrado")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PatchMapping("/{id}/desativar")
+    @Operation(summary = "Desativar usuário", description = "Desativa um usuário do sistema")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Usuário desativado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Void> desativar(@Parameter(description = "ID do usuário") @PathVariable Long id) {
+        log.info("PATCH /api/usuarios/{}/desativar - Desativando usuário", id);
+        
+        try {
+            usuarioService.desativar(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Erro ao desativar usuário: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PatchMapping("/{id}/ativar")
+    @Operation(summary = "Ativar usuário", description = "Ativa um usuário do sistema")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Usuário ativado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Void> ativar(@Parameter(description = "ID do usuário") @PathVariable Long id) {
+        log.info("PATCH /api/usuarios/{}/ativar - Ativando usuário", id);
+        
+        try {
+            usuarioService.ativar(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Erro ao ativar usuário: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{id}/login")
+    @Operation(summary = "Registrar login", description = "Registra o login de um usuário")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Login registrado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+    })
+    public ResponseEntity<Void> registrarLogin(@Parameter(description = "ID do usuário") @PathVariable Long id) {
+        log.info("POST /api/usuarios/{}/login - Registrando login", id);
+        
+        try {
+            usuarioService.registrarLogin(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            log.warn("Erro ao registrar login: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/validar-credenciais")
+    @Operation(summary = "Validar credenciais", description = "Valida as credenciais de login de um usuário")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Credenciais validadas"),
+            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos")
+    })
+    public ResponseEntity<ValidacaoCredenciaisResponseDTO> validarCredenciais(
+            @Valid @RequestBody ValidacaoCredenciaisRequestDTO dto) {
+        log.info("POST /api/usuarios/validar-credenciais - Validando credenciais para email: {}", dto.getEmail());
+        
+        boolean validas = usuarioService.validarCredenciais(dto.getEmail(), dto.getSenha());
+        
+        ValidacaoCredenciaisResponseDTO response = ValidacaoCredenciaisResponseDTO.builder()
+                .validas(validas)
+                .build();
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/estatisticas")
+    @Operation(summary = "Obter estatísticas", description = "Obtém estatísticas gerais dos usuários")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso")
+    })
+    public ResponseEntity<UsuarioService.UsuarioEstatisticasDTO> obterEstatisticas() {
+        log.info("GET /api/usuarios/estatisticas - Obtendo estatísticas");
+        
+        UsuarioService.UsuarioEstatisticasDTO estatisticas = usuarioService.obterEstatisticas();
+        return ResponseEntity.ok(estatisticas);
+    }
+
+    // DTOs auxiliares para validação de credenciais
+    public static class ValidacaoCredenciaisRequestDTO {
+        @Parameter(description = "Email do usuário", required = true)
+        private String email;
+        
+        @Parameter(description = "Senha do usuário", required = true)
+        private String senha;
+
+        // Getters e Setters
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getSenha() { return senha; }
+        public void setSenha(String senha) { this.senha = senha; }
+    }
+
+    public static class ValidacaoCredenciaisResponseDTO {
+        @Parameter(description = "Indica se as credenciais são válidas")
+        private Boolean validas;
+
+        public static ValidacaoCredenciaisResponseDTOBuilder builder() {
+            return new ValidacaoCredenciaisResponseDTOBuilder();
+        }
+
+        public static class ValidacaoCredenciaisResponseDTOBuilder {
+            private Boolean validas;
+
+            public ValidacaoCredenciaisResponseDTOBuilder validas(Boolean validas) {
+                this.validas = validas;
+                return this;
+            }
+
+            public ValidacaoCredenciaisResponseDTO build() {
+                ValidacaoCredenciaisResponseDTO dto = new ValidacaoCredenciaisResponseDTO();
+                dto.validas = this.validas;
+                return dto;
+            }
+        }
+
+        // Getter
+        public Boolean getValidas() { return validas; }
+    }
+}
