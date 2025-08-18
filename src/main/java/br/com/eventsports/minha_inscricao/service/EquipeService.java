@@ -7,6 +7,7 @@ import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IEquipeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class EquipeService {
+public class EquipeService implements IEquipeService {
 
     private final EquipeRepository equipeRepository;
 

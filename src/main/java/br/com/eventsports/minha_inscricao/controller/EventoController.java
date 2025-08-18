@@ -3,7 +3,7 @@ package br.com.eventsports.minha_inscricao.controller;
 import br.com.eventsports.minha_inscricao.dto.evento.*;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
-import br.com.eventsports.minha_inscricao.service.EventoService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,7 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EventoController {
 
-    private final EventoService eventoService;
+    private final IEventoService eventoService;
 
     @GetMapping
     public ResponseEntity<List<EventoSummaryDTO>> getAllEventos() {

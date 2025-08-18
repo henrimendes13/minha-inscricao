@@ -1,8 +1,6 @@
 package br.com.eventsports.minha_inscricao.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -10,72 +8,63 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "leaderboards", 
-       uniqueConstraints = @UniqueConstraint(columnNames = {"evento_id", "atleta_id"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"categoria_id", "workout_id", "equipe_id", "atleta_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "Classificação de um atleta em um evento")
 public class LeaderboardEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "ID único da classificação", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotNull(message = "Posição é obrigatória")
-    @Positive(message = "Posição deve ser um número positivo")
-    @Column(name = "posicao", nullable = false)
-    @Schema(description = "Posição do atleta na classificação", example = "1", required = true)
-    private Integer posicao;
+    @Column(name = "posicao_workout", nullable = false)
+    private Integer posicaoWorkout;
 
-    @NotNull(message = "Pontuação é obrigatória")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Pontuação deve ser maior ou igual a zero")
-    @Digits(integer = 8, fraction = 2, message = "Pontuação deve ter no máximo 8 dígitos inteiros e 2 decimais")
-    @Column(name = "pontuacao", nullable = false, precision = 10, scale = 2)
-    @Schema(description = "Pontuação total do atleta", example = "480.50", required = true)
-    private BigDecimal pontuacao;
-
-    @PositiveOrZero(message = "Tempo total deve ser positivo ou zero")
-    @Column(name = "tempo_total_segundos")
-    @Schema(description = "Tempo total em segundos (para eventos cronometrados)", example = "1800")
-    private Integer tempoTotalSegundos;
-
-    @Size(max = 500, message = "Observações devem ter no máximo 500 caracteres")
-    @Column(name = "observacoes", length = 500)
-    @Schema(description = "Observações sobre a performance", 
-            example = "Excelente performance, recorde pessoal")
-    private String observacoes;
+    @Column(name = "pontuacao_total", precision = 10, scale = 2)
+    private BigDecimal pontuacaoTotal;
 
     @Column(name = "finalizado", nullable = false)
     @Builder.Default
-    @Schema(description = "Indica se o atleta finalizou todos os workouts", example = "true")
     private Boolean finalizado = false;
 
-    @Size(max = 50, message = "Categoria deve ter no máximo 50 caracteres")
-    @Column(name = "categoria", length = 50)
-    @Schema(description = "Categoria em que o atleta competiu", example = "RX")
-    private String categoria;
+    // Campos de resultado baseados no tipo do workout
+    @Column(name = "resultado_reps")
+    private Integer resultadoReps;
+
+    @Column(name = "resultado_peso", precision = 8, scale = 2)
+    private Double resultadoPeso;
+
+    @Column(name = "resultado_tempo_segundos")
+    private Integer resultadoTempoSegundos;
 
     // Relacionamentos
-    @NotNull(message = "Evento é obrigatório")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evento_id", nullable = false)
-    @Schema(description = "Evento da classificação")
     private EventoEntity evento;
 
-    @NotNull(message = "Atleta é obrigatório")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atleta_id", nullable = false)
-    @Schema(description = "Atleta classificado")
+    @JoinColumn(name = "categoria_id", nullable = false)
+    private CategoriaEntity categoria;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "workout_id", nullable = false)
+    private WorkoutEntity workout;
+
+    // Relacionamento condicional - equipe OU atleta (baseado no tipo da categoria)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "equipe_id")
+    private EquipeEntity equipe;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "atleta_id")
     private AtletaEntity atleta;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @Schema(description = "Data de criação", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    @Schema(description = "Data da última atualização", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime updatedAt;
 
     // Lifecycle methods
@@ -86,80 +75,244 @@ public class LeaderboardEntity {
         if (this.finalizado == null) {
             this.finalizado = false;
         }
+        
+        // Validar que apenas equipe OU atleta está definido
+        validarParticipante();
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+        validarParticipante();
     }
 
     // Métodos de conveniência
+
+    /**
+     * Valida que apenas equipe OU atleta está definido baseado no tipo da categoria
+     */
+    private void validarParticipante() {
+        if (this.categoria != null) {
+            if (this.categoria.isEquipe()) {
+                if (this.equipe == null) {
+                    throw new IllegalStateException("Equipe é obrigatória para categoria do tipo EQUIPE");
+                }
+                if (this.atleta != null) {
+                    throw new IllegalStateException("Atleta deve ser null para categoria do tipo EQUIPE");
+                }
+            } else if (this.categoria.isIndividual()) {
+                if (this.atleta == null) {
+                    throw new IllegalStateException("Atleta é obrigatório para categoria do tipo INDIVIDUAL");
+                }
+                if (this.equipe != null) {
+                    throw new IllegalStateException("Equipe deve ser null para categoria do tipo INDIVIDUAL");
+                }
+            }
+        }
+    }
+
+    /**
+     * Verifica se é uma categoria de equipe
+     */
+    public boolean isCategoriaEquipe() {
+        return this.categoria != null && this.categoria.isEquipe();
+    }
+
+    /**
+     * Verifica se é uma categoria individual
+     */
+    public boolean isCategoriaIndividual() {
+        return this.categoria != null && this.categoria.isIndividual();
+    }
+
+    /**
+     * Define o resultado baseado no tipo do workout
+     */
+    public void definirResultado(Object resultado) {
+        if (this.workout != null) {
+            switch (this.workout.getTipo()) {
+                case REPS:
+                    if (resultado instanceof Integer) {
+                        this.resultadoReps = (Integer) resultado;
+                    }
+                    break;
+                case PESO:
+                    if (resultado instanceof Double) {
+                        this.resultadoPeso = (Double) resultado;
+                    } else if (resultado instanceof Integer) {
+                        this.resultadoPeso = ((Integer) resultado).doubleValue();
+                    }
+                    break;
+                case TEMPO:
+                    if (resultado instanceof Integer) {
+                        this.resultadoTempoSegundos = (Integer) resultado;
+                    }
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Retorna o resultado principal baseado no tipo do workout
+     */
+    public Object getResultadoPrincipal() {
+        if (this.workout == null) return null;
+        
+        return switch (this.workout.getTipo()) {
+            case REPS -> this.resultadoReps;
+            case PESO -> this.resultadoPeso;
+            case TEMPO -> this.resultadoTempoSegundos;
+        };
+    }
+
+    /**
+     * Retorna o resultado formatado como string
+     */
+    public String getResultadoFormatado() {
+        if (this.workout == null) return "N/A";
+        
+        return switch (this.workout.getTipo()) {
+            case REPS -> this.resultadoReps != null ? this.resultadoReps + " reps" : "N/A";
+            case PESO -> this.resultadoPeso != null ? String.format("%.2f kg", this.resultadoPeso) : "N/A";
+            case TEMPO -> formatarTempo(this.resultadoTempoSegundos);
+        };
+    }
+
+    /**
+     * Converte segundos para formato de tempo (mm:ss ou hh:mm:ss)
+     */
+    public String formatarTempo(Integer segundos) {
+        if (segundos == null || segundos <= 0) {
+            return "N/A";
+        }
+        
+        int horas = segundos / 3600;
+        int minutos = (segundos % 3600) / 60;
+        int seg = segundos % 60;
+        
+        if (horas > 0) {
+            return String.format("%d:%02d:%02d", horas, minutos, seg);
+        } else {
+            return String.format("%d:%02d", minutos, seg);
+        }
+    }
+
+    /**
+     * Verifica se tem resultado definido
+     */
+    public boolean temResultado() {
+        if (this.workout == null) return false;
+        
+        return switch (this.workout.getTipo()) {
+            case REPS -> this.resultadoReps != null && this.resultadoReps > 0;
+            case PESO -> this.resultadoPeso != null && this.resultadoPeso > 0;
+            case TEMPO -> this.resultadoTempoSegundos != null && this.resultadoTempoSegundos > 0;
+        };
+    }
+
+    /**
+     * Finaliza o resultado
+     */
     public void finalizar() {
         this.finalizado = true;
     }
 
+    /**
+     * Desqualifica o participante
+     */
     public void desqualificar() {
         this.finalizado = false;
-        this.pontuacao = BigDecimal.ZERO;
+        this.posicaoWorkout = null;
+        limparResultado();
     }
 
-    public boolean temTempo() {
-        return this.tempoTotalSegundos != null && this.tempoTotalSegundos > 0;
+    /**
+     * Limpa o resultado
+     */
+    public void limparResultado() {
+        this.resultadoReps = null;
+        this.resultadoPeso = null;
+        this.resultadoTempoSegundos = null;
     }
 
-    public String getTempoFormatado() {
-        if (!temTempo()) {
-            return "N/A";
+    /**
+     * Retorna o nome do participante (equipe ou atleta)
+     */
+    public String getNomeParticipante() {
+        if (isCategoriaEquipe() && this.equipe != null) {
+            return this.equipe.getNome();
+        } else if (isCategoriaIndividual() && this.atleta != null) {
+            return this.atleta.getNomeCompleto();
         }
-        
-        int horas = this.tempoTotalSegundos / 3600;
-        int minutos = (this.tempoTotalSegundos % 3600) / 60;
-        int segundos = this.tempoTotalSegundos % 60;
-        
-        if (horas > 0) {
-            return String.format("%d:%02d:%02d", horas, minutos, segundos);
-        } else {
-            return String.format("%d:%02d", minutos, segundos);
-        }
+        return "";
     }
 
-    public String getNomeAtleta() {
-        return this.atleta != null ? this.atleta.getNomeCompleto() : "";
-    }
-
+    /**
+     * Retorna o nome do evento
+     */
     public String getNomeEvento() {
         return this.evento != null ? this.evento.getNome() : "";
     }
 
+    /**
+     * Retorna o nome da categoria
+     */
+    public String getNomeCategoria() {
+        return this.categoria != null ? this.categoria.getNome() : "";
+    }
+
+    /**
+     * Retorna o nome do workout
+     */
+    public String getNomeWorkout() {
+        return this.workout != null ? this.workout.getNome() : "";
+    }
+
+    /**
+     * Retorna descrição completa do resultado
+     */
     public String getDescricaoCompleta() {
         StringBuilder sb = new StringBuilder();
-        sb.append(this.posicao).append("º lugar: ");
-        sb.append(getNomeAtleta());
-        sb.append(" - ").append(this.pontuacao).append(" pts");
         
-        if (temTempo()) {
-            sb.append(" (").append(getTempoFormatado()).append(")");
+        if (this.posicaoWorkout != null) {
+            sb.append(this.posicaoWorkout).append("º lugar: ");
         }
         
-        if (this.categoria != null) {
-            sb.append(" [").append(this.categoria).append("]");
+        sb.append(getNomeParticipante());
+        sb.append(" - ").append(getResultadoFormatado());
+        
+        if (this.workout != null) {
+            sb.append(" [").append(this.workout.getNome()).append("]");
         }
         
         return sb.toString();
     }
 
-    public boolean isPodio() {
-        return this.posicao != null && this.posicao <= 3;
+    /**
+     * Verifica se está no pódio do workout
+     */
+    public boolean isPodioWorkout() {
+        return this.posicaoWorkout != null && this.posicaoWorkout <= 3;
     }
 
-    public String getMedalha() {
-        if (this.posicao == null) return "";
+    /**
+     * Retorna a medalha baseada na posição no workout
+     */
+    public String getMedalhaWorkout() {
+        if (this.posicaoWorkout == null) return "";
         
-        return switch (this.posicao) {
+        return switch (this.posicaoWorkout) {
             case 1 -> "🥇";
             case 2 -> "🥈";
             case 3 -> "🥉";
             default -> "";
         };
+    }
+
+    /**
+     * Verifica se o participante finalizou o workout
+     */
+    public boolean isFinalizadoWorkout() {
+        return this.finalizado != null && this.finalizado;
     }
 }

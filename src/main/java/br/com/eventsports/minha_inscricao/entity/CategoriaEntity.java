@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "categorias")
@@ -71,6 +72,14 @@ public class CategoriaEntity {
     @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<EquipeEntity> equipes = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "categorias", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<WorkoutEntity> workouts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<LeaderboardEntity> leaderboards = new ArrayList<>();
 
     // Lifecycle methods
     @PrePersist
@@ -209,5 +218,147 @@ public class CategoriaEntity {
 
     public int getTotalEquipes() {
         return this.equipes != null ? this.equipes.size() : 0;
+    }
+
+    // Métodos de conveniência para workouts
+    public void adicionarWorkout(WorkoutEntity workout) {
+        if (this.workouts == null) {
+            this.workouts = new ArrayList<>();
+        }
+        if (!this.workouts.contains(workout)) {
+            this.workouts.add(workout);
+            workout.getCategorias().add(this);
+        }
+    }
+
+    public void removerWorkout(WorkoutEntity workout) {
+        if (this.workouts != null) {
+            this.workouts.remove(workout);
+            workout.getCategorias().remove(this);
+        }
+    }
+
+    public boolean temWorkout(WorkoutEntity workout) {
+        return this.workouts != null && this.workouts.contains(workout);
+    }
+
+    public long getNumeroWorkoutsAtivos() {
+        return this.workouts != null 
+               ? this.workouts.stream()
+                   .filter(WorkoutEntity::getAtivo)
+                   .count()
+               : 0;
+    }
+
+    public String getNomesWorkouts() {
+        if (this.workouts == null || this.workouts.isEmpty()) {
+            return "Sem workouts";
+        }
+        return this.workouts.stream()
+                .map(WorkoutEntity::getNome)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("Sem workouts");
+    }
+
+    public int getQuantidadeWorkouts() {
+        return this.workouts != null ? this.workouts.size() : 0;
+    }
+
+    // Métodos de conveniência para leaderboards
+    
+    /**
+     * Calcula a pontuação total de uma equipe (soma das posições em todos os workouts)
+     */
+    public Integer calcularPontuacaoTotalEquipe(EquipeEntity equipe) {
+        if (this.leaderboards == null || !isEquipe()) {
+            return null;
+        }
+        
+        return this.leaderboards.stream()
+                .filter(lb -> equipe.equals(lb.getEquipe()) && lb.getPosicaoWorkout() != null)
+                .mapToInt(LeaderboardEntity::getPosicaoWorkout)
+                .sum();
+    }
+
+    /**
+     * Calcula a pontuação total de um atleta (soma das posições em todos os workouts)
+     */
+    public Integer calcularPontuacaoTotalAtleta(AtletaEntity atleta) {
+        if (this.leaderboards == null || !isIndividual()) {
+            return null;
+        }
+        
+        return this.leaderboards.stream()
+                .filter(lb -> atleta.equals(lb.getAtleta()) && lb.getPosicaoWorkout() != null)
+                .mapToInt(LeaderboardEntity::getPosicaoWorkout)
+                .sum();
+    }
+
+    /**
+     * Retorna o leaderboard final ordenado por pontuação total (menor pontuação primeiro)
+     */
+    public List<Object[]> getLeaderboardFinal() {
+        if (this.leaderboards == null) {
+            return new ArrayList<>();
+        }
+
+        if (isEquipe()) {
+            return this.leaderboards.stream()
+                    .filter(lb -> lb.getEquipe() != null)
+                    .collect(Collectors.groupingBy(LeaderboardEntity::getEquipe))
+                    .entrySet().stream()
+                    .map(entry -> {
+                        EquipeEntity equipe = entry.getKey();
+                        Integer pontuacaoTotal = calcularPontuacaoTotalEquipe(equipe);
+                        return new Object[]{equipe, pontuacaoTotal};
+                    })
+                    .filter(entry -> entry[1] != null)
+                    .sorted((a, b) -> Integer.compare((Integer) a[1], (Integer) b[1]))
+                    .collect(Collectors.toList());
+        } else {
+            return this.leaderboards.stream()
+                    .filter(lb -> lb.getAtleta() != null)
+                    .collect(Collectors.groupingBy(LeaderboardEntity::getAtleta))
+                    .entrySet().stream()
+                    .map(entry -> {
+                        AtletaEntity atleta = entry.getKey();
+                        Integer pontuacaoTotal = calcularPontuacaoTotalAtleta(atleta);
+                        return new Object[]{atleta, pontuacaoTotal};
+                    })
+                    .filter(entry -> entry[1] != null)
+                    .sorted((a, b) -> Integer.compare((Integer) a[1], (Integer) b[1]))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    /**
+     * Retorna quantos participantes finalizaram todos os workouts
+     */
+    public long getParticipantesFinalizados() {
+        if (this.leaderboards == null) {
+            return 0;
+        }
+
+        if (isEquipe()) {
+            return this.leaderboards.stream()
+                    .filter(lb -> lb.getEquipe() != null)
+                    .collect(Collectors.groupingBy(LeaderboardEntity::getEquipe))
+                    .entrySet().stream()
+                    .filter(entry -> {
+                        List<LeaderboardEntity> resultados = entry.getValue();
+                        return resultados.stream().allMatch(LeaderboardEntity::isFinalizadoWorkout);
+                    })
+                    .count();
+        } else {
+            return this.leaderboards.stream()
+                    .filter(lb -> lb.getAtleta() != null)
+                    .collect(Collectors.groupingBy(LeaderboardEntity::getAtleta))
+                    .entrySet().stream()
+                    .filter(entry -> {
+                        List<LeaderboardEntity> resultados = entry.getValue();
+                        return resultados.stream().allMatch(LeaderboardEntity::isFinalizadoWorkout);
+                    })
+                    .count();
+        }
     }
 }

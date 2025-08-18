@@ -1,7 +1,7 @@
 package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.organizador.*;
-import br.com.eventsports.minha_inscricao.service.OrganizadorService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IOrganizadorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -27,7 +27,7 @@ import java.util.List;
 @Tag(name = "Organizadores", description = "Operações relacionadas aos organizadores de eventos")
 public class OrganizadorController {
 
-    private final OrganizadorService organizadorService;
+    private final IOrganizadorService organizadorService;
 
     @PostMapping
     @Operation(summary = "Criar organizador", description = "Cria um novo organizador vinculado a um usuário")
@@ -280,10 +280,10 @@ public class OrganizadorController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso")
     })
-    public ResponseEntity<OrganizadorService.OrganizadorEstatisticasDTO> obterEstatisticas() {
+    public ResponseEntity<Object> obterEstatisticas() {
         log.info("GET /api/organizadores/estatisticas - Obtendo estatísticas");
         
-        OrganizadorService.OrganizadorEstatisticasDTO estatisticas = organizadorService.obterEstatisticas();
+        Object estatisticas = organizadorService.obterEstatisticas();
         return ResponseEntity.ok(estatisticas);
     }
 

@@ -8,6 +8,7 @@ import br.com.eventsports.minha_inscricao.enums.Genero;
 import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class AtletaService {
+public class AtletaService implements IAtletaService {
 
     private final AtletaRepository atletaRepository;
     private final EventoRepository eventoRepository;

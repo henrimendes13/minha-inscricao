@@ -1,7 +1,7 @@
 package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.equipe.*;
-import br.com.eventsports.minha_inscricao.service.EquipeService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IEquipeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EquipeController {
 
-    private final EquipeService equipeService;
+    private final IEquipeService equipeService;
 
     @GetMapping
     public ResponseEntity<List<EquipeSummaryDTO>> getAllEquipes() {

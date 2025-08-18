@@ -6,6 +6,7 @@ import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class EventoService {
+public class EventoService implements IEventoService {
 
     private final EventoRepository eventoRepository;
 

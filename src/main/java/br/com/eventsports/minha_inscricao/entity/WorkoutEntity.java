@@ -1,11 +1,12 @@
 package br.com.eventsports.minha_inscricao.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import br.com.eventsports.minha_inscricao.enums.TipoWorkout;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "workouts")
@@ -13,61 +14,57 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "Exercício ou modalidade de um evento esportivo")
 public class WorkoutEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "ID único do workout", example = "1", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
-    @NotBlank(message = "Nome do workout é obrigatório")
-    @Size(max = 200, message = "Nome deve ter no máximo 200 caracteres")
     @Column(name = "nome", nullable = false, length = 200)
-    @Schema(description = "Nome do workout", example = "21-15-9 Thrusters/Pull-ups", required = true)
     private String nome;
 
-    @Size(max = 5000, message = "Descrição deve ter no máximo 5000 caracteres")
     @Lob
     @Column(name = "descricao", columnDefinition = "TEXT")
-    @Schema(description = "Descrição detalhada do workout", 
-            example = "For time: 21-15-9 Thrusters 95/65 Pull-ups")
     private String descricao;
 
-    @Min(value = 1, message = "Ordem deve ser maior que zero")
-    @Column(name = "ordem", nullable = false)
-    @Schema(description = "Ordem de execução do workout no evento", example = "1", required = true)
-    private Integer ordem;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false, length = 20)
+    @Builder.Default
+    private TipoWorkout tipo = TipoWorkout.REPS;
 
-    @PositiveOrZero(message = "Tempo limite deve ser positivo ou zero")
-    @Column(name = "tempo_limite_minutos")
-    @Schema(description = "Tempo limite em minutos (0 = sem limite)", example = "20")
-    private Integer tempoLimiteMinutos;
+    // Campos de resultado baseados no tipo
+    @Column(name = "resultado_reps")
+    private Integer resultadoReps;
 
-    @Size(max = 100, message = "Categoria deve ter no máximo 100 caracteres")
-    @Column(name = "categoria", length = 100)
-    @Schema(description = "Categoria do workout", example = "RX", 
-            allowableValues = {"RX", "SCALED", "MASTERS", "TEEN"})
-    private String categoria;
+    @Column(name = "resultado_peso", precision = 8, scale = 2)
+    private Double resultadoPeso;
+
+    @Column(name = "resultado_tempo_segundos")
+    private Integer resultadoTempoSegundos;
+
+    // Relacionamento Many-to-Many com Categorias
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "workout_categorias",
+        joinColumns = @JoinColumn(name = "workout_id"),
+        inverseJoinColumns = @JoinColumn(name = "categoria_id")
+    )
+    @Builder.Default
+    private List<CategoriaEntity> categorias = new ArrayList<>();
 
     @Column(name = "ativo", nullable = false)
     @Builder.Default
-    @Schema(description = "Indica se o workout está ativo", example = "true")
     private Boolean ativo = true;
 
     // Relacionamento com Evento
-    @NotNull(message = "Evento é obrigatório")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evento_id", nullable = false)
-    @Schema(description = "Evento ao qual o workout pertence")
     private EventoEntity evento;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    @Schema(description = "Data de criação", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
-    @Schema(description = "Data da última atualização", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime updatedAt;
 
     // Lifecycle methods
@@ -94,23 +91,172 @@ public class WorkoutEntity {
         this.ativo = false;
     }
 
-    public boolean temTempoLimite() {
-        return this.tempoLimiteMinutos != null && this.tempoLimiteMinutos > 0;
-    }
-
     public String getNomeEvento() {
         return this.evento != null ? this.evento.getNome() : "";
     }
 
-    public String getDescricaoCompleta() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Workout ").append(this.ordem).append(": ").append(this.nome);
-        if (this.categoria != null) {
-            sb.append(" (").append(this.categoria).append(")");
+    // Métodos de conveniência para categorias
+    public void adicionarCategoria(CategoriaEntity categoria) {
+        if (this.categorias == null) {
+            this.categorias = new ArrayList<>();
         }
-        if (temTempoLimite()) {
-            sb.append(" - Tempo limite: ").append(this.tempoLimiteMinutos).append(" min");
+        if (!this.categorias.contains(categoria)) {
+            this.categorias.add(categoria);
+            categoria.getWorkouts().add(this);
         }
-        return sb.toString();
+    }
+
+    public void removerCategoria(CategoriaEntity categoria) {
+        if (this.categorias != null) {
+            this.categorias.remove(categoria);
+            categoria.getWorkouts().remove(this);
+        }
+    }
+
+    public boolean temCategoria(CategoriaEntity categoria) {
+        return this.categorias != null && this.categorias.contains(categoria);
+    }
+
+    public String getNomesCategorias() {
+        if (this.categorias == null || this.categorias.isEmpty()) {
+            return "Sem categorias";
+        }
+        return this.categorias.stream()
+                .map(CategoriaEntity::getNome)
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("Sem categorias");
+    }
+
+    public int getQuantidadeCategorias() {
+        return this.categorias != null ? this.categorias.size() : 0;
+    }
+
+    // Métodos de conveniência para resultados
+    
+    /**
+     * Define o resultado baseado no tipo do workout
+     */
+    public void definirResultado(Object resultado) {
+        switch (this.tipo) {
+            case REPS:
+                if (resultado instanceof Integer) {
+                    this.resultadoReps = (Integer) resultado;
+                }
+                break;
+            case PESO:
+                if (resultado instanceof Double) {
+                    this.resultadoPeso = (Double) resultado;
+                } else if (resultado instanceof Integer) {
+                    this.resultadoPeso = ((Integer) resultado).doubleValue();
+                }
+                break;
+            case TEMPO:
+                if (resultado instanceof Integer) {
+                    this.resultadoTempoSegundos = (Integer) resultado;
+                }
+                break;
+        }
+    }
+    
+    /**
+     * Retorna o resultado principal baseado no tipo
+     */
+    public Object getResultadoPrincipal() {
+        return switch (this.tipo) {
+            case REPS -> this.resultadoReps;
+            case PESO -> this.resultadoPeso;
+            case TEMPO -> this.resultadoTempoSegundos;
+        };
+    }
+    
+    /**
+     * Retorna o resultado formatado como string
+     */
+    public String getResultadoFormatado() {
+        return switch (this.tipo) {
+            case REPS -> this.resultadoReps != null ? this.resultadoReps + " reps" : "N/A";
+            case PESO -> this.resultadoPeso != null ? String.format("%.2f kg", this.resultadoPeso) : "N/A";
+            case TEMPO -> formatarTempo(this.resultadoTempoSegundos);
+        };
+    }
+    
+    /**
+     * Converte segundos para formato de tempo (mm:ss ou hh:mm:ss)
+     */
+    public String formatarTempo(Integer segundos) {
+        if (segundos == null || segundos <= 0) {
+            return "N/A";
+        }
+        
+        int horas = segundos / 3600;
+        int minutos = (segundos % 3600) / 60;
+        int seg = segundos % 60;
+        
+        if (horas > 0) {
+            return String.format("%d:%02d:%02d", horas, minutos, seg);
+        } else {
+            return String.format("%d:%02d", minutos, seg);
+        }
+    }
+    
+    /**
+     * Converte string de tempo (mm:ss ou hh:mm:ss) para segundos
+     */
+    public static Integer converterTempoParaSegundos(String tempo) {
+        if (tempo == null || tempo.trim().isEmpty()) {
+            return null;
+        }
+        
+        String[] partes = tempo.trim().split(":");
+        
+        try {
+            if (partes.length == 2) {
+                // Formato mm:ss
+                int minutos = Integer.parseInt(partes[0]);
+                int segundos = Integer.parseInt(partes[1]);
+                return minutos * 60 + segundos;
+            } else if (partes.length == 3) {
+                // Formato hh:mm:ss
+                int horas = Integer.parseInt(partes[0]);
+                int minutos = Integer.parseInt(partes[1]);
+                int segundos = Integer.parseInt(partes[2]);
+                return horas * 3600 + minutos * 60 + segundos;
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
+        }
+        
+        throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
+    }
+    
+    /**
+     * Verifica se tem resultado definido
+     */
+    public boolean temResultado() {
+        return switch (this.tipo) {
+            case REPS -> this.resultadoReps != null && this.resultadoReps > 0;
+            case PESO -> this.resultadoPeso != null && this.resultadoPeso > 0;
+            case TEMPO -> this.resultadoTempoSegundos != null && this.resultadoTempoSegundos > 0;
+        };
+    }
+    
+    /**
+     * Limpa o resultado
+     */
+    public void limparResultado() {
+        this.resultadoReps = null;
+        this.resultadoPeso = null;
+        this.resultadoTempoSegundos = null;
+    }
+    
+    /**
+     * Retorna a unidade de medida baseada no tipo
+     */
+    public String getUnidadeMedida() {
+        return switch (this.tipo) {
+            case REPS -> "repetições";
+            case PESO -> "kg";
+            case TEMPO -> "tempo";
+        };
     }
 }

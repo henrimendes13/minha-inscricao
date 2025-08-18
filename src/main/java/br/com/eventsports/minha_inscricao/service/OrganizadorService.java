@@ -7,6 +7,7 @@ import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import br.com.eventsports.minha_inscricao.repository.OrganizadorRepository;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IOrganizadorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class OrganizadorService {
+public class OrganizadorService implements IOrganizadorService {
 
     private final OrganizadorRepository organizadorRepository;
     private final UsuarioRepository usuarioRepository;

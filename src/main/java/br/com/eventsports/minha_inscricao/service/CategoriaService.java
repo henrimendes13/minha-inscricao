@@ -5,6 +5,7 @@ import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
 import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
+import br.com.eventsports.minha_inscricao.service.Interfaces.ICategoriaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class CategoriaService {
+public class CategoriaService implements ICategoriaService {
 
     private final CategoriaRepository categoriaRepository;
 

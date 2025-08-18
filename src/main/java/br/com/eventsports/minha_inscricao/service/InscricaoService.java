@@ -6,6 +6,7 @@ import br.com.eventsports.minha_inscricao.dto.inscricao.*;
 import br.com.eventsports.minha_inscricao.entity.*;
 import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
 import br.com.eventsports.minha_inscricao.repository.*;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IInscricaoService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class InscricaoService {
+public class InscricaoService implements IInscricaoService {
 
     private final InscricaoRepository inscricaoRepository;
     private final EventoRepository eventoRepository;

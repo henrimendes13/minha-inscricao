@@ -2,7 +2,7 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.usuario.*;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
-import br.com.eventsports.minha_inscricao.service.UsuarioService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Usuários", description = "Operações relacionadas aos usuários do sistema")
 public class UsuarioController {
 
-    private final UsuarioService usuarioService;
+    private final IUsuarioService usuarioService;
 
     @PostMapping
     @Operation(summary = "Criar usuário", description = "Cria um novo usuário no sistema")
@@ -255,10 +255,10 @@ public class UsuarioController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso")
     })
-    public ResponseEntity<UsuarioService.UsuarioEstatisticasDTO> obterEstatisticas() {
+    public ResponseEntity<Object> obterEstatisticas() {
         log.info("GET /api/usuarios/estatisticas - Obtendo estatísticas");
         
-        UsuarioService.UsuarioEstatisticasDTO estatisticas = usuarioService.obterEstatisticas();
+        Object estatisticas = usuarioService.obterEstatisticas();
         return ResponseEntity.ok(estatisticas);
     }
 

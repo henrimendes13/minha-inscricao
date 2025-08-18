@@ -2,7 +2,7 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.inscricao.*;
 import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
-import br.com.eventsports.minha_inscricao.service.InscricaoService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IInscricaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,7 +24,7 @@ import java.util.Map;
 @Tag(name = "Inscrições", description = "API para gerenciamento de inscrições")
 public class InscricaoController {
 
-    private final InscricaoService inscricaoService;
+    private final IInscricaoService inscricaoService;
 
     @Operation(summary = "Listar todas as inscrições", description = "Retorna uma lista resumida de todas as inscrições cadastradas")
     @ApiResponses(value = {

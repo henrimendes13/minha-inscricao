@@ -2,7 +2,7 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.categoria.*;
 import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
-import br.com.eventsports.minha_inscricao.service.CategoriaService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.ICategoriaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,7 +22,7 @@ import java.util.Map;
 @Tag(name = "Categorias", description = "APIs para gerenciamento de categorias de eventos")
 public class CategoriaController {
 
-    private final CategoriaService categoriaService;
+    private final ICategoriaService categoriaService;
 
     @GetMapping
     @Operation(summary = "Listar todas as categorias", description = "Retorna uma lista com todas as categorias cadastradas")

@@ -2,7 +2,7 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.*;
 import br.com.eventsports.minha_inscricao.enums.Genero;
-import br.com.eventsports.minha_inscricao.service.AtletaService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,7 +25,7 @@ import java.util.Optional;
 @Tag(name = "Atletas", description = "API para gerenciamento de atletas")
 public class AtletaController {
 
-    private final AtletaService atletaService;
+    private final IAtletaService atletaService;
 
     @Operation(summary = "Listar todos os atletas", description = "Retorna uma lista resumida de todos os atletas cadastrados")
     @ApiResponses(value = {

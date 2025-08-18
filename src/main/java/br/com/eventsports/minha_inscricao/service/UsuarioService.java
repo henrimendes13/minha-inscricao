@@ -8,6 +8,7 @@ import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import br.com.eventsports.minha_inscricao.repository.OrganizadorRepository;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.util.PasswordUtil;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class UsuarioService {
+public class UsuarioService implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordUtil passwordUtil;
