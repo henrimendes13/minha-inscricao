@@ -41,14 +41,17 @@ public interface InscricaoRepository extends JpaRepository<InscricaoEntity, Long
     @CacheEvict(value = "inscricoes", key = "#id")
     void deleteById(@NonNull Long id);
 
+    @Query("SELECT i FROM InscricaoEntity i WHERE i.evento.id = :eventoId")
     @Cacheable(value = "inscricoes", key = "'byEvento:' + #eventoId")
-    List<InscricaoEntity> findByEventoId(Long eventoId);
+    List<InscricaoEntity> findByEventoId(@Param("eventoId") Long eventoId);
 
+    @Query("SELECT i FROM InscricaoEntity i WHERE i.categoria.id = :categoriaId")
     @Cacheable(value = "inscricoes", key = "'byCategoria:' + #categoriaId")
-    List<InscricaoEntity> findByCategoriaId(Long categoriaId);
+    List<InscricaoEntity> findByCategoriaId(@Param("categoriaId") Long categoriaId);
 
+    @Query("SELECT i FROM InscricaoEntity i WHERE i.equipe.id = :equipeId")
     @Cacheable(value = "inscricoes", key = "'byEquipe:' + #equipeId")
-    List<InscricaoEntity> findByEquipeId(Long equipeId);
+    List<InscricaoEntity> findByEquipeId(@Param("equipeId") Long equipeId);
 
     @Cacheable(value = "inscricoes", key = "'byStatus:' + #status")
     List<InscricaoEntity> findByStatus(StatusInscricao status);

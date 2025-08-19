@@ -47,9 +47,11 @@ public interface EventoRepository extends JpaRepository<EventoEntity, Long> {
     @Query("SELECT e FROM EventoEntity e WHERE e.dataFimDoEvento < CURRENT_TIMESTAMP ORDER BY e.dataFimDoEvento DESC")
     List<EventoEntity> findEventosPast();
 
+    @Query("SELECT e FROM EventoEntity e WHERE e.dataInicioDoEvento > :data ORDER BY e.dataInicioDoEvento ASC")
     @Cacheable(value = "eventos", key = "'byDataAfter:' + #data")
-    List<EventoEntity> findByDataInicioDoEventoAfterOrderByDataInicioDoEventoAsc(LocalDateTime data);
+    List<EventoEntity> findByDataInicioDoEventoAfterOrderByDataInicioDoEventoAsc(@Param("data") LocalDateTime data);
 
+    @Query("SELECT e FROM EventoEntity e WHERE e.dataFimDoEvento < :data ORDER BY e.dataFimDoEvento DESC")
     @Cacheable(value = "eventos", key = "'byDataBefore:' + #data")
-    List<EventoEntity> findByDataFimDoEventoBeforeOrderByDataFimDoEventoDesc(LocalDateTime data);
+    List<EventoEntity> findByDataFimDoEventoBeforeOrderByDataFimDoEventoDesc(@Param("data") LocalDateTime data);
 }

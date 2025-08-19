@@ -15,37 +15,44 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
     /**
      * Busca todos os resultados de uma categoria específica
      */
-    List<LeaderboardEntity> findByCategoriaIdOrderByPosicaoWorkoutAsc(Long categoriaId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId ORDER BY l.posicaoWorkout ASC")
+    List<LeaderboardEntity> findByCategoriaIdOrderByPosicaoWorkoutAsc(@Param("categoriaId") Long categoriaId);
 
     /**
      * Busca todos os resultados de um evento específico
      */
-    List<LeaderboardEntity> findByEventoIdOrderByCategoriaNomeAscPosicaoWorkoutAsc(Long eventoId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.evento.id = :eventoId ORDER BY l.categoria.nome ASC, l.posicaoWorkout ASC")
+    List<LeaderboardEntity> findByEventoIdOrderByCategoriaNomeAscPosicaoWorkoutAsc(@Param("eventoId") Long eventoId);
 
     /**
      * Busca resultados de uma categoria e workout específicos
      */
-    List<LeaderboardEntity> findByCategoriaIdAndWorkoutIdOrderByPosicaoWorkoutAsc(Long categoriaId, Long workoutId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId ORDER BY l.posicaoWorkout ASC")
+    List<LeaderboardEntity> findByCategoriaIdAndWorkoutIdOrderByPosicaoWorkoutAsc(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId);
 
     /**
      * Busca resultados de uma equipe específica
      */
-    List<LeaderboardEntity> findByEquipeIdOrderByWorkoutNomeAsc(Long equipeId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.equipe.id = :equipeId ORDER BY l.workout.nome ASC")
+    List<LeaderboardEntity> findByEquipeIdOrderByWorkoutNomeAsc(@Param("equipeId") Long equipeId);
 
     /**
      * Busca resultados de um atleta específico
      */
-    List<LeaderboardEntity> findByAtletaIdOrderByWorkoutNomeAsc(Long atletaId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.atleta.id = :atletaId ORDER BY l.workout.nome ASC")
+    List<LeaderboardEntity> findByAtletaIdOrderByWorkoutNomeAsc(@Param("atletaId") Long atletaId);
 
     /**
      * Busca resultado específico de uma equipe em um workout
      */
-    Optional<LeaderboardEntity> findByCategoriaIdAndWorkoutIdAndEquipeId(Long categoriaId, Long workoutId, Long equipeId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId AND l.equipe.id = :equipeId")
+    Optional<LeaderboardEntity> findByCategoriaIdAndWorkoutIdAndEquipeId(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId, @Param("equipeId") Long equipeId);
 
     /**
      * Busca resultado específico de um atleta em um workout
      */
-    Optional<LeaderboardEntity> findByCategoriaIdAndWorkoutIdAndAtletaId(Long categoriaId, Long workoutId, Long atletaId);
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId AND l.atleta.id = :atletaId")
+    Optional<LeaderboardEntity> findByCategoriaIdAndWorkoutIdAndAtletaId(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId, @Param("atletaId") Long atletaId);
 
     /**
      * Busca todas as equipes que participaram de uma categoria

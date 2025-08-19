@@ -33,7 +33,7 @@ public class LeaderboardEntity {
     @Column(name = "resultado_reps")
     private Integer resultadoReps;
 
-    @Column(name = "resultado_peso", precision = 8, scale = 2)
+    @Column(name = "resultado_peso")
     private Double resultadoPeso;
 
     @Column(name = "resultado_tempo_segundos")

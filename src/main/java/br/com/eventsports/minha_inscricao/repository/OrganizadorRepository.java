@@ -17,12 +17,14 @@ public interface OrganizadorRepository extends JpaRepository<OrganizadorEntity, 
     /**
      * Busca organizador por ID do usuário
      */
-    Optional<OrganizadorEntity> findByUsuarioId(Long usuarioId);
+    @Query("SELECT o FROM OrganizadorEntity o WHERE o.usuario.id = :usuarioId")
+    Optional<OrganizadorEntity> findByUsuarioId(@Param("usuarioId") Long usuarioId);
 
     /**
      * Verifica se existe organizador para o usuário
      */
-    boolean existsByUsuarioId(Long usuarioId);
+    @Query("SELECT COUNT(o) > 0 FROM OrganizadorEntity o WHERE o.usuario.id = :usuarioId")
+    boolean existsByUsuarioId(@Param("usuarioId") Long usuarioId);
 
     /**
      * Busca organizador por CNPJ
@@ -47,12 +49,14 @@ public interface OrganizadorRepository extends JpaRepository<OrganizadorEntity, 
     /**
      * Busca organizadores por nome da empresa (contendo)
      */
-    Page<OrganizadorEntity> findByNomeEmpresaContainingIgnoreCase(String nomeEmpresa, Pageable pageable);
+    @Query("SELECT o FROM OrganizadorEntity o WHERE LOWER(o.nomeEmpresa) LIKE LOWER(CONCAT('%', :nomeEmpresa, '%'))")
+    Page<OrganizadorEntity> findByNomeEmpresaContainingIgnoreCase(@Param("nomeEmpresa") String nomeEmpresa, Pageable pageable);
 
     /**
      * Busca organizadores verificados por nome da empresa
      */
-    Page<OrganizadorEntity> findByNomeEmpresaContainingIgnoreCaseAndVerificadoTrue(String nomeEmpresa, Pageable pageable);
+    @Query("SELECT o FROM OrganizadorEntity o WHERE LOWER(o.nomeEmpresa) LIKE LOWER(CONCAT('%', :nomeEmpresa, '%')) AND o.verificado = true")
+    Page<OrganizadorEntity> findByNomeEmpresaContainingIgnoreCaseAndVerificadoTrue(@Param("nomeEmpresa") String nomeEmpresa, Pageable pageable);
 
     /**
      * Busca organizadores com usuário ativo

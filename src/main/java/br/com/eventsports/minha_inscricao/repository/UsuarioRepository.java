@@ -49,12 +49,14 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
     /**
      * Busca usuários por nome (contendo)
      */
-    Page<UsuarioEntity> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
+    @Query("SELECT u FROM UsuarioEntity u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%'))")
+    Page<UsuarioEntity> findByNomeContainingIgnoreCase(@Param("nome") String nome, Pageable pageable);
 
     /**
      * Busca usuários ativos por nome (contendo)
      */
-    Page<UsuarioEntity> findByNomeContainingIgnoreCaseAndAtivoTrue(String nome, Pageable pageable);
+    @Query("SELECT u FROM UsuarioEntity u WHERE LOWER(u.nome) LIKE LOWER(CONCAT('%', :nome, '%')) AND u.ativo = true")
+    Page<UsuarioEntity> findByNomeContainingIgnoreCaseAndAtivoTrue(@Param("nome") String nome, Pageable pageable);
 
     /**
      * Busca usuários que fizeram login após determinada data

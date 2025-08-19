@@ -48,14 +48,17 @@ public interface AtletaRepository extends JpaRepository<AtletaEntity, Long> {
     @Cacheable(value = "atletas", key = "'byGenero:' + #genero")
     List<AtletaEntity> findByGenero(Genero genero);
 
+    @Query("SELECT a FROM AtletaEntity a WHERE a.evento.id = :eventoId")
     @Cacheable(value = "atletas", key = "'byEvento:' + #eventoId")
-    List<AtletaEntity> findByEventoId(Long eventoId);
+    List<AtletaEntity> findByEventoId(@Param("eventoId") Long eventoId);
 
+    @Query("SELECT a FROM AtletaEntity a WHERE a.equipe.id = :equipeId")
     @Cacheable(value = "atletas", key = "'byEquipe:' + #equipeId")
-    List<AtletaEntity> findByEquipeId(Long equipeId);
+    List<AtletaEntity> findByEquipeId(@Param("equipeId") Long equipeId);
 
+    @Query("SELECT a FROM AtletaEntity a WHERE a.inscricao.id = :inscricaoId")
     @Cacheable(value = "atletas", key = "'byInscricao:' + #inscricaoId")
-    List<AtletaEntity> findByInscricaoId(Long inscricaoId);
+    List<AtletaEntity> findByInscricaoId(@Param("inscricaoId") Long inscricaoId);
 
     @Query("SELECT a FROM AtletaEntity a WHERE a.evento = :evento AND a.aceitaTermos = true")
     @Cacheable(value = "atletas", key = "'atletasAtivosEvento:' + #evento.id")

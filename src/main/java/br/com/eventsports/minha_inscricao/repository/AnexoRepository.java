@@ -15,12 +15,14 @@ public interface AnexoRepository extends JpaRepository<AnexoEntity, Long> {
     /**
      * Busca todos os anexos de um evento
      */
-    List<AnexoEntity> findByEventoIdAndAtivoTrue(Long eventoId);
+    @Query("SELECT a FROM AnexoEntity a WHERE a.evento.id = :eventoId AND a.ativo = true")
+    List<AnexoEntity> findByEventoIdAndAtivoTrue(@Param("eventoId") Long eventoId);
     
     /**
      * Busca todos os anexos de um evento (incluindo inativos)
      */
-    List<AnexoEntity> findByEventoId(Long eventoId);
+    @Query("SELECT a FROM AnexoEntity a WHERE a.evento.id = :eventoId")
+    List<AnexoEntity> findByEventoId(@Param("eventoId") Long eventoId);
     
     /**
      * Busca anexos por tipo MIME
@@ -35,7 +37,8 @@ public interface AnexoRepository extends JpaRepository<AnexoEntity, Long> {
     /**
      * Busca anexo por nome do arquivo
      */
-    Optional<AnexoEntity> findByNomeArquivoAndEventoId(String nomeArquivo, Long eventoId);
+    @Query("SELECT a FROM AnexoEntity a WHERE a.nomeArquivo = :nomeArquivo AND a.evento.id = :eventoId")
+    Optional<AnexoEntity> findByNomeArquivoAndEventoId(@Param("nomeArquivo") String nomeArquivo, @Param("eventoId") Long eventoId);
     
     /**
      * Busca anexo por checksum MD5 (para evitar duplicatas)
@@ -45,13 +48,14 @@ public interface AnexoRepository extends JpaRepository<AnexoEntity, Long> {
     /**
      * Busca anexos que contenham texto na descrição
      */
-    @Query("SELECT a FROM AnexoEntity a WHERE a.descricao ILIKE %:texto% AND a.ativo = true")
+    @Query("SELECT a FROM AnexoEntity a WHERE LOWER(a.descricao) LIKE LOWER(CONCAT('%', :texto, '%')) AND a.ativo = true")
     List<AnexoEntity> findByDescricaoContaining(@Param("texto") String texto);
     
     /**
      * Conta anexos de um evento
      */
-    long countByEventoIdAndAtivoTrue(Long eventoId);
+    @Query("SELECT COUNT(a) FROM AnexoEntity a WHERE a.evento.id = :eventoId AND a.ativo = true")
+    long countByEventoIdAndAtivoTrue(@Param("eventoId") Long eventoId);
     
     /**
      * Soma total de bytes dos anexos de um evento

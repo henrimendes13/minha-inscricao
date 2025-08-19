@@ -38,14 +38,17 @@ public interface EquipeRepository extends JpaRepository<EquipeEntity, Long> {
     @Cacheable(value = "equipes", key = "'byNome:' + #nome")
     List<EquipeEntity> findByNomeContainingIgnoreCase(String nome);
 
+    @Query("SELECT e FROM EquipeEntity e WHERE e.evento.id = :eventoId ORDER BY e.nome ASC")
     @Cacheable(value = "equipes", key = "'byEvento:' + #eventoId")
-    List<EquipeEntity> findByEventoIdOrderByNomeAsc(Long eventoId);
+    List<EquipeEntity> findByEventoIdOrderByNomeAsc(@Param("eventoId") Long eventoId);
 
+    @Query("SELECT e FROM EquipeEntity e WHERE e.categoria.id = :categoriaId ORDER BY e.nome ASC")
     @Cacheable(value = "equipes", key = "'byCategoria:' + #categoriaId")
-    List<EquipeEntity> findByCategoriaIdOrderByNomeAsc(Long categoriaId);
+    List<EquipeEntity> findByCategoriaIdOrderByNomeAsc(@Param("categoriaId") Long categoriaId);
 
+    @Query("SELECT e FROM EquipeEntity e WHERE e.capitao.id = :capitaoId ORDER BY e.nome ASC")
     @Cacheable(value = "equipes", key = "'byCapitao:' + #capitaoId")
-    List<EquipeEntity> findByCapitaoIdOrderByNomeAsc(Long capitaoId);
+    List<EquipeEntity> findByCapitaoIdOrderByNomeAsc(@Param("capitaoId") Long capitaoId);
 
     @Cacheable(value = "equipes", key = "'ativas'")
     List<EquipeEntity> findByAtivaTrue();
@@ -53,11 +56,13 @@ public interface EquipeRepository extends JpaRepository<EquipeEntity, Long> {
     @Cacheable(value = "equipes", key = "'inativas'")
     List<EquipeEntity> findByAtivaFalse();
 
+    @Query("SELECT e FROM EquipeEntity e WHERE e.evento.id = :eventoId AND e.categoria.id = :categoriaId ORDER BY e.nome ASC")
     @Cacheable(value = "equipes", key = "'byEventoAndCategoria:' + #eventoId + ':' + #categoriaId")
-    List<EquipeEntity> findByEventoIdAndCategoriaIdOrderByNomeAsc(Long eventoId, Long categoriaId);
+    List<EquipeEntity> findByEventoIdAndCategoriaIdOrderByNomeAsc(@Param("eventoId") Long eventoId, @Param("categoriaId") Long categoriaId);
 
+    @Query("SELECT e FROM EquipeEntity e WHERE e.evento.id = :eventoId AND e.ativa = :ativa ORDER BY e.nome ASC")
     @Cacheable(value = "equipes", key = "'byEventoAndAtiva:' + #eventoId + ':' + #ativa")
-    List<EquipeEntity> findByEventoIdAndAtivaOrderByNomeAsc(Long eventoId, Boolean ativa);
+    List<EquipeEntity> findByEventoIdAndAtivaOrderByNomeAsc(@Param("eventoId") Long eventoId, @Param("ativa") Boolean ativa);
 
     @Query("SELECT e FROM EquipeEntity e WHERE e.evento.id = :eventoId AND e.ativa = true AND SIZE(e.atletas) >= 2")
     @Cacheable(value = "equipes", key = "'equipesCompletasByEvento:' + #eventoId")

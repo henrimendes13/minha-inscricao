@@ -14,7 +14,8 @@ public interface WorkoutRepository extends JpaRepository<WorkoutEntity, Long> {
     /**
      * Busca workouts por evento
      */
-    List<WorkoutEntity> findByEventoIdOrderByNomeAsc(Long eventoId);
+    @Query("SELECT w FROM WorkoutEntity w WHERE w.evento.id = :eventoId ORDER BY w.nome ASC")
+    List<WorkoutEntity> findByEventoIdOrderByNomeAsc(@Param("eventoId") Long eventoId);
 
     /**
      * Busca workouts ativos
@@ -24,7 +25,8 @@ public interface WorkoutRepository extends JpaRepository<WorkoutEntity, Long> {
     /**
      * Busca workouts ativos por evento
      */
-    List<WorkoutEntity> findByEventoIdAndAtivoTrue(Long eventoId);
+    @Query("SELECT w FROM WorkoutEntity w WHERE w.evento.id = :eventoId AND w.ativo = true")
+    List<WorkoutEntity> findByEventoIdAndAtivoTrue(@Param("eventoId") Long eventoId);
 
     /**
      * Busca workouts por nome (case insensitive)
@@ -34,12 +36,14 @@ public interface WorkoutRepository extends JpaRepository<WorkoutEntity, Long> {
     /**
      * Verifica se existe workout com o mesmo nome no evento
      */
-    boolean existsByNomeAndEventoId(String nome, Long eventoId);
+    @Query("SELECT COUNT(w) > 0 FROM WorkoutEntity w WHERE w.nome = :nome AND w.evento.id = :eventoId")
+    boolean existsByNomeAndEventoId(@Param("nome") String nome, @Param("eventoId") Long eventoId);
 
     /**
      * Verifica se existe outro workout com o mesmo nome no evento (para update)
      */
-    boolean existsByNomeAndEventoIdAndIdNot(String nome, Long eventoId, Long id);
+    @Query("SELECT COUNT(w) > 0 FROM WorkoutEntity w WHERE w.nome = :nome AND w.evento.id = :eventoId AND w.id <> :id")
+    boolean existsByNomeAndEventoIdAndIdNot(@Param("nome") String nome, @Param("eventoId") Long eventoId, @Param("id") Long id);
 
     /**
      * Busca workouts por categoria
@@ -76,9 +80,9 @@ public interface WorkoutRepository extends JpaRepository<WorkoutEntity, Long> {
     List<Object[]> findByEventoIdWithCategoriaCount(@Param("eventoId") Long eventoId);
 
     /**
-     * Busca workouts que podem receber categorias (ativos e do evento ativo)
+     * Busca workouts que podem receber categorias (ativos do evento)
      */
-    @Query("SELECT w FROM WorkoutEntity w WHERE w.evento.id = :eventoId AND w.ativo = true AND w.evento.ativo = true")
+    @Query("SELECT w FROM WorkoutEntity w WHERE w.evento.id = :eventoId AND w.ativo = true")
     List<WorkoutEntity> findWorkoutsDisponiveis(@Param("eventoId") Long eventoId);
 
     /**

@@ -15,7 +15,8 @@ public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Long
     /**
      * Busca categorias por evento
      */
-    List<CategoriaEntity> findByEventoIdOrderByNomeAsc(Long eventoId);
+    @Query("SELECT c FROM CategoriaEntity c WHERE c.evento.id = :eventoId ORDER BY c.nome ASC")
+    List<CategoriaEntity> findByEventoIdOrderByNomeAsc(@Param("eventoId") Long eventoId);
 
     /**
      * Busca categorias ativas
@@ -25,7 +26,8 @@ public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Long
     /**
      * Busca categorias ativas por evento
      */
-    List<CategoriaEntity> findByEventoIdAndAtivaTrue(Long eventoId);
+    @Query("SELECT c FROM CategoriaEntity c WHERE c.evento.id = :eventoId AND c.ativa = true")
+    List<CategoriaEntity> findByEventoIdAndAtivaTrue(@Param("eventoId") Long eventoId);
 
     /**
      * Busca categorias por tipo de participação
@@ -35,7 +37,8 @@ public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Long
     /**
      * Busca categorias por evento e tipo de participação
      */
-    List<CategoriaEntity> findByEventoIdAndTipoParticipacao(Long eventoId, TipoParticipacao tipoParticipacao);
+    @Query("SELECT c FROM CategoriaEntity c WHERE c.evento.id = :eventoId AND c.tipoParticipacao = :tipoParticipacao")
+    List<CategoriaEntity> findByEventoIdAndTipoParticipacao(@Param("eventoId") Long eventoId, @Param("tipoParticipacao") TipoParticipacao tipoParticipacao);
 
     /**
      * Busca categorias por nome (case insensitive)
@@ -45,17 +48,20 @@ public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Long
     /**
      * Verifica se existe categoria com o mesmo nome no evento
      */
-    boolean existsByNomeAndEventoId(String nome, Long eventoId);
+    @Query("SELECT COUNT(c) > 0 FROM CategoriaEntity c WHERE c.nome = :nome AND c.evento.id = :eventoId")
+    boolean existsByNomeAndEventoId(@Param("nome") String nome, @Param("eventoId") Long eventoId);
 
     /**
      * Verifica se existe outra categoria com o mesmo nome no evento (para update)
      */
-    boolean existsByNomeAndEventoIdAndIdNot(String nome, Long eventoId, Long id);
+    @Query("SELECT COUNT(c) > 0 FROM CategoriaEntity c WHERE c.nome = :nome AND c.evento.id = :eventoId AND c.id <> :id")
+    boolean existsByNomeAndEventoIdAndIdNot(@Param("nome") String nome, @Param("eventoId") Long eventoId, @Param("id") Long id);
 
     /**
      * Busca categorias com quantidade específica de atletas por equipe
      */
-    List<CategoriaEntity> findByQuantidadeDeAtletasPorEquipe(Integer quantidade);
+    @Query("SELECT c FROM CategoriaEntity c WHERE c.quantidadeDeAtletasPorEquipe = :quantidade")
+    List<CategoriaEntity> findByQuantidadeDeAtletasPorEquipe(@Param("quantidade") Integer quantidade);
 
     /**
      * Busca categorias por evento ordenadas por tipo de participação e nome
@@ -70,9 +76,9 @@ public interface CategoriaRepository extends JpaRepository<CategoriaEntity, Long
     long countAtivasByEventoId(@Param("eventoId") Long eventoId);
 
     /**
-     * Busca categorias que podem receber inscrições (ativas e do evento ativo)
+     * Busca categorias que podem receber inscrições (ativas do evento)
      */
-    @Query("SELECT c FROM CategoriaEntity c WHERE c.evento.id = :eventoId AND c.ativa = true AND c.evento.ativo = true")
+    @Query("SELECT c FROM CategoriaEntity c WHERE c.evento.id = :eventoId AND c.ativa = true")
     List<CategoriaEntity> findCategoriasDisponiveis(@Param("eventoId") Long eventoId);
 
     /**
