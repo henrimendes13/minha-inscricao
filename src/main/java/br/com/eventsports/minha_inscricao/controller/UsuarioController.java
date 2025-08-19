@@ -231,24 +231,7 @@ public class UsuarioController {
         }
     }
 
-    @PostMapping("/validar-credenciais")
-    @Operation(summary = "Validar credenciais", description = "Valida as credenciais de login de um usuário")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Credenciais validadas"),
-            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos")
-    })
-    public ResponseEntity<ValidacaoCredenciaisResponseDTO> validarCredenciais(
-            @Valid @RequestBody ValidacaoCredenciaisRequestDTO dto) {
-        log.info("POST /api/usuarios/validar-credenciais - Validando credenciais para email: {}", dto.getEmail());
-        
-        boolean validas = usuarioService.validarCredenciais(dto.getEmail(), dto.getSenha());
-        
-        ValidacaoCredenciaisResponseDTO response = ValidacaoCredenciaisResponseDTO.builder()
-                .validas(validas)
-                .build();
-        
-        return ResponseEntity.ok(response);
-    }
+
 
     @GetMapping("/estatisticas")
     @Operation(summary = "Obter estatísticas", description = "Obtém estatísticas gerais dos usuários")
@@ -262,45 +245,4 @@ public class UsuarioController {
         return ResponseEntity.ok(estatisticas);
     }
 
-    // DTOs auxiliares para validação de credenciais
-    public static class ValidacaoCredenciaisRequestDTO {
-        @Parameter(description = "Email do usuário", required = true)
-        private String email;
-        
-        @Parameter(description = "Senha do usuário", required = true)
-        private String senha;
-
-        // Getters e Setters
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public String getSenha() { return senha; }
-        public void setSenha(String senha) { this.senha = senha; }
-    }
-
-    public static class ValidacaoCredenciaisResponseDTO {
-        @Parameter(description = "Indica se as credenciais são válidas")
-        private Boolean validas;
-
-        public static ValidacaoCredenciaisResponseDTOBuilder builder() {
-            return new ValidacaoCredenciaisResponseDTOBuilder();
-        }
-
-        public static class ValidacaoCredenciaisResponseDTOBuilder {
-            private Boolean validas;
-
-            public ValidacaoCredenciaisResponseDTOBuilder validas(Boolean validas) {
-                this.validas = validas;
-                return this;
-            }
-
-            public ValidacaoCredenciaisResponseDTO build() {
-                ValidacaoCredenciaisResponseDTO dto = new ValidacaoCredenciaisResponseDTO();
-                dto.validas = this.validas;
-                return dto;
-            }
-        }
-
-        // Getter
-        public Boolean getValidas() { return validas; }
-    }
 }

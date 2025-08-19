@@ -3,7 +3,18 @@
     "allow": [
       "Bash(mvn compile:*)",
       "Bash(mvn:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(timeout:*)",
+      "Bash(taskkill:*)",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(wmic process where processid=\"6152\" delete:*)",
+      "Bash(rm:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
