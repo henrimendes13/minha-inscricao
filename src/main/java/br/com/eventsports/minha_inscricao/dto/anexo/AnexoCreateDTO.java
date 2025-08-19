@@ -1,7 +1,8 @@
 package br.com.eventsports.minha_inscricao.dto.anexo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Data
@@ -20,7 +21,4 @@ public class AnexoCreateDTO {
     @Schema(description = "Descrição opcional do anexo", example = "Regulamento oficial da competição", maxLength = 1000)
     private String descricao;
 
-    @NotNull(message = "Evento é obrigatório")
-    @Schema(description = "ID do evento ao qual o anexo pertence", example = "1", required = true)
-    private Long eventoId;
 }
