@@ -213,18 +213,30 @@ public class EventoEntity {
     }
 
     public List<AnexoEntity> getAnexosAtivos() {
-        return this.anexos != null 
-               ? this.anexos.stream()
-                   .filter(anexo -> anexo.isAtivo())
-                   .sorted((a1, a2) -> {
-                       if (a1.getOrdem() != null && a2.getOrdem() != null) {
-                           return a1.getOrdem().compareTo(a2.getOrdem());
-                       }
-                       return a1.getDescricao().compareTo(a2.getDescricao());
-                   })
-                   .toList()
-               : new ArrayList<>();
-    }
+      return this.anexos != null
+             ? this.anexos.stream()
+                 .filter(anexo -> anexo.isAtivo())
+                 .sorted((a1, a2) -> {
+                     // Ordenar por nome do arquivo como critério principal
+                     if (a1.getNomeArquivo() != null && a2.getNomeArquivo() != null) {
+                         return a1.getNomeArquivo().compareToIgnoreCase(a2.getNomeArquivo());
+                     }
+                     // Se um dos nomes for null, colocar o null por último
+                     if (a1.getNomeArquivo() == null && a2.getNomeArquivo() != null) {
+                         return 1;
+                     }
+                     if (a1.getNomeArquivo() != null && a2.getNomeArquivo() == null) {
+                         return -1;
+                     }
+                     // Se ambos forem null, ordenar por data de criação
+                     if (a1.getCreatedAt() != null && a2.getCreatedAt() != null) {
+                         return a1.getCreatedAt().compareTo(a2.getCreatedAt());
+                     }
+                     return 0;
+                 })
+                 .toList()
+             : new ArrayList<>();
+  }
 
     public String getDescricaoStatus() {
         return this.status != null ? this.status.getDescricao() : "";
