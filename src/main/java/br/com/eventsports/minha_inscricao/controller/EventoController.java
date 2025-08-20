@@ -3,12 +3,15 @@ package br.com.eventsports.minha_inscricao.controller;
 import br.com.eventsports.minha_inscricao.dto.evento.*;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
+import br.com.eventsports.minha_inscricao.security.OwnershipValidator;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -22,6 +25,7 @@ import java.util.Map;
 public class EventoController {
 
     private final IEventoService eventoService;
+    private final OwnershipValidator ownershipValidator;
 
     @GetMapping
     public ResponseEntity<List<EventoSummaryDTO>> getAllEventos() {
@@ -40,7 +44,9 @@ public class EventoController {
     }
 
     @PostMapping
-    public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO) {
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO,
+                                                         Authentication authentication) {
         try {
             EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdEvento);
@@ -50,8 +56,16 @@ public class EventoController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id, @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO) {
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id, 
+                                                         @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO,
+                                                         Authentication authentication) {
         try {
+            // Verificar ownership do evento
+            if (!ownershipValidator.isEventoOwner(authentication, id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
             EventoResponseDTO updatedEvento = eventoService.update(id, eventoUpdateDTO);
             return ResponseEntity.ok(updatedEvento);
         } catch (EventoNotFoundException e) {
@@ -62,8 +76,15 @@ public class EventoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id,
+                                                           Authentication authentication) {
         try {
+            // Verificar ownership do evento
+            if (!ownershipValidator.isEventoOwner(authentication, id)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            
             eventoService.deleteById(id);
             return ResponseEntity.ok(Map.of("message", "Evento deletado com sucesso"));
         } catch (EventoNotFoundException e) {

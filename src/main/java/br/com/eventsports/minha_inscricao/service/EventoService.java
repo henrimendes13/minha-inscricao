@@ -5,6 +5,7 @@ import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
+import br.com.eventsports.minha_inscricao.exception.UnauthorizedException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import lombok.RequiredArgsConstructor;
@@ -207,6 +208,38 @@ public class EventoService implements IEventoService {
             // Se não conseguir obter o organizador, retorna null
             // O evento será criado sem organizador definido
             return null;
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void validateEventoOwnership(Long eventoId, Long usuarioId) {
+        if (!isEventoOwner(eventoId, usuarioId)) {
+            throw new UnauthorizedException("Você não tem permissão para acessar este evento");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isEventoOwner(Long eventoId, Long usuarioId) {
+        if (eventoId == null || usuarioId == null) {
+            return false;
+        }
+
+        try {
+            EventoEntity evento = eventoRepository.findById(eventoId)
+                    .orElseThrow(() -> new EventoNotFoundException("Evento não encontrado com ID: " + eventoId));
+
+            // Verifica se o evento tem organizador associado
+            if (evento.getOrganizador() == null || evento.getOrganizador().getUsuario() == null) {
+                return false;
+            }
+
+            // Verifica se o usuário logado é o mesmo usuário do organizador do evento
+            return evento.getOrganizador().getUsuario().getId().equals(usuarioId);
+        } catch (Exception e) {
+            // Em caso de erro, considera que não é o owner
+            return false;
         }
     }
 }

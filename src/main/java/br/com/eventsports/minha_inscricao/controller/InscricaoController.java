@@ -2,6 +2,7 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import br.com.eventsports.minha_inscricao.dto.inscricao.*;
 import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
+import br.com.eventsports.minha_inscricao.security.OwnershipValidator;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IInscricaoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +13,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +29,46 @@ import java.util.Map;
 public class InscricaoController {
 
     private final IInscricaoService inscricaoService;
+    private final OwnershipValidator ownershipValidator;
+
+    /**
+     * Verifica se o usuário logado é proprietário da inscrição
+     * Para isso, verifica se algum atleta da inscrição tem o mesmo email do usuário logado
+     */
+    private boolean isOwnerOfInscricao(Long inscricaoId) {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+                return false;
+            }
+            
+            String userEmail = auth.getName(); // O email do usuário logado
+            InscricaoResponseDTO inscricao = inscricaoService.findById(inscricaoId);
+            
+            // Verifica se algum atleta da inscrição tem o mesmo email
+            // Como não temos relacionamento direto, assumimos que o CPF ou nome do atleta
+            // deve corresponder ao usuário logado de alguma forma
+            // Por simplicidade, vamos permitir que apenas organizadores e o próprio atleta acessem
+            return auth.getAuthorities().stream()
+                    .anyMatch(authority -> authority.getAuthority().equals("ROLE_ORGANIZADOR")) ||
+                   userEmail.equals(getAtletaEmailFromInscricao(inscricao));
+                   
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Método auxiliar para extrair email do atleta da inscrição
+     * Como não temos relacionamento direto usuário-atleta, 
+     * assumimos que o email está disponível de alguma forma
+     */
+    private String getAtletaEmailFromInscricao(InscricaoResponseDTO inscricao) {
+        // Implementação simplificada - na prática seria necessário
+        // ter um relacionamento adequado entre usuário e atleta
+        // Por enquanto, retornamos null para que apenas organizadores tenham acesso
+        return null;
+    }
 
     @Operation(summary = "Listar todas as inscrições", description = "Retorna uma lista resumida de todas as inscrições cadastradas")
     @ApiResponses(value = {
@@ -55,10 +99,13 @@ public class InscricaoController {
     @Operation(summary = "Criar nova inscrição", description = "Cadastra uma nova inscrição no sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Inscrição criada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
+            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - apenas atletas podem criar inscrições")
     })
     @PostMapping
-    public ResponseEntity<InscricaoResponseDTO> createInscricao(@Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO) {
+    @PreAuthorize("hasRole('ATLETA')")
+    public ResponseEntity<InscricaoResponseDTO> createInscricao(@Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO,
+                                                               Authentication authentication) {
         try {
             InscricaoResponseDTO createdInscricao = inscricaoService.save(inscricaoCreateDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdInscricao);
@@ -71,12 +118,15 @@ public class InscricaoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Inscrição criada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - apenas atletas podem criar inscrições"),
             @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
     @PostMapping("/evento/{eventoId}")
+    @PreAuthorize("hasRole('ATLETA')")
     public ResponseEntity<InscricaoResponseDTO> createInscricaoForEvento(
             @Parameter(description = "ID do evento") @PathVariable Long eventoId,
-            @Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO) {
+            @Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO,
+            Authentication authentication) {
         try {
             InscricaoResponseDTO createdInscricao = inscricaoService.saveForEvento(inscricaoCreateDTO, eventoId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdInscricao);
@@ -92,12 +142,15 @@ public class InscricaoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Inscrição criada com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - apenas atletas podem criar inscrições"),
             @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
     @PostMapping("/evento/{eventoId}/completa")
+    @PreAuthorize("hasRole('ATLETA')")
     public ResponseEntity<InscricaoResponseDTO> createInscricaoCompletaForEvento(
             @Parameter(description = "ID do evento") @PathVariable Long eventoId,
-            @Valid @RequestBody InscricaoComEquipeCreateDTO inscricaoComEquipeCreateDTO) {
+            @Valid @RequestBody InscricaoComEquipeCreateDTO inscricaoComEquipeCreateDTO,
+            Authentication authentication) {
         try {
             InscricaoResponseDTO createdInscricao = inscricaoService.saveComEquipeForEvento(inscricaoComEquipeCreateDTO, eventoId);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdInscricao);
@@ -112,14 +165,24 @@ public class InscricaoController {
     @Operation(summary = "Atualizar inscrição", description = "Atualiza os dados de uma inscrição existente")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Inscrição atualizada com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - apenas o proprietário ou organizador pode atualizar"),
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ORGANIZADOR') or hasRole('ATLETA')")
     public ResponseEntity<InscricaoResponseDTO> updateInscricao(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
-            @Valid @RequestBody InscricaoUpdateDTO inscricaoUpdateDTO) {
+            @Valid @RequestBody InscricaoUpdateDTO inscricaoUpdateDTO,
+            Authentication authentication) {
         try {
+            // Organizadores podem atualizar qualquer inscrição, atletas precisam de ownership
+            if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ATLETA"))) {
+                if (!ownershipValidator.isInscricaoOwner(authentication, id)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+            }
+            
             InscricaoResponseDTO updatedInscricao = inscricaoService.update(id, inscricaoUpdateDTO);
             return ResponseEntity.ok(updatedInscricao);
         } catch (RuntimeException e) {
@@ -133,12 +196,22 @@ public class InscricaoController {
     @Operation(summary = "Excluir inscrição", description = "Remove uma inscrição do sistema")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Inscrição excluída com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - apenas o proprietário ou organizador pode excluir"),
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ORGANIZADOR') or hasRole('ATLETA')")
     public ResponseEntity<Void> deleteInscricao(
-            @Parameter(description = "ID da inscrição") @PathVariable Long id) {
+            @Parameter(description = "ID da inscrição") @PathVariable Long id,
+            Authentication authentication) {
         try {
+            // Organizadores podem deletar qualquer inscrição, atletas precisam de ownership
+            if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ATLETA"))) {
+                if (!ownershipValidator.isInscricaoOwner(authentication, id)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+            }
+            
             inscricaoService.deleteById(id);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
@@ -227,8 +300,10 @@ public class InscricaoController {
             @ApiResponse(responseCode = "400", description = "Inscrição não pode ser confirmada")
     })
     @PatchMapping("/{id}/confirmar")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
     public ResponseEntity<InscricaoResponseDTO> confirmarInscricao(
-            @Parameter(description = "ID da inscrição") @PathVariable Long id) {
+            @Parameter(description = "ID da inscrição") @PathVariable Long id,
+            Authentication authentication) {
         try {
             InscricaoResponseDTO inscricao = inscricaoService.confirmar(id);
             return ResponseEntity.ok(inscricao);
@@ -247,10 +322,19 @@ public class InscricaoController {
             @ApiResponse(responseCode = "400", description = "Inscrição não pode ser cancelada")
     })
     @PatchMapping("/{id}/cancelar")
+    @PreAuthorize("hasRole('ORGANIZADOR') or hasRole('ATLETA')")
     public ResponseEntity<InscricaoResponseDTO> cancelarInscricao(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
-            @RequestBody Map<String, String> request) {
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
         try {
+            // Atletas precisam de ownership para cancelar
+            if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ATLETA"))) {
+                if (!ownershipValidator.isInscricaoOwner(authentication, id)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                }
+            }
+            
             String motivo = request.getOrDefault("motivo", "Cancelamento solicitado");
             InscricaoResponseDTO inscricao = inscricaoService.cancelar(id, motivo);
             return ResponseEntity.ok(inscricao);
@@ -268,8 +352,10 @@ public class InscricaoController {
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada")
     })
     @PatchMapping("/{id}/lista-espera")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
     public ResponseEntity<InscricaoResponseDTO> colocarEmListaEspera(
-            @Parameter(description = "ID da inscrição") @PathVariable Long id) {
+            @Parameter(description = "ID da inscrição") @PathVariable Long id,
+            Authentication authentication) {
         try {
             InscricaoResponseDTO inscricao = inscricaoService.colocarEmListaEspera(id);
             return ResponseEntity.ok(inscricao);

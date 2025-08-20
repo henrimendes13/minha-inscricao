@@ -2,17 +2,12 @@ package br.com.eventsports.minha_inscricao.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.session.SessionRegistry;
-import org.springframework.security.core.session.SessionRegistryImpl;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -22,6 +17,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -33,24 +29,22 @@ public class SecurityConfig {
             // Desabilitar CSRF para facilitar desenvolvimento
             .csrf(csrf -> csrf.disable())
             
-            // Configuração de autorização
+            // Configuração de autorização - MUITO ESPECÍFICA E ORDENADA
             .authorizeHttpRequests(authz -> authz
-                // Endpoints públicos para eventos (GET apenas)
-                .requestMatchers("GET", "/api/eventos/**").permitAll()
-                
-                // Endpoints para registro de usuários
+                // PRIMEIRO: Endpoints públicos específicos para criação de usuários
                 .requestMatchers("POST", "/api/usuarios").permitAll()
                 .requestMatchers("POST", "/api/usuarios/com-organizador").permitAll()
                 
-                // Endpoints públicos para login/auth
+                // Endpoints públicos de autenticação
                 .requestMatchers("/api/auth/**").permitAll()
                 
-                // Documentação e monitoramento
+                // Endpoints públicos para consulta de eventos
+                .requestMatchers("GET", "/api/eventos/**").permitAll()
+                
+                // Endpoints de documentação e monitoramento
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/api-docs/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/actuator/cache").permitAll()
-                .requestMatchers("/actuator/metrics").permitAll()
+                .requestMatchers("/actuator/**").permitAll()
                 
                 // H2 Console para desenvolvimento
                 .requestMatchers("/h2-console/**").permitAll()
@@ -58,25 +52,21 @@ public class SecurityConfig {
                 // Recursos estáticos
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 
-                // Todos os outros endpoints precisam de autenticação
+                // OPTIONS requests para CORS preflight
+                .requestMatchers("OPTIONS", "/**").permitAll()
+                
+                // TODOS os outros endpoints requerem autenticação
                 .anyRequest().authenticated()
             )
             
             // Configuração de session management
             .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                .sessionFixation().changeSessionId() // Proteção contra session fixation
-                .maximumSessions(1) // Máximo de 1 sessão por usuário
-                .sessionRegistry(sessionRegistry())
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             
             // Headers de segurança
             .headers(headers -> headers
                 .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Permitir H2 Console em iframe
-                .contentTypeOptions(contentTypeOptions -> {}) // Ativar proteção de Content Type
-                .httpStrictTransportSecurity(hsts -> hsts
-                    .includeSubDomains(true)
-                    .maxAgeInSeconds(31536000))
             );
 
         return http.build();
@@ -110,29 +100,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        // UserDetailsService básico para desenvolvimento
-        // Em produção, isso deve ser substituído por implementação customizada
-        UserDetails user = User.builder()
-                .username("admin@test.com")
-                .password(passwordEncoder().encode("123456"))
-                .roles("ADMIN")
-                .build();
-        
-        UserDetails user2 = User.builder()
-                .username("atleta@test.com")
-                .password(passwordEncoder().encode("123456"))
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(user, user2);
-    }
-
-    @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
     }
 }

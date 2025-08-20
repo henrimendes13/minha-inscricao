@@ -14,7 +14,8 @@
       "WebFetch(domain:localhost)",
       "Bash(wmic process where processid=\"6152\" delete:*)",
       "Bash(rm:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(.test-403-debug.bat)"
     ],
     "deny": [],
     "ask": []

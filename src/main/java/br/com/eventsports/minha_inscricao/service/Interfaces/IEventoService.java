@@ -24,4 +24,20 @@ public interface IEventoService {
     List<EventoSummaryDTO> findEventosPast();
     
     List<EventoSummaryDTO> findEventosByDataBetween(LocalDateTime inicio, LocalDateTime fim);
+    
+    /**
+     * Valida se o usuário logado é o organizador do evento.
+     * @param eventoId ID do evento
+     * @param usuarioId ID do usuário logado
+     * @throws UnauthorizedException se o usuário não for o organizador do evento
+     */
+    void validateEventoOwnership(Long eventoId, Long usuarioId);
+    
+    /**
+     * Verifica se o usuário logado é o organizador do evento.
+     * @param eventoId ID do evento
+     * @param usuarioId ID do usuário logado
+     * @return true se o usuário for o organizador, false caso contrário
+     */
+    boolean isEventoOwner(Long eventoId, Long usuarioId);
 }

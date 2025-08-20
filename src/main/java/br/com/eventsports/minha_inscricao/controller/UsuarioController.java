@@ -17,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -70,10 +71,12 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar usuário por ID", description = "Busca um usuário específico pelo ID")
+    @PreAuthorize("hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
+    @Operation(summary = "Buscar usuário por ID", description = "Busca um usuário específico pelo ID - Organizadores podem ver qualquer usuário, atletas apenas seu próprio perfil")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Atletas só podem ver próprio perfil")
     })
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(
             @Parameter(description = "ID do usuário") @PathVariable Long id) {
@@ -89,11 +92,13 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}/com-organizador")
+    @PreAuthorize("hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
     @Operation(summary = "Buscar usuário com informações de organizador", 
-               description = "Busca um usuário e suas informações de organizador (se aplicável)")
+               description = "Busca um usuário e suas informações de organizador (se aplicável) - Organizadores podem ver qualquer usuário, atletas apenas seu próprio perfil")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Atletas só podem ver próprio perfil")
     })
     public ResponseEntity<UsuarioComOrganizadorResponseDTO> buscarComOrganizador(
             @Parameter(description = "ID do usuário") @PathVariable Long id) {
@@ -109,10 +114,12 @@ public class UsuarioController {
     }
 
     @GetMapping("/email/{email}")
-    @Operation(summary = "Buscar usuário por email", description = "Busca um usuário específico pelo email")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @Operation(summary = "Buscar usuário por email", description = "Busca um usuário específico pelo email - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas organizadores")
     })
     public ResponseEntity<UsuarioResponseDTO> buscarPorEmail(
             @Parameter(description = "Email do usuário") @PathVariable String email) {
@@ -128,9 +135,11 @@ public class UsuarioController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar usuários", description = "Lista usuários com paginação e filtros opcionais")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @Operation(summary = "Listar usuários", description = "Lista usuários com paginação e filtros opcionais - Apenas organizadores")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso")
+            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas organizadores")
     })
     public ResponseEntity<Page<UsuarioSummaryDTO>> listar(
             @Parameter(description = "Tipo de usuário para filtrar") @RequestParam(required = false) TipoUsuario tipo,
@@ -153,12 +162,14 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
+    @PreAuthorize("hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
+    @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente - Organizadores podem atualizar qualquer usuário, atletas apenas a si mesmos")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
-            @ApiResponse(responseCode = "409", description = "Email já existe")
+            @ApiResponse(responseCode = "409", description = "Email já existe"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<UsuarioResponseDTO> atualizar(
             @Parameter(description = "ID do usuário") @PathVariable Long id,
@@ -178,10 +189,12 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/desativar")
-    @Operation(summary = "Desativar usuário", description = "Desativa um usuário do sistema")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @Operation(summary = "Desativar usuário", description = "Desativa um usuário do sistema - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Usuário desativado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas organizadores")
     })
     public ResponseEntity<Void> desativar(@Parameter(description = "ID do usuário") @PathVariable Long id) {
         log.info("PATCH /api/usuarios/{}/desativar - Desativando usuário", id);
@@ -196,10 +209,12 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/ativar")
-    @Operation(summary = "Ativar usuário", description = "Ativa um usuário do sistema")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @Operation(summary = "Ativar usuário", description = "Ativa um usuário do sistema - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Usuário ativado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas organizadores")
     })
     public ResponseEntity<Void> ativar(@Parameter(description = "ID do usuário") @PathVariable Long id) {
         log.info("PATCH /api/usuarios/{}/ativar - Ativando usuário", id);
@@ -214,10 +229,12 @@ public class UsuarioController {
     }
 
     @PostMapping("/{id}/login")
-    @Operation(summary = "Registrar login", description = "Registra o login de um usuário")
+    @PreAuthorize("hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
+    @Operation(summary = "Registrar login", description = "Registra o login de um usuário - Usuários só podem registrar próprio login")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Login registrado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Só pode registrar próprio login")
     })
     public ResponseEntity<Void> registrarLogin(@Parameter(description = "ID do usuário") @PathVariable Long id) {
         log.info("POST /api/usuarios/{}/login - Registrando login", id);
@@ -234,9 +251,11 @@ public class UsuarioController {
 
 
     @GetMapping("/estatisticas")
-    @Operation(summary = "Obter estatísticas", description = "Obtém estatísticas gerais dos usuários")
+    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @Operation(summary = "Obter estatísticas", description = "Obtém estatísticas gerais dos usuários - Apenas organizadores")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso")
+            @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso"),
+            @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas organizadores")
     })
     public ResponseEntity<Object> obterEstatisticas() {
         log.info("GET /api/usuarios/estatisticas - Obtendo estatísticas");
