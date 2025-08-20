@@ -15,7 +15,8 @@
       "Bash(wmic process where processid=\"6152\" delete:*)",
       "Bash(rm:*)",
       "Bash(curl:*)",
-      "Bash(.test-403-debug.bat)"
+      "Bash(.test-403-debug.bat)",
+      "Bash(wmic process where processid=19200 delete:*)"
     ],
     "deny": [],
     "ask": []

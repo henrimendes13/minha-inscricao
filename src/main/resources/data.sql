@@ -1,3 +1,2 @@
--- Arquivo de dados iniciais
--- Os dados de exemplo foram removidos temporariamente para evitar conflitos de schema
--- Para adicionar dados de teste, use a API REST ou o console H2 em http://localhost:8080/h2-console
+-- Este arquivo foi substituído pelo DataInitializer
+-- Dados iniciais agora são carregados programaticamente via initial-data.sql

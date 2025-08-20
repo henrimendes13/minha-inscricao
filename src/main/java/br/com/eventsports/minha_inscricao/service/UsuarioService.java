@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -157,11 +158,13 @@ public class UsuarioService implements IUsuarioService {
      * Lista usuários por tipo
      */
     @Transactional(readOnly = true)
-    public Page<UsuarioSummaryDTO> listarPorTipo(TipoUsuario tipo, Pageable pageable) {
+    public List<UsuarioSummaryDTO> listarPorTipo(TipoUsuario tipo) {
         log.debug("Listando usuários por tipo: {}", tipo);
         
-        return usuarioRepository.findByTipoAndAtivoTrue(tipo, pageable)
-                .map(this::mapToSummaryDTO);
+        return usuarioRepository.findByTipoAndAtivoTrue(tipo)
+                .stream()
+                .map(this::mapToSummaryDTO)
+                .collect(Collectors.toList());
     }
 
     /**

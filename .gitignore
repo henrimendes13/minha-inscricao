@@ -69,6 +69,8 @@ bin/
 
 # IDE - VS Code
 .vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # OS
 .DS_Store

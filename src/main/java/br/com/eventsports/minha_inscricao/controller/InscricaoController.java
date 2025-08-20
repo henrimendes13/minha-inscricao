@@ -170,7 +170,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANIZADOR') or hasRole('ATLETA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or hasRole('ATLETA')")
     public ResponseEntity<InscricaoResponseDTO> updateInscricao(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
             @Valid @RequestBody InscricaoUpdateDTO inscricaoUpdateDTO,
@@ -200,7 +200,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANIZADOR') or hasRole('ATLETA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or hasRole('ATLETA')")
     public ResponseEntity<Void> deleteInscricao(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
             Authentication authentication) {
@@ -300,7 +300,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "400", description = "Inscrição não pode ser confirmada")
     })
     @PatchMapping("/{id}/confirmar")
-    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     public ResponseEntity<InscricaoResponseDTO> confirmarInscricao(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
             Authentication authentication) {
@@ -322,7 +322,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "400", description = "Inscrição não pode ser cancelada")
     })
     @PatchMapping("/{id}/cancelar")
-    @PreAuthorize("hasRole('ORGANIZADOR') or hasRole('ATLETA')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or hasRole('ATLETA')")
     public ResponseEntity<InscricaoResponseDTO> cancelarInscricao(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
             @RequestBody Map<String, String> request,
@@ -352,7 +352,7 @@ public class InscricaoController {
             @ApiResponse(responseCode = "404", description = "Inscrição não encontrada")
     })
     @PatchMapping("/{id}/lista-espera")
-    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     public ResponseEntity<InscricaoResponseDTO> colocarEmListaEspera(
             @Parameter(description = "ID da inscrição") @PathVariable Long id,
             Authentication authentication) {

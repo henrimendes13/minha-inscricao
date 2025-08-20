@@ -44,7 +44,7 @@ public class EventoController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO,
                                                          Authentication authentication) {
         try {
@@ -56,7 +56,7 @@ public class EventoController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id, 
                                                          @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO,
                                                          Authentication authentication) {
@@ -76,7 +76,7 @@ public class EventoController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ORGANIZADOR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id,
                                                            Authentication authentication) {
         try {

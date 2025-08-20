@@ -6,8 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Build e Execução
 ```bash
-# Executar a aplicação
+# Executar a aplicação (com dados persistentes)
 mvn spring-boot:run
+
+# Executar com profile específico
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
 
 # Compilar o projeto
 mvn compile
@@ -20,6 +23,10 @@ mvn clean compile
 
 # Gerar JAR executável
 mvn clean package
+
+# Limpar banco de dados (remover pasta data/)
+rm -rf data/
+# No Windows: rmdir /s data
 ```
 
 ### Endpoints de Desenvolvimento
@@ -32,17 +39,19 @@ mvn clean package
 - **Metrics**: http://localhost:8080/actuator/metrics
 
 ### Banco de Dados H2
-- **URL JDBC**: `jdbc:h2:mem:testdb`
+- **URL JDBC**: `jdbc:h2:file:./data/minha-inscricao-dev` (persistente)
 - **Driver**: `org.h2.Driver`
 - **Usuário**: `sa`
 - **Senha**: (vazia)
 - **Console Web**: http://localhost:8080/h2-console
+- **Localização do arquivo**: `./data/minha-inscricao-dev.mv.db`
 
 ## Arquitetura da Aplicação
 
 ### Stack Tecnológico
 - **Java 21** com **Spring Boot 3.5.4**
-- **Spring Data JPA** com banco H2 em memória
+- **Spring Data JPA** com banco H2 baseado em arquivo (persistente)
+- **Spring DevTools** para hot reload otimizado
 - **Spring Cache** para otimização de performance
 - **Lombok** para redução de boilerplate
 - **OpenAPI 3** (Swagger) para documentação
@@ -145,11 +154,54 @@ br.com.eventsports.minha_inscricao/
 - Queries JPQL com timezone awareness
 - Cache integrado nas consultas
 
-## Dados de Exemplo
-O arquivo `data.sql` contém dados iniciais para desenvolvimento:
-- CrossFit Games 2024
-- Maratona de São Paulo  
-- Torneio de Natação Masters
+## Dados de Exemplo e Inicialização
+- **Arquivo**: `initial-data.sql` contém dados iniciais para desenvolvimento
+- **Inicialização Inteligente**: Dados são carregados apenas se o banco estiver vazio
+- **Componente**: `DataInitializer` gerencia a carga inicial de dados
+- **Dados inclusos**: CrossFit Games 2024, Maratona de São Paulo, Torneio de Natação Masters
+- **Persistência**: Dados permanecem entre restarts da aplicação
+
+## Hot Reload e Development Workflow
+
+### Spring DevTools - Hot Reload
+- **Configuração**: Habilitado por padrão com otimizações
+- **Arquivos Excluídos**: `**/data/**`, `**/target/**`, `**/*.db`, `**/*.mv.db`, `**/*.trace.db`
+- **Poll Interval**: 2 segundos para detectar mudanças
+- **Quiet Period**: 1 segundo antes de recarregar
+
+### Quando o Hot Reload Funciona
+✅ **Não requer restart** (hot reload):
+- Mudanças em Controllers (@RestController, @RequestMapping)
+- Mudanças em Services (lógica de negócio)
+- Mudanças em métodos de Repository personalizados
+- Mudanças em configurações simples (@Value, @ConfigurationProperties)
+- Mudanças em templates/arquivos estáticos
+
+❌ **Requer restart** (hot reload não funciona):
+- Mudanças em Entities JPA (@Entity, campos, relacionamentos)
+- Mudanças em configurações de segurança (@Configuration, @Bean)
+- Mudanças em dependências (pom.xml)
+- Mudanças em arquivos application.properties (algumas configurações)
+- Mudanças em anotações de cache (@Cacheable, @CacheEvict)
+
+### Fluxo de Desenvolvimento Recomendado
+1. **Executar**: `mvn spring-boot:run` (dados persistem automaticamente)
+2. **Desenvolver**: Fazer alterações no código
+3. **Testar**: Usar Swagger UI para testar endpoints
+4. **Dados**: Permanecem salvos entre hot reloads
+5. **Restart**: Só quando necessário (mudanças em entities, etc.)
+
+### Reset de Dados de Desenvolvimento
+```bash
+# Parar a aplicação (Ctrl+C)
+# Remover banco de dados
+rm -rf data/
+# Windows: rmdir /s data
+
+# Reiniciar aplicação
+mvn spring-boot:run
+# Dados iniciais serão recarregados automaticamente
+```
 
 ## Monitoramento e Debug
 - **Logs SQL**: Habilitados via `spring.jpa.show-sql=true`

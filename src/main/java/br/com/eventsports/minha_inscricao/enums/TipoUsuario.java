@@ -4,9 +4,10 @@ package br.com.eventsports.minha_inscricao.enums;
  * Enum que define os tipos de usuário do sistema
  */
 public enum TipoUsuario {
-    
-    ORGANIZADOR("Organizador de Eventos", "Usuário responsável por criar e gerenciar eventos"),
-    ATLETA("Atleta/Participante", "Usuário que se inscreve em eventos esportivos");
+
+    ADMIN("ADMIN", "Administrador do sistema com acesso completo"),
+    ORGANIZADOR("ORGANIZADOR", "Usuário responsável por criar e gerenciar eventos"),
+    ATLETA("ATLETA", "Usuário que se inscreve em eventos esportivos");
 
     private final String nome;
     private final String descricao;

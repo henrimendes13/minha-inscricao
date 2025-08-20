@@ -4,6 +4,7 @@ import br.com.eventsports.minha_inscricao.dto.usuario.*;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import java.util.List;
 
 public interface IUsuarioService {
     
@@ -17,7 +18,7 @@ public interface IUsuarioService {
     
     Page<UsuarioSummaryDTO> listarAtivos(Pageable pageable);
     
-    Page<UsuarioSummaryDTO> listarPorTipo(TipoUsuario tipo, Pageable pageable);
+    List<UsuarioSummaryDTO> listarPorTipo(TipoUsuario tipo);
     
     Page<UsuarioSummaryDTO> buscarPorNome(String nome, Pageable pageable);
     

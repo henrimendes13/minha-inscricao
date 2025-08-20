@@ -59,6 +59,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     private String mapTipoUsuarioToRole(TipoUsuario tipoUsuario) {
         return switch (tipoUsuario) {
+            case ADMIN -> "ROLE_ADMIN";
             case ORGANIZADOR -> "ROLE_ORGANIZADOR";
             case ATLETA -> "ROLE_ATLETA";
         };
