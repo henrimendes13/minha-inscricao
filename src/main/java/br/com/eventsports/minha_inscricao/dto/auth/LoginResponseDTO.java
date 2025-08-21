@@ -14,6 +14,9 @@ public class LoginResponseDTO {
     @Schema(description = "Mensagem de sucesso do login", example = "Login realizado com sucesso")
     private String mensagem;
 
+    @Schema(description = "Token JWT para autenticação", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    private String token;
+
     @Schema(description = "Dados completos do usuário logado")
     private UsuarioResponseDTO usuario;
 }

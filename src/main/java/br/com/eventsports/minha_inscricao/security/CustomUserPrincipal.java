@@ -28,6 +28,9 @@ public class CustomUserPrincipal implements UserDetails {
         
         // Mapear TipoUsuario para roles do Spring Security
         switch (usuario.getTipo()) {
+            case ADMIN:
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                break;
             case ORGANIZADOR:
                 authorities.add(new SimpleGrantedAuthority("ROLE_ORGANIZADOR"));
                 break;

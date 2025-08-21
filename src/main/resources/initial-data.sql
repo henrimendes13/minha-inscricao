@@ -9,8 +9,8 @@ INSERT INTO usuarios (id, nome, email, senha, tipo, ativo, created_at, updated_a
 (4, 'Maria Santos', 'maria@example.com', '$2a$10$N.WphQbp6rspAZN4Fq1qhO5M5LDm7LjLLFJf7nKnhZ.ckJ3LqPKem', 'ATLETA', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Inserir organizadores
-INSERT INTO organizadores (id, usuario_id, nome_empresa, created_at, updated_at, verificado) VALUES
-(1, 2, 'EventSports Brasil', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, false);
+INSERT INTO organizadores (id, usuario_id, nome_empresa, cnpj, telefone, endereco, descricao, site, verificado, created_at, updated_at) VALUES
+(1, 2, 'EventSports Brasil', '12.345.678/0001-90', '(11) 99999-0000', 'São Paulo, SP', 'Empresa organizadora de eventos esportivos', 'www.eventsports.com.br', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Inserir atletas
 INSERT INTO atletas (id, nome, cpf, data_nascimento, genero, telefone, endereco, aceita_termos, created_at, updated_at) VALUES
