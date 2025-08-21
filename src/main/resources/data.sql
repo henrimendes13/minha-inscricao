@@ -1,2 +1,0 @@
--- Este arquivo foi substituído pelo DataInitializer
--- Dados iniciais agora são carregados programaticamente via initial-data.sql

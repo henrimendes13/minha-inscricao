@@ -17,7 +17,9 @@
       "Bash(curl:*)",
       "Bash(.test-403-debug.bat)",
       "Bash(wmic process where processid=19200 delete:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(docker exec:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []

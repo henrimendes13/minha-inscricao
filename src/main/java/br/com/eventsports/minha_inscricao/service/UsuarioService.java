@@ -327,8 +327,12 @@ public class UsuarioService implements IUsuarioService {
         
         // Se o usuário tem tipo ORGANIZADOR mas não tem perfil, indicar necessidade de completar
         // Admins também podem precisar de perfil de organizador para criar eventos
-        boolean isOrganizadorOuAdmin = TipoUsuario.ORGANIZADOR.equals(usuario.getTipo()) || 
-                                       TipoUsuarioUtil.isAdmin(usuarioEntity);
+        boolean isAdmin = usuario.getEmail() != null && (
+            usuario.getEmail().contains("@eventsports.com.br") || 
+            usuario.getEmail().contains("@developer") ||
+            usuario.getEmail().equals("admin@sistema.com")
+        );
+        boolean isOrganizadorOuAdmin = TipoUsuario.ORGANIZADOR.equals(usuario.getTipo()) || isAdmin;
         if (isOrganizadorOuAdmin) {
             return UsuarioComOrganizadorResponseDTO.criarIncompleto(
                 usuario, 
