@@ -3,6 +3,7 @@ package br.com.eventsports.minha_inscricao.service;
 import br.com.eventsports.minha_inscricao.dto.evento.*;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
+import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.exception.UnauthorizedException;
@@ -153,8 +154,8 @@ public class EventoService implements IEventoService {
                 .descricao(dto.getDescricao());
 
         // TODO: Implementar lógica para obter o organizador do usuário autenticado
-        // Por enquanto, usa o organizador padrão (ID = 1) até implementar autenticação
-        OrganizadorEntity organizadorPadrao = getOrganizadorPadrao();
+        // Por enquanto, usa o usuário organizador padrão (ID = 2) até implementar autenticação
+        UsuarioEntity organizadorPadrao = getUsuarioOrganizadorPadrao();
         if (organizadorPadrao != null) {
             builder.organizador(organizadorPadrao);
         }
@@ -170,7 +171,7 @@ public class EventoService implements IEventoService {
 
         // Update organizador if provided
         if (dto.getOrganizadorId() != null) {
-            OrganizadorEntity organizador = new OrganizadorEntity();
+            UsuarioEntity organizador = new UsuarioEntity();
             organizador.setId(dto.getOrganizadorId());
             evento.setOrganizador(organizador);
         }
@@ -197,13 +198,13 @@ public class EventoService implements IEventoService {
      * TODO: Substituir pela lógica de autenticação quando implementada.
      * Deve retornar o organizador baseado no usuário logado.
      */
-    private OrganizadorEntity getOrganizadorPadrao() {
+    private UsuarioEntity getUsuarioOrganizadorPadrao() {
         try {
-            // Por enquanto, retorna um organizador com ID = 1 (se existir)
+            // Por enquanto, retorna um usuário organizador com ID = 2 (se existir)
             // Em produção, isso deve ser obtido do contexto de segurança
-            OrganizadorEntity organizador = new OrganizadorEntity();
-            organizador.setId(1L); // ID padrão
-            return organizador;
+            UsuarioEntity usuario = new UsuarioEntity();
+            usuario.setId(2L); // ID padrão do usuário organizador
+            return usuario;
         } catch (Exception e) {
             // Se não conseguir obter o organizador, retorna null
             // O evento será criado sem organizador definido
@@ -231,12 +232,12 @@ public class EventoService implements IEventoService {
                     .orElseThrow(() -> new EventoNotFoundException("Evento não encontrado com ID: " + eventoId));
 
             // Verifica se o evento tem organizador associado
-            if (evento.getOrganizador() == null || evento.getOrganizador().getUsuario() == null) {
+            if (evento.getOrganizador() == null) {
                 return false;
             }
 
-            // Verifica se o usuário logado é o mesmo usuário do organizador do evento
-            return evento.getOrganizador().getUsuario().getId().equals(usuarioId);
+            // Verifica se o usuário logado é o mesmo usuário organizador do evento
+            return evento.getOrganizador().getId().equals(usuarioId);
         } catch (Exception e) {
             // Em caso de erro, considera que não é o owner
             return false;

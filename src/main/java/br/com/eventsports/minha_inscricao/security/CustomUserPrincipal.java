@@ -27,7 +27,7 @@ public class CustomUserPrincipal implements UserDetails {
         List<GrantedAuthority> authorities = new ArrayList<>();
         
         // Mapear TipoUsuario para roles do Spring Security
-        switch (usuario.getTipo()) {
+        switch (usuario.getTipoUsuario()) {
             case ADMIN:
                 authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                 break;
@@ -86,14 +86,14 @@ public class CustomUserPrincipal implements UserDetails {
     }
 
     public TipoUsuario getTipo() {
-        return usuario.getTipo();
+        return usuario.getTipoUsuario();
     }
 
     public boolean isOrganizador() {
-        return TipoUsuario.ORGANIZADOR.equals(usuario.getTipo());
+        return usuario.isOrganizador();
     }
 
     public boolean isAtleta() {
-        return TipoUsuario.ATLETA.equals(usuario.getTipo());
+        return usuario.isAtleta();
     }
 }

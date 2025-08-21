@@ -1,6 +1,5 @@
 package br.com.eventsports.minha_inscricao.dto.usuario;
 
-import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -9,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "DTO para criação de usuário")
+@Schema(description = "DTO para criação de usuário - Tipo determinado dinamicamente pelas ações")
 public class UsuarioCreateDTO {
 
     @NotBlank(message = "Email é obrigatório")
@@ -28,7 +27,7 @@ public class UsuarioCreateDTO {
     @Schema(description = "Nome completo do usuário", example = "João Silva Santos", required = true)
     private String nome;
 
-    @NotNull(message = "Tipo de usuário é obrigatório")
-    @Schema(description = "Tipo do usuário no sistema", example = "ATLETA", required = true)
-    private TipoUsuario tipo;
+    @Builder.Default
+    @Schema(description = "Aceita os termos de uso", example = "true")
+    private Boolean aceitaTermos = true;
 }

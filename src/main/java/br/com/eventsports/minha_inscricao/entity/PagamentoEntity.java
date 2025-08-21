@@ -218,8 +218,8 @@ public class PagamentoEntity {
     }
 
     public String getNomeAtleta() {
-        return this.inscricao != null && this.inscricao.getAtletas() != null && !this.inscricao.getAtletas().isEmpty()
-               ? this.inscricao.getAtletas().get(0).getNomeCompleto() 
+        return this.inscricao != null 
+               ? this.inscricao.getNomeAtleta() 
                : "";
     }
 

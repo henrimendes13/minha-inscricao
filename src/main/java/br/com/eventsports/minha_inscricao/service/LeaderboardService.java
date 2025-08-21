@@ -152,7 +152,7 @@ public class LeaderboardService implements ILeaderboardService {
 
         return ranking.stream()
                 .map(entry -> {
-                    AtletaEntity atleta = (AtletaEntity) entry[0];
+                    UsuarioEntity atleta = (UsuarioEntity) entry[0];
                     Integer pontuacaoTotal = (Integer) entry[1];
                     
                     List<LeaderboardEntity> resultadosAtleta = resultados.stream()
@@ -171,7 +171,7 @@ public class LeaderboardService implements ILeaderboardService {
     }
 
     private LeaderboardFinalDTO createLeaderboardFinalDTO(int posicaoFinal, Integer pontuacaoTotal, 
-                                                          EquipeEntity equipe, AtletaEntity atleta, 
+                                                          EquipeEntity equipe, UsuarioEntity atleta, 
                                                           List<LeaderboardEntity> resultados) {
         if (resultados.isEmpty()) {
             return null;
@@ -201,7 +201,7 @@ public class LeaderboardService implements ILeaderboardService {
                 .evento(convertEventoToSummaryDTO(primeiro.getEvento()))
                 .categoria(convertCategoriaToSummaryDTO(primeiro.getCategoria()))
                 .equipe(isCategoriaEquipe && equipe != null ? convertEquipeToSummaryDTO(equipe) : null)
-                .atleta(!isCategoriaEquipe && atleta != null ? convertAtletaToSummaryDTO(atleta) : null)
+                .atleta(!isCategoriaEquipe && atleta != null ? convertUsuarioToAtletaSummaryDTO(atleta) : null)
                 .nomeParticipante(nomeParticipante)
                 .resultadosWorkouts(resultadosWorkouts)
                 .workoutsFinalizados((int) workoutsFinalizados)
@@ -242,7 +242,7 @@ public class LeaderboardService implements ILeaderboardService {
                 .categoria(convertCategoriaToSummaryDTO(leaderboard.getCategoria()))
                 .workout(convertWorkoutToSummaryDTO(leaderboard.getWorkout()))
                 .equipe(leaderboard.getEquipe() != null ? convertEquipeToSummaryDTO(leaderboard.getEquipe()) : null)
-                .atleta(leaderboard.getAtleta() != null ? convertAtletaToSummaryDTO(leaderboard.getAtleta()) : null)
+                .atleta(leaderboard.getAtleta() != null ? convertUsuarioToAtletaSummaryDTO(leaderboard.getAtleta()) : null)
                 .resultadoReps(leaderboard.getResultadoReps())
                 .resultadoPeso(leaderboard.getResultadoPeso())
                 .resultadoTempo(leaderboard.formatarTempo(leaderboard.getResultadoTempoSegundos()))
@@ -305,10 +305,23 @@ public class LeaderboardService implements ILeaderboardService {
                 .build();
     }
 
-    private AtletaSummaryDTO convertAtletaToSummaryDTO(AtletaEntity atleta) {
+    private AtletaSummaryDTO convertAtletaToSummaryDTO(UsuarioEntity atleta) {
         return AtletaSummaryDTO.builder()
                 .id(atleta.getId())
                 .nome(atleta.getNomeCompleto())
+                .build();
+    }
+
+    private AtletaSummaryDTO convertUsuarioToAtletaSummaryDTO(UsuarioEntity usuario) {
+        return AtletaSummaryDTO.builder()
+                .id(usuario.getId())
+                .nome(usuario.getNomeCompleto())
+                .dataNascimento(usuario.getDataNascimento())
+                .genero(usuario.getGenero())
+                .telefone(usuario.getTelefone())
+                .aceitaTermos(usuario.getAceitaTermos())
+                .idade(usuario.getIdade())
+                .podeParticipar(usuario.podeParticipar())
                 .build();
     }
 
@@ -359,10 +372,10 @@ public class LeaderboardService implements ILeaderboardService {
                     .orElseThrow(() -> new RuntimeException("Equipe não encontrada ou não pertence a esta categoria"));
             leaderboard.setEquipe(equipe);
         } else if (categoria.isIndividual() && dto.getAtletaId() != null) {
-            // Buscar atleta nas inscrições da categoria
-            AtletaEntity atleta = categoria.getInscricoes().stream()
-                    .flatMap(inscricao -> inscricao.getAtletas().stream())
-                    .filter(a -> a.getId().equals(dto.getAtletaId()))
+            // Buscar usuário atleta nas inscrições da categoria
+            UsuarioEntity atleta = categoria.getInscricoes().stream()
+                    .map(InscricaoEntity::getAtleta)
+                    .filter(a -> a != null && a.getId().equals(dto.getAtletaId()))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Atleta não encontrado ou não está inscrito nesta categoria"));
             leaderboard.setAtleta(atleta);

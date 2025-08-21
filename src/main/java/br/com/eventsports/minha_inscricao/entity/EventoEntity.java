@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"descricao", "inscricoes", "workouts", "leaderboards", "timeline", "anexos", "atletas"})
+@ToString(exclude = {"descricao", "inscricoes", "workouts", "leaderboards", "timeline", "anexos"})
 public class EventoEntity {
 
     @Id
@@ -40,10 +40,10 @@ public class EventoEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Novos campos para integração com o sistema completo
+    // Relacionamento direto com Usuario como organizador
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizador_id")
-    private OrganizadorEntity organizador;
+    private UsuarioEntity organizador;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30)
@@ -74,9 +74,6 @@ public class EventoEntity {
     @Builder.Default
     private List<AnexoEntity> anexos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "evento", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<AtletaEntity> atletas = new ArrayList<>();
 
     // Constructor customizado para campos essenciais
     public EventoEntity(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao) {
@@ -139,6 +136,32 @@ public class EventoEntity {
         return this.organizador != null ? this.organizador.getNomeExibicao() : "";
     }
 
+    public boolean podeSerEditadoPeloOrganizador(UsuarioEntity usuario) {
+        return this.organizador != null && this.organizador.equals(usuario);
+    }
+
+    public boolean organizadorVerificado() {
+        return this.organizador != null && this.organizador.getVerificado();
+    }
+
+    public InscricaoEntity buscarInscricaoPorAtleta(UsuarioEntity usuario) {
+        return this.inscricoes != null 
+               ? this.inscricoes.stream()
+                   .filter(inscricao -> inscricao.contemAtleta(usuario))
+                   .findFirst()
+                   .orElse(null)
+               : null;
+    }
+
+    public InscricaoEntity buscarInscricaoPorAtletaId(Long usuarioId) {
+        return this.inscricoes != null 
+               ? this.inscricoes.stream()
+                   .filter(inscricao -> inscricao.contemAtletaPorId(usuarioId))
+                   .findFirst()
+                   .orElse(null)
+               : null;
+    }
+
     public int getTotalCategorias() {
         return this.categorias != null ? this.categorias.size() : 0;
     }
@@ -179,11 +202,12 @@ public class EventoEntity {
                : 0;
     }
 
-    public List<AtletaEntity> getAtletasInscritos() {
+    public List<UsuarioEntity> getAtletasInscritos() {
         return this.inscricoes != null 
                ? this.inscricoes.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
-                   .flatMap(inscricao -> inscricao.getAtletas().stream())
+                   .filter(inscricao -> inscricao.getAtleta() != null)
+                   .map(InscricaoEntity::getAtleta)
                    .toList()
                : new ArrayList<>();
     }
@@ -242,15 +266,18 @@ public class EventoEntity {
         return this.status != null ? this.status.getDescricao() : "";
     }
 
-    // Métodos para gerenciar atletas do evento
+    // Métodos para gerenciar atletas do evento (via inscrições)
     public int getTotalAtletas() {
-        return this.atletas != null ? this.atletas.size() : 0;
+        return getAtletasInscritos().size();
     }
 
-    public List<AtletaEntity> getAtletasAtivos() {
-        return this.atletas != null 
-               ? this.atletas.stream()
-                   .filter(AtletaEntity::podeParticipar)
+    public List<UsuarioEntity> getAtletasAtivos() {
+        return this.inscricoes != null 
+               ? this.inscricoes.stream()
+                   .filter(inscricao -> inscricao.getStatus().isAtiva())
+                   .filter(inscricao -> inscricao.getAtleta() != null)
+                   .map(InscricaoEntity::getAtleta)
+                   .filter(UsuarioEntity::podeParticipar)
                    .sorted((a1, a2) -> a1.getNomeCompleto().compareTo(a2.getNomeCompleto()))
                    .toList()
                : new ArrayList<>();
@@ -260,54 +287,39 @@ public class EventoEntity {
         return getAtletasAtivos().size();
     }
 
-    public void adicionarAtleta(AtletaEntity atleta) {
-        if (this.atletas == null) {
-            this.atletas = new ArrayList<>();
-        }
-        
-        if (!this.atletas.contains(atleta)) {
-            this.atletas.add(atleta);
-            atleta.setEvento(this);
-        }
+    public boolean contemAtleta(UsuarioEntity usuario) {
+        return this.inscricoes != null && 
+               this.inscricoes.stream()
+                   .filter(inscricao -> inscricao.getStatus().isAtiva())
+                   .anyMatch(inscricao -> inscricao.contemAtleta(usuario));
     }
 
-    public void removerAtleta(AtletaEntity atleta) {
-        if (this.atletas != null) {
-            this.atletas.remove(atleta);
-            if (atleta.getEvento() != null && atleta.getEvento().equals(this)) {
-                atleta.setEvento(null);
-            }
-        }
+    public boolean contemAtletaPorId(Long usuarioId) {
+        return this.inscricoes != null && 
+               this.inscricoes.stream()
+                   .filter(inscricao -> inscricao.getStatus().isAtiva())
+                   .anyMatch(inscricao -> inscricao.contemAtletaPorId(usuarioId));
     }
 
-    public boolean contemAtleta(AtletaEntity atleta) {
-        return this.atletas != null && this.atletas.contains(atleta);
-    }
-
-    public boolean contemAtletaPorId(Long atletaId) {
-        return this.atletas != null && 
-               this.atletas.stream().anyMatch(atleta -> atleta.getId().equals(atletaId));
-    }
-
-    public AtletaEntity buscarAtletaPorId(Long atletaId) {
-        return this.atletas != null 
-               ? this.atletas.stream()
-                   .filter(atleta -> atleta.getId().equals(atletaId))
+    public UsuarioEntity buscarAtletaPorId(Long usuarioId) {
+        return this.inscricoes != null 
+               ? this.inscricoes.stream()
+                   .filter(inscricao -> inscricao.getStatus().isAtiva())
+                   .map(InscricaoEntity::getAtleta)
+                   .filter(usuario -> usuario != null && usuario.getId().equals(usuarioId))
                    .findFirst()
                    .orElse(null)
                : null;
     }
 
     public List<String> getNomesAtletas() {
-        return this.atletas != null 
-               ? this.atletas.stream()
-                   .map(AtletaEntity::getNomeCompleto)
-                   .sorted()
-                   .toList()
-               : new ArrayList<>();
+        return getAtletasInscritos().stream()
+               .map(UsuarioEntity::getNomeCompleto)
+               .sorted()
+               .toList();
     }
 
     public boolean temAtletas() {
-        return this.atletas != null && !this.atletas.isEmpty();
+        return getTotalAtletas() > 0;
     }
 }

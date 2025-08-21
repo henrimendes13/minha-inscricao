@@ -208,10 +208,8 @@ public class InscricaoService implements IInscricaoService {
 
     // Métodos de conversão
     private InscricaoResponseDTO convertToResponseDTO(InscricaoEntity inscricao) {
-        List<AtletaSummaryDTO> atletasDTO = inscricao.getAtletas() != null 
-                ? inscricao.getAtletas().stream()
-                    .map(this::convertAtletaToSummaryDTO)
-                    .collect(Collectors.toList())
+        List<AtletaSummaryDTO> atletasDTO = inscricao.getAtleta() != null 
+                ? List.of(convertUsuarioToAtletaSummaryDTO(inscricao.getAtleta()))
                 : List.of();
 
         return InscricaoResponseDTO.builder()
@@ -280,6 +278,22 @@ public class InscricaoService implements IInscricaoService {
                 .nomeEvento(atleta.getNomeEvento())
                 .statusInscricao(atleta.getStatusInscricao())
                 .nomeEquipe(atleta.getNomeEquipe())
+                .build();
+    }
+
+    private AtletaSummaryDTO convertUsuarioToAtletaSummaryDTO(UsuarioEntity usuario) {
+        return AtletaSummaryDTO.builder()
+                .id(usuario.getId())
+                .nome(usuario.getNome())
+                .dataNascimento(usuario.getDataNascimento())
+                .genero(usuario.getGenero())
+                .telefone(usuario.getTelefone())
+                .aceitaTermos(usuario.getAceitaTermos())
+                .idade(usuario.getIdade())
+                .podeParticipar(usuario.podeParticipar())
+                .nomeEvento("") // Não aplicável diretamente
+                .statusInscricao("") // Será obtido da inscrição
+                .nomeEquipe("") // Não aplicável diretamente
                 .build();
     }
 

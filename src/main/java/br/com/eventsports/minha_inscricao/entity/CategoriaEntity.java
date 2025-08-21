@@ -104,7 +104,7 @@ public class CategoriaEntity {
     }
 
     // Métodos de conveniência
-    public boolean atletaPodeParticipar(AtletaEntity atleta) {
+    public boolean atletaPodeParticipar(UsuarioEntity atleta) {
         if (!this.ativa) {
             return false;
         }
@@ -283,7 +283,7 @@ public class CategoriaEntity {
     /**
      * Calcula a pontuação total de um atleta (soma das posições em todos os workouts)
      */
-    public Integer calcularPontuacaoTotalAtleta(AtletaEntity atleta) {
+    public Integer calcularPontuacaoTotalAtleta(UsuarioEntity atleta) {
         if (this.leaderboards == null || !isIndividual()) {
             return null;
         }
@@ -321,7 +321,7 @@ public class CategoriaEntity {
                     .collect(Collectors.groupingBy(LeaderboardEntity::getAtleta))
                     .entrySet().stream()
                     .map(entry -> {
-                        AtletaEntity atleta = entry.getKey();
+                        UsuarioEntity atleta = entry.getKey();
                         Integer pontuacaoTotal = calcularPontuacaoTotalAtleta(atleta);
                         return new Object[]{atleta, pontuacaoTotal};
                     })

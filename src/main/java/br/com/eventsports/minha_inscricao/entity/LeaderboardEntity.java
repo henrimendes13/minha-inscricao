@@ -59,7 +59,7 @@ public class LeaderboardEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atleta_id")
-    private AtletaEntity atleta;
+    private UsuarioEntity atleta;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

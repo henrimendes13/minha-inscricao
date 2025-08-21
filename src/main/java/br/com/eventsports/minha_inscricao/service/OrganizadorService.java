@@ -40,7 +40,7 @@ public class OrganizadorService implements IOrganizadorService {
         UsuarioEntity usuario = usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + dto.getUsuarioId()));
         
-        if (!TipoUsuario.ORGANIZADOR.equals(usuario.getTipo())) {
+        if (!usuario.isOrganizador()) {
             throw new IllegalArgumentException("Usuário deve ser do tipo ORGANIZADOR");
         }
         
@@ -346,7 +346,7 @@ public class OrganizadorService implements IOrganizadorService {
                 .id(usuario.getId())
                 .email(usuario.getEmail())
                 .nome(usuario.getNome())
-                .tipo(usuario.getTipo())
+                .tipo(usuario.getTipoUsuario())
                 .ativo(usuario.getAtivo())
                 .build();
     }

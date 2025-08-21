@@ -1,7 +1,7 @@
 package br.com.eventsports.minha_inscricao.service;
 
 import br.com.eventsports.minha_inscricao.dto.equipe.*;
-import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
+import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
@@ -315,7 +315,7 @@ public class EquipeService implements IEquipeService {
             }
         }
         
-        AtletaEntity capitao = new AtletaEntity();
+        UsuarioEntity capitao = new UsuarioEntity();
         capitao.setId(capitaoId);
         equipe.setCapitao(capitao);
     }
@@ -326,7 +326,7 @@ public class EquipeService implements IEquipeService {
         }
 
         for (Long atletaId : atletasIds) {
-            AtletaEntity atleta = new AtletaEntity();
+            UsuarioEntity atleta = new UsuarioEntity();
             atleta.setId(atletaId);
             equipe.adicionarAtleta(atleta);
         }
@@ -348,7 +348,7 @@ public class EquipeService implements IEquipeService {
 
         // Adiciona os novos atletas
         for (Long atletaId : novosAtletasIds) {
-            AtletaEntity atleta = new AtletaEntity();
+            UsuarioEntity atleta = new UsuarioEntity();
             atleta.setId(atletaId);
             equipe.adicionarAtleta(atleta);
         }
@@ -377,7 +377,7 @@ public class EquipeService implements IEquipeService {
 
         // Atualiza o capitão se fornecido
         if (dto.getCapitaoId() != null) {
-            AtletaEntity novoCapitao = new AtletaEntity();
+            UsuarioEntity novoCapitao = new UsuarioEntity();
             novoCapitao.setId(dto.getCapitaoId());
             
             // Verifica se o novo capitão está na lista de atletas da equipe

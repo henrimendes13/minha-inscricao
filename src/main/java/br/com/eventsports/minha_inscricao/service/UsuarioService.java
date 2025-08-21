@@ -7,7 +7,8 @@ import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import br.com.eventsports.minha_inscricao.repository.OrganizadorRepository;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
-import br.com.eventsports.minha_inscricao.util.PasswordUtil;
+import br.com.eventsports.minha_inscricao.util.TipoUsuarioUtil;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 public class UsuarioService implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final PasswordUtil passwordUtil;
+    private final PasswordEncoder passwordEncoder;
     private final OrganizadorRepository organizadorRepository;
 
     /**
@@ -47,9 +48,9 @@ public class UsuarioService implements IUsuarioService {
         // Criar entidade
         UsuarioEntity usuario = UsuarioEntity.builder()
                 .email(dto.getEmail())
-                .senha(passwordUtil.encode(dto.getSenha()))
+                .senha(passwordEncoder.encode(dto.getSenha()))
                 .nome(dto.getNome())
-                .tipo(dto.getTipo())
+                .aceitaTermos(dto.getAceitaTermos() != null ? dto.getAceitaTermos() : true)
                 .ativo(true)
                 .build();
 
@@ -67,14 +68,9 @@ public class UsuarioService implements IUsuarioService {
     public UsuarioComOrganizadorResponseDTO criarComOrganizador(UsuarioComOrganizadorCreateDTO dto) {
         log.info("Criando usuário organizador completo com email: {}", dto.getUsuario().getEmail());
         
-        // Validar que é do tipo ORGANIZADOR
-        if (!TipoUsuario.ORGANIZADOR.equals(dto.getUsuario().getTipo())) {
-            throw new IllegalArgumentException("Este endpoint é apenas para usuários do tipo ORGANIZADOR");
-        }
-        
         // Validar que dados do organizador foram fornecidos
         if (dto.getOrganizador() == null) {
-            throw new IllegalArgumentException("Dados do organizador são obrigatórios para usuários do tipo ORGANIZADOR");
+            throw new IllegalArgumentException("Dados do organizador são obrigatórios para criar perfil completo de organizador");
         }
 
         try {
@@ -161,8 +157,12 @@ public class UsuarioService implements IUsuarioService {
     public List<UsuarioSummaryDTO> listarPorTipo(TipoUsuario tipo) {
         log.debug("Listando usuários por tipo: {}", tipo);
         
-        return usuarioRepository.findByTipoAndAtivoTrue(tipo)
+        return usuarioRepository.findByAtivoTrue()
                 .stream()
+                .filter(usuario -> {
+                    TipoUsuario tipoUsuario = usuario.getTipoUsuario();
+                    return tipoUsuario.equals(tipo);
+                })
                 .map(this::mapToSummaryDTO)
                 .collect(Collectors.toList());
     }
@@ -202,7 +202,7 @@ public class UsuarioService implements IUsuarioService {
         }
         
         if (dto.getSenha() != null) {
-            usuario.setSenha(passwordUtil.encode(dto.getSenha()));
+            usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         }
         
         if (dto.getAtivo() != null) {
@@ -269,7 +269,7 @@ public class UsuarioService implements IUsuarioService {
         log.debug("Validando credenciais para email: {}", email);
         
         return usuarioRepository.findByEmail(email)
-                .map(usuario -> usuario.getAtivo() && passwordUtil.matches(senha, usuario.getSenha()))
+                .map(usuario -> usuario.getAtivo() && passwordEncoder.matches(senha, usuario.getSenha()))
                 .orElse(false);
     }
 
@@ -280,8 +280,14 @@ public class UsuarioService implements IUsuarioService {
     public UsuarioEstatisticasDTO obterEstatisticas() {
         log.debug("Obtendo estatísticas de usuários");
         
-        Long totalAtletas = usuarioRepository.countByTipoAndAtivoTrue(TipoUsuario.ATLETA);
-        Long totalOrganizadores = usuarioRepository.countByTipoAndAtivoTrue(TipoUsuario.ORGANIZADOR);
+        // Contar usuários por tipo usando lógica dinâmica
+        List<UsuarioEntity> usuariosAtivos = usuarioRepository.findByAtivoTrue();
+        Long totalAtletas = usuariosAtivos.stream()
+                .filter(usuario -> usuario.getTipoUsuario() == TipoUsuario.ATLETA)
+                .count();
+        Long totalOrganizadores = usuariosAtivos.stream()
+                .filter(usuario -> usuario.getTipoUsuario() == TipoUsuario.ORGANIZADOR)
+                .count();
         Long totalGeral = totalAtletas + totalOrganizadores;
         
         // Usuários com login recente (últimos 30 dias)
@@ -311,19 +317,24 @@ public class UsuarioService implements IUsuarioService {
     public UsuarioComOrganizadorResponseDTO buscarComOrganizador(Long usuarioId) {
         UsuarioResponseDTO usuario = buscarPorId(usuarioId);
         
-        if (TipoUsuario.ORGANIZADOR.equals(usuario.getTipo())) {
-            OrganizadorEntity organizadorEntity = organizadorRepository.findByUsuarioId(usuarioId).orElse(null);
-            
-            if (organizadorEntity != null) {
-                OrganizadorResponseDTO organizador = mapOrganizadorToResponseDTO(organizadorEntity);
-                return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, organizador);
-            } else {
-                return UsuarioComOrganizadorResponseDTO.criarIncompleto(
-                    usuario, 
-                    "criar-organizador",
-                    "Usuário é do tipo ORGANIZADOR mas não possui perfil de organizador. Complete seu perfil para organizar eventos."
-                );
-            }
+        // Buscar perfil de organizador se existir
+        OrganizadorEntity organizadorEntity = organizadorRepository.findByUsuarioId(usuarioId).orElse(null);
+        
+        if (organizadorEntity != null) {
+            OrganizadorResponseDTO organizador = mapOrganizadorToResponseDTO(organizadorEntity);
+            return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, organizador);
+        }
+        
+        // Se o usuário tem tipo ORGANIZADOR mas não tem perfil, indicar necessidade de completar
+        // Admins também podem precisar de perfil de organizador para criar eventos
+        boolean isOrganizadorOuAdmin = TipoUsuario.ORGANIZADOR.equals(usuario.getTipo()) || 
+                                       TipoUsuarioUtil.isAdmin(usuarioEntity);
+        if (isOrganizadorOuAdmin) {
+            return UsuarioComOrganizadorResponseDTO.criarIncompleto(
+                usuario, 
+                "criar-organizador",
+                "Complete seu perfil de organizador para poder organizar eventos."
+            );
         }
         
         return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, null);
@@ -331,12 +342,23 @@ public class UsuarioService implements IUsuarioService {
 
     // Métodos auxiliares de mapeamento
     private UsuarioResponseDTO mapToResponseDTO(UsuarioEntity usuario) {
+        // Determinar características dinâmicas
+        boolean temEventos = usuario.getEventosOrganizados() != null && !usuario.getEventosOrganizados().isEmpty();
+        boolean temInscricoes = usuario.getInscricoes() != null && !usuario.getInscricoes().isEmpty();
+        int totalEventos = usuario.getEventosOrganizados() != null ? usuario.getEventosOrganizados().size() : 0;
+        int totalInscricoes = usuario.getInscricoes() != null ? usuario.getInscricoes().size() : 0;
+        
         return UsuarioResponseDTO.builder()
                 .id(usuario.getId())
                 .email(usuario.getEmail())
                 .nome(usuario.getNome())
-                .tipo(usuario.getTipo())
+                .tipo(usuario.getTipoUsuario())
+                .isOrganizador(temEventos)
+                .isAtleta(temInscricoes)
                 .ativo(usuario.getAtivo())
+                .verificado(usuario.getVerificado())
+                .totalEventos(totalEventos)
+                .totalInscricoes(totalInscricoes)
                 .ultimoLogin(usuario.getUltimoLogin())
                 .createdAt(usuario.getCreatedAt())
                 .updatedAt(usuario.getUpdatedAt())
@@ -348,7 +370,7 @@ public class UsuarioService implements IUsuarioService {
                 .id(usuario.getId())
                 .email(usuario.getEmail())
                 .nome(usuario.getNome())
-                .tipo(usuario.getTipo())
+                .tipo(usuario.getTipoUsuario())
                 .ativo(usuario.getAtivo())
                 .build();
     }
@@ -358,7 +380,7 @@ public class UsuarioService implements IUsuarioService {
                 .id(organizador.getUsuario().getId())
                 .email(organizador.getUsuario().getEmail())
                 .nome(organizador.getUsuario().getNome())
-                .tipo(organizador.getUsuario().getTipo())
+                .tipo(organizador.getUsuario().getTipoUsuario())
                 .ativo(organizador.getUsuario().getAtivo())
                 .build();
 

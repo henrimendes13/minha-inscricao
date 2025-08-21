@@ -89,6 +89,30 @@ Controller → Service (Interface) → Service (Implementation) → Repository �
   - `@CachePut` para atualizações (save, update)
   - `@CacheEvict` para invalidação (delete, updates que afetam listas)
 
+### Sistema de Papéis Flexíveis
+A aplicação implementa um **sistema de papéis dinâmicos** onde o tipo do usuário é determinado automaticamente pelas suas ações:
+
+#### **Tipos de Usuário:**
+- **ATLETA** (padrão) - Novos usuários e quem se inscreve em eventos
+- **ORGANIZADOR** - Usuários que criam eventos (automaticamente promovidos)
+- **ADMIN** - **EXCLUSIVO para desenvolvedores** - acesso global ao sistema
+
+#### **Lógica de Determinação:**
+- **Cadastro**: Sempre como ATLETA (email, senha, nome, aceitaTermos)
+- **Criou evento**: Torna-se ORGANIZADOR automaticamente  
+- **ADMIN**: Apenas emails `@eventsports.com.br`, `@developer` ou `admin@sistema.com`
+
+#### **Benefícios:**
+✅ **Cadastro simplificado** - sem escolha prévia de papel  
+✅ **Flexibilidade total** - usuário pode organizar E participar  
+✅ **Evolução natural** - tipo baseado no comportamento  
+✅ **Interface adaptativa** - funcionalidades aparecem conforme necessário
+
+#### **Classe Utilitária:**
+- `TipoUsuarioUtil.determinarTipo()` - Determina tipo dinamicamente
+- `TipoUsuarioUtil.isAdmin()` - Verifica se é desenvolvedor
+- `TipoUsuarioUtil.podeOrganizarEventos()` - Valida permissões
+
 ### Padrão DTO
 Cada entidade principal possui DTOs específicos:
 - **CreateDTO** - Para criação (POST)

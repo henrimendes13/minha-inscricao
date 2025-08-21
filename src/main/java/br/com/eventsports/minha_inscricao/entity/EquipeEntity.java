@@ -34,7 +34,7 @@ public class EquipeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capitao_id", nullable = false)
-    private AtletaEntity capitao;
+    private UsuarioEntity capitao;
 
     @Column(name = "descricao", length = 300)
     private String descricao;
@@ -52,19 +52,19 @@ public class EquipeEntity {
     // Relacionamentos
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "equipe_atletas",
+        name = "equipe_usuarios",
         joinColumns = @JoinColumn(name = "equipe_id"),
-        inverseJoinColumns = @JoinColumn(name = "atleta_id"),
-        uniqueConstraints = @UniqueConstraint(columnNames = {"equipe_id", "atleta_id"})
+        inverseJoinColumns = @JoinColumn(name = "usuario_id"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"equipe_id", "usuario_id"})
     )
     @Builder.Default
-    private List<AtletaEntity> atletas = new ArrayList<>();
+    private List<UsuarioEntity> atletas = new ArrayList<>();
 
     @OneToOne(mappedBy = "equipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private InscricaoEntity inscricao;
 
     // Constructor customizado para campos essenciais
-    public EquipeEntity(String nome, EventoEntity evento, CategoriaEntity categoria, AtletaEntity capitao, String descricao) {
+    public EquipeEntity(String nome, EventoEntity evento, CategoriaEntity categoria, UsuarioEntity capitao, String descricao) {
         this.nome = nome;
         this.evento = evento;
         this.categoria = categoria;
@@ -89,7 +89,7 @@ public class EquipeEntity {
     }
 
     // Métodos de conveniência
-    public void adicionarAtleta(AtletaEntity atleta) {
+    public void adicionarAtleta(UsuarioEntity atleta) {
         if (this.atletas == null) {
             this.atletas = new ArrayList<>();
         }
@@ -103,7 +103,7 @@ public class EquipeEntity {
         }
     }
 
-    public void removerAtleta(AtletaEntity atleta) {
+    public void removerAtleta(UsuarioEntity atleta) {
         if (this.atletas != null) {
             this.atletas.remove(atleta);
             
@@ -114,7 +114,7 @@ public class EquipeEntity {
         }
     }
 
-    public void definirCapitao(AtletaEntity atleta) {
+    public void definirCapitao(UsuarioEntity atleta) {
         if (this.atletas == null || !this.atletas.contains(atleta)) {
             throw new IllegalArgumentException("Atleta deve ser membro da equipe para ser capitão");
         }
@@ -133,7 +133,7 @@ public class EquipeEntity {
         return this.atletas != null ? this.atletas.size() : 0;
     }
 
-    public boolean contemAtleta(AtletaEntity atleta) {
+    public boolean contemAtleta(UsuarioEntity atleta) {
         return this.atletas != null && this.atletas.contains(atleta);
     }
 
@@ -151,7 +151,7 @@ public class EquipeEntity {
             return false;
         }
         
-        return this.atletas.stream().allMatch(AtletaEntity::podeParticipar);
+        return this.atletas.stream().allMatch(UsuarioEntity::podeParticipar);
     }
 
     public boolean todosAtletasCompativeisComCategoria() {
@@ -205,7 +205,7 @@ public class EquipeEntity {
         }
         
         return this.atletas.stream()
-                .map(AtletaEntity::getNomeCompleto)
+                .map(UsuarioEntity::getNomeCompleto)
                 .sorted()
                 .toList();
     }

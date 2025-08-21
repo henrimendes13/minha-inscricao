@@ -51,10 +51,10 @@ public class OrganizadorEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // Relacionamentos
-    @OneToMany(mappedBy = "organizador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<EventoEntity> eventos = new ArrayList<>();
+    // Relacionamentos - Removido pois agora EventoEntity referencia diretamente UsuarioEntity
+    // @OneToMany(mappedBy = "organizador", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // @Builder.Default
+    // private List<EventoEntity> eventos = new ArrayList<>();
 
     // Lifecycle methods
     @PrePersist
@@ -93,6 +93,7 @@ public class OrganizadorEntity {
     }
 
     public int getTotalEventos() {
-        return this.eventos != null ? this.eventos.size() : 0;
+        // Método deprecated - agora os eventos são obtidos diretamente do UsuarioEntity
+        return this.usuario != null ? this.usuario.getTotalEventos() : 0;
     }
 }

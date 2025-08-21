@@ -90,13 +90,15 @@ public interface OrganizadorRepository extends JpaRepository<OrganizadorEntity, 
 
     /**
      * Busca organizadores com eventos
+     * Usando junção com EventoEntity via usuario.id
      */
-    @Query("SELECT DISTINCT o FROM OrganizadorEntity o WHERE SIZE(o.eventos) > 0")
+    @Query("SELECT DISTINCT o FROM OrganizadorEntity o JOIN EventoEntity e ON e.organizador.id = o.usuario.id")
     List<OrganizadorEntity> findComEventos();
 
     /**
      * Busca organizadores por quantidade mínima de eventos
+     * Usando junção com EventoEntity via usuario.id
      */
-    @Query("SELECT o FROM OrganizadorEntity o WHERE SIZE(o.eventos) >= :minEventos")
+    @Query("SELECT o FROM OrganizadorEntity o WHERE (SELECT COUNT(e) FROM EventoEntity e WHERE e.organizador.id = o.usuario.id) >= :minEventos")
     List<OrganizadorEntity> findComMinimoEventos(@Param("minEventos") int minEventos);
 }

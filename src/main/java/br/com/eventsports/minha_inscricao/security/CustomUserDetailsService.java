@@ -31,7 +31,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Usuário inativo: " + email);
         }
 
-        log.debug("Usuário carregado com sucesso: {} - Tipo: {}", email, usuario.getTipo());
+        log.debug("Usuário carregado com sucesso: {} - Tipo: {}", email, usuario.getTipoUsuario());
 
         return new CustomUserPrincipal(usuario);
     }

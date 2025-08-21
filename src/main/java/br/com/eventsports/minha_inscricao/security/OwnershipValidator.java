@@ -53,7 +53,7 @@ public class OwnershipValidator {
                 return false;
             }
 
-            boolean isOwner = evento.getOrganizador().getUsuario().getId().equals(usuario.getId());
+            boolean isOwner = evento.getOrganizador().getId().equals(usuario.getId());
             log.debug("Resultado da validação de ownership: usuário {} {} dono do evento {}", 
                     userEmail, isOwner ? "é" : "não é", eventoId);
             
@@ -100,8 +100,14 @@ public class OwnershipValidator {
             // Verificar se é organizador do evento
             if (inscricao.getEvento() != null && 
                 inscricao.getEvento().getOrganizador() != null &&
-                inscricao.getEvento().getOrganizador().getUsuario().getId().equals(usuario.getId())) {
+                inscricao.getEvento().getOrganizador().getId().equals(usuario.getId())) {
                 log.debug("Usuário {} é organizador do evento da inscrição {}", userEmail, inscricaoId);
+                return true;
+            }
+            
+            // Verificar se é o atleta da inscrição
+            if (inscricao.getAtleta() != null && inscricao.getAtleta().getId().equals(usuario.getId())) {
+                log.debug("Usuário {} é o atleta da inscrição {}", userEmail, inscricaoId);
                 return true;
             }
 

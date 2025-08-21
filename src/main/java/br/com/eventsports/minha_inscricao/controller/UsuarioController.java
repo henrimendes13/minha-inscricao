@@ -63,10 +63,10 @@ public class UsuarioController {
     }
 
     @PostMapping("/com-organizador")
-    @Operation(summary = "Criar usuário organizador completo", description = "Cria um usuário do tipo ORGANIZADOR junto com seu perfil de organizador em uma operação")
+    @Operation(summary = "Criar usuário organizador completo", description = "Cria um usuário junto com seu perfil de organizador em uma operação")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Usuário organizador criado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos ou usuário não é do tipo ORGANIZADOR"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "409", description = "Email ou CNPJ já existe")
     })
     public ResponseEntity<UsuarioComOrganizadorResponseDTO> criarComOrganizador(
@@ -168,8 +168,6 @@ public class UsuarioController {
 
         return ResponseEntity.ok(usuarios);
     }
-
-    // gfhdf
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")

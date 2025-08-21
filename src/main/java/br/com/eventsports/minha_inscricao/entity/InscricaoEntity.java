@@ -15,16 +15,17 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"atletas", "evento", "categoria", "equipe", "pagamento"})
+@ToString(exclude = {"atleta", "evento", "categoria", "equipe", "pagamento"})
 public class InscricaoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy = "inscricao", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<AtletaEntity> atletas = new ArrayList<>();
+    // Relacionamento direto com Usuario como atleta
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "atleta_id", nullable = false)
+    private UsuarioEntity atleta;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evento_id", nullable = false)
@@ -89,12 +90,12 @@ public class InscricaoEntity {
             this.status = StatusInscricao.PENDENTE;
         }
         
-        // Validação: deve ter atletas OU equipe, mas não ambos
-        boolean temAtletas = this.atletas != null && !this.atletas.isEmpty();
+        // Validação: deve ter atleta OU equipe, mas não ambos
+        boolean temAtleta = this.atleta != null;
         boolean temEquipe = this.equipe != null;
         
-        if ((!temAtletas && !temEquipe) || (temAtletas && temEquipe)) {
-            throw new IllegalStateException("Inscrição deve ter atletas OU uma equipe, mas não ambos");
+        if ((!temAtleta && !temEquipe) || (temAtleta && temEquipe)) {
+            throw new IllegalStateException("Inscrição deve ter um atleta OU uma equipe, mas não ambos");
         }
     }
 
@@ -152,19 +153,12 @@ public class InscricaoEntity {
     }
 
     public String getNomeAtleta() {
-        if (this.atletas != null && !this.atletas.isEmpty()) {
-            return this.atletas.get(0).getNomeCompleto();
-        }
-        return "";
+        return this.atleta != null ? this.atleta.getNomeCompleto() : "";
     }
 
     public String getNomeParticipante() {
-        if (this.atletas != null && !this.atletas.isEmpty()) {
-            if (this.atletas.size() == 1) {
-                return this.atletas.get(0).getNomeCompleto();
-            } else {
-                return this.atletas.size() + " atletas";
-            }
+        if (this.atleta != null) {
+            return this.atleta.getNomeCompleto();
         }
         if (this.equipe != null) {
             return this.equipe.getNome();
@@ -201,15 +195,16 @@ public class InscricaoEntity {
     }
 
     public boolean isInscricaoIndividual() {
-        return this.atletas != null && this.atletas.size() == 1 && this.equipe == null;
+        return this.atleta != null && this.equipe == null;
     }
 
     public boolean isInscricaoEquipe() {
-        return this.equipe != null && (this.atletas == null || this.atletas.isEmpty());
+        return this.equipe != null && this.atleta == null;
     }
 
     public boolean isInscricaoMultiplosAtletas() {
-        return this.atletas != null && this.atletas.size() > 1 && this.equipe == null;
+        // Não aplicavel no novo modelo - sempre individual ou equipe
+        return false;
     }
 
     public String getTipoInscricao() {
@@ -219,15 +214,12 @@ public class InscricaoEntity {
         if (isInscricaoEquipe()) {
             return "Equipe";
         }
-        if (isInscricaoMultiplosAtletas()) {
-            return "Múltiplos Atletas";
-        }
         return "Indefinido";
     }
 
     public int getNumeroParticipantes() {
-        if (this.atletas != null && !this.atletas.isEmpty()) {
-            return this.atletas.size();
+        if (this.atleta != null) {
+            return 1;
         }
         if (isInscricaoEquipe() && this.equipe != null) {
             return this.equipe.getNumeroAtletas();
@@ -235,46 +227,43 @@ public class InscricaoEntity {
         return 0;
     }
 
-    // Métodos para gerenciar atletas da inscrição
+    // Métodos para gerenciar atleta da inscrição
     public int getTotalAtletas() {
-        return this.atletas != null ? this.atletas.size() : 0;
+        return this.atleta != null ? 1 : 0;
     }
 
-    public void adicionarAtleta(AtletaEntity atleta) {
-        if (this.atletas == null) {
-            this.atletas = new ArrayList<>();
-        }
-        
-        if (!this.atletas.contains(atleta)) {
-            this.atletas.add(atleta);
-            atleta.setInscricao(this);
-        }
+    public boolean contemAtleta(UsuarioEntity usuario) {
+        return this.atleta != null && this.atleta.equals(usuario);
     }
 
-    public void removerAtleta(AtletaEntity atleta) {
-        if (this.atletas != null) {
-            this.atletas.remove(atleta);
-            if (atleta.getInscricao() != null && atleta.getInscricao().equals(this)) {
-                atleta.setInscricao(null);
-            }
-        }
-    }
-
-    public boolean contemAtleta(AtletaEntity atleta) {
-        return this.atletas != null && this.atletas.contains(atleta);
-    }
-
-    public boolean contemAtletaPorId(Long atletaId) {
-        return this.atletas != null && 
-               this.atletas.stream().anyMatch(atleta -> atleta.getId().equals(atletaId));
+    public boolean contemAtletaPorId(Long usuarioId) {
+        return this.atleta != null && this.atleta.getId().equals(usuarioId);
     }
 
     public List<String> getNomesAtletas() {
-        return this.atletas != null 
-               ? this.atletas.stream()
-                   .map(AtletaEntity::getNomeCompleto)
-                   .sorted()
-                   .toList()
+        return this.atleta != null 
+               ? List.of(this.atleta.getNomeCompleto())
                : new ArrayList<>();
+    }
+
+    public boolean podeSerEditadaPeloAtleta(UsuarioEntity usuario) {
+        return this.atleta != null && this.atleta.equals(usuario);
+    }
+
+    // Métodos de conveniência adicionais
+    public String getEmailAtleta() {
+        return this.atleta != null ? this.atleta.getEmail() : "";
+    }
+
+    public boolean atletaVerificado() {
+        return this.atleta != null && this.atleta.getAtivo();
+    }
+
+    public boolean atletaPodeParticipar() {
+        return this.atleta != null && this.atleta.podeParticipar();
+    }
+
+    public int getIdadeAtleta() {
+        return this.atleta != null ? this.atleta.getIdade() : 0;
     }
 }

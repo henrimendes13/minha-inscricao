@@ -1,7 +1,6 @@
 package br.com.eventsports.minha_inscricao.repository;
 
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
-import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,15 +35,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
      */
     Page<UsuarioEntity> findByAtivoTrue(Pageable pageable);
 
-    /**
-     * Busca usuários por tipo
-     */
-    List<UsuarioEntity> findByTipo(TipoUsuario tipo);
 
-    /**
-     * Busca usuários ativos por tipo
-     */
-    List<UsuarioEntity> findByTipoAndAtivoTrue(TipoUsuario tipo);
 
     /**
      * Busca usuários por nome (contendo)
@@ -64,16 +55,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
     @Query("SELECT u FROM UsuarioEntity u WHERE u.ultimoLogin >= :dataInicio")
     List<UsuarioEntity> findUsuariosComLoginRecente(@Param("dataInicio") LocalDateTime dataInicio);
 
-    /**
-     * Conta usuários por tipo
-     */
-    @Query("SELECT COUNT(u) FROM UsuarioEntity u WHERE u.tipo = :tipo AND u.ativo = true")
-    Long countByTipoAndAtivoTrue(@Param("tipo") TipoUsuario tipo);
 
-    /**
-     * Busca usuários por tipo com paginação
-     */
-    Page<UsuarioEntity> findByTipoAndAtivoTrue(TipoUsuario tipo, Pageable pageable);
 
     /**
      * Busca usuários criados em um período
