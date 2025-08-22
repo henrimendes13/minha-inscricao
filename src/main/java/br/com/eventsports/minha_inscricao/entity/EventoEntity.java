@@ -30,7 +30,6 @@ public class EventoEntity {
     @Column(name = "data_fim_evento", nullable = false)
     private LocalDateTime dataFimDoEvento;
 
-    @Lob
     @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 

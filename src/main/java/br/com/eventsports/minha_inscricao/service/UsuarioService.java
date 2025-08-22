@@ -2,12 +2,9 @@ package br.com.eventsports.minha_inscricao.service;
 
 import br.com.eventsports.minha_inscricao.dto.organizador.OrganizadorResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.usuario.*;
-import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
-import br.com.eventsports.minha_inscricao.repository.OrganizadorRepository;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
-import br.com.eventsports.minha_inscricao.util.TipoUsuarioUtil;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +26,6 @@ import java.util.stream.Collectors;
 public class UsuarioService implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final OrganizadorRepository organizadorRepository;
 
     /**
      * Cria um novo usuário
@@ -75,32 +71,43 @@ public class UsuarioService implements IUsuarioService {
             // Criar usuário primeiro
             UsuarioResponseDTO usuario = criar(dto.getUsuario());
             
-            // Validar CNPJ se informado
-            if (dto.getOrganizador().getCnpj() != null && organizadorRepository.existsByCnpj(dto.getOrganizador().getCnpj())) {
-                throw new IllegalArgumentException("CNPJ já está em uso: " + dto.getOrganizador().getCnpj());
-            }
-
+            // TODO: Refatorar após consolidação - funcionalidade movida para UsuarioEntity
+            // Agora os dados de organizador estão diretamente na UsuarioEntity
+            
             // Buscar usuário criado
             UsuarioEntity usuarioEntity = usuarioRepository.findById(usuario.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Erro interno: usuário não encontrado após criação"));
 
-            // Criar organizador diretamente
-            OrganizadorEntity organizador = OrganizadorEntity.builder()
-                    .usuario(usuarioEntity)
-                    .nomeEmpresa(dto.getOrganizador().getNomeEmpresa())
-                    .cnpj(dto.getOrganizador().getCnpj())
-                    .telefone(dto.getOrganizador().getTelefone())
-                    .endereco(dto.getOrganizador().getEndereco())
-                    .descricao(dto.getOrganizador().getDescricao())
-                    .site(dto.getOrganizador().getSite())
-                    .verificado(false)
-                    .build();
-
-            OrganizadorEntity organizadorSalvo = organizadorRepository.save(organizador);
-            OrganizadorResponseDTO organizadorResponse = mapOrganizadorToResponseDTO(organizadorSalvo);
+            // Atualizar usuário com dados do organizador (campos já estão na UsuarioEntity)
+            usuarioEntity.setNomeEmpresa(dto.getOrganizador().getNomeEmpresa());
+            usuarioEntity.setCnpj(dto.getOrganizador().getCnpj());
+            usuarioEntity.setTelefone(dto.getOrganizador().getTelefone());
+            usuarioEntity.setEndereco(dto.getOrganizador().getEndereco());
+            usuarioEntity.setDescricao(dto.getOrganizador().getDescricao());
+            usuarioEntity.setSite(dto.getOrganizador().getSite());
+            usuarioEntity.setVerificado(false);
             
-            log.info("Usuário organizador criado com sucesso. Usuario ID: {}, Organizador ID: {}", 
-                    usuario.getId(), organizadorSalvo.getId());
+            UsuarioEntity usuarioAtualizado = usuarioRepository.save(usuarioEntity);
+            
+            // Criar response DTO simulando organizador
+            OrganizadorResponseDTO organizadorResponse = OrganizadorResponseDTO.builder()
+                    .id(usuarioAtualizado.getId())
+                    .nomeEmpresa(usuarioAtualizado.getNomeEmpresa())
+                    .cnpj(usuarioAtualizado.getCnpj())
+                    .telefone(usuarioAtualizado.getTelefone())
+                    .endereco(usuarioAtualizado.getEndereco())
+                    .descricao(usuarioAtualizado.getDescricao())
+                    .site(usuarioAtualizado.getSite())
+                    .verificado(usuarioAtualizado.getVerificado())
+                    .createdAt(usuarioAtualizado.getCreatedAt())
+                    .updatedAt(usuarioAtualizado.getUpdatedAt())
+                    .nomeExibicao(usuarioAtualizado.getNomeEmpresa())
+                    .totalEventos(usuarioAtualizado.getEventosOrganizados() != null ? usuarioAtualizado.getEventosOrganizados().size() : 0)
+                    .podeOrganizarEventos(usuarioAtualizado.getAtivo() && usuarioAtualizado.getVerificado())
+                    .build();
+            
+            log.info("Usuário organizador criado com sucesso. Usuario ID: {}", 
+                    usuario.getId());
             
             return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, organizadorResponse);
             
@@ -305,7 +312,12 @@ public class UsuarioService implements IUsuarioService {
      */
     @Transactional(readOnly = true)
     public boolean organizadorTemPerfilCompleto(Long usuarioId) {
-        return organizadorRepository.existsByUsuarioId(usuarioId);
+        UsuarioEntity usuario = usuarioRepository.findById(usuarioId).orElse(null);
+        if (usuario == null) {
+            return false;
+        }
+        // Verifica se tem os campos essenciais do organizador preenchidos
+        return usuario.getNomeEmpresa() != null && !usuario.getNomeEmpresa().trim().isEmpty();
     }
 
     /**
@@ -315,11 +327,11 @@ public class UsuarioService implements IUsuarioService {
     public UsuarioComOrganizadorResponseDTO buscarComOrganizador(Long usuarioId) {
         UsuarioResponseDTO usuario = buscarPorId(usuarioId);
         
-        // Buscar perfil de organizador se existir
-        OrganizadorEntity organizadorEntity = organizadorRepository.findByUsuarioId(usuarioId).orElse(null);
+        // Verifica se o usuário tem dados de organizador preenchidos na UsuarioEntity
+        UsuarioEntity usuarioEntity = usuarioRepository.findById(usuarioId).orElse(null);
         
-        if (organizadorEntity != null) {
-            OrganizadorResponseDTO organizador = mapOrganizadorToResponseDTO(organizadorEntity);
+        if (usuarioEntity != null && organizadorTemPerfilCompleto(usuarioId)) {
+            OrganizadorResponseDTO organizador = mapOrganizadorToResponseDTO(usuarioEntity);
             return UsuarioComOrganizadorResponseDTO.criarCompleto(usuario, organizador);
         }
         
@@ -377,30 +389,30 @@ public class UsuarioService implements IUsuarioService {
                 .build();
     }
 
-    private OrganizadorResponseDTO mapOrganizadorToResponseDTO(OrganizadorEntity organizador) {
+    private OrganizadorResponseDTO mapOrganizadorToResponseDTO(UsuarioEntity usuario) {
         UsuarioSummaryDTO usuarioSummary = UsuarioSummaryDTO.builder()
-                .id(organizador.getUsuario().getId())
-                .email(organizador.getUsuario().getEmail())
-                .nome(organizador.getUsuario().getNome())
-                .tipo(organizador.getUsuario().getTipoUsuario())
-                .ativo(organizador.getUsuario().getAtivo())
+                .id(usuario.getId())
+                .email(usuario.getEmail())
+                .nome(usuario.getNome())
+                .tipo(usuario.getTipoUsuario())
+                .ativo(usuario.getAtivo())
                 .build();
 
         return OrganizadorResponseDTO.builder()
-                .id(organizador.getId())
+                .id(usuario.getId())
                 .usuario(usuarioSummary)
-                .nomeEmpresa(organizador.getNomeEmpresa())
-                .cnpj(organizador.getCnpj())
-                .telefone(organizador.getTelefone())
-                .endereco(organizador.getEndereco())
-                .descricao(organizador.getDescricao())
-                .site(organizador.getSite())
-                .verificado(organizador.getVerificado())
-                .createdAt(organizador.getCreatedAt())
-                .updatedAt(organizador.getUpdatedAt())
-                .nomeExibicao(organizador.getNomeExibicao())
-                .totalEventos(organizador.getTotalEventos())
-                .podeOrganizarEventos(organizador.podeOrganizarEventos())
+                .nomeEmpresa(usuario.getNomeEmpresa())
+                .cnpj(usuario.getCnpj())
+                .telefone(usuario.getTelefone())
+                .endereco(usuario.getEndereco())
+                .descricao(usuario.getDescricao())
+                .site(usuario.getSite())
+                .verificado(usuario.getVerificado())
+                .createdAt(usuario.getCreatedAt())
+                .updatedAt(usuario.getUpdatedAt())
+                .nomeExibicao(usuario.getNomeEmpresa()) // Using nomeEmpresa as nomeExibicao
+                .totalEventos(usuario.getEventosOrganizados() != null ? usuario.getEventosOrganizados().size() : 0)
+                .podeOrganizarEventos(usuario.getAtivo() && usuario.getVerificado())
                 .build();
     }
 

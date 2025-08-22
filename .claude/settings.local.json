@@ -22,7 +22,10 @@
       "Bash(psql:*)",
       "Bash(wmic process where processid=23996 delete:*)",
       "mcp__ide__getDiagnostics",
-      "Bash(wmic process where processid=14036 delete:*)"
+      "Bash(wmic process where processid=14036 delete:*)",
+      "Bash(wmic process where processid=26420 delete:*)",
+      "Bash(wmic process where processid=12016 delete:*)",
+      "Bash(del:*)"
     ],
     "deny": [],
     "ask": []

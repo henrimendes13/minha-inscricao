@@ -2,7 +2,6 @@ package br.com.eventsports.minha_inscricao.service;
 
 import br.com.eventsports.minha_inscricao.dto.evento.*;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
-import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;

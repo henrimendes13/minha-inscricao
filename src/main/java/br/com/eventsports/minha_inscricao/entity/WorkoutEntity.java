@@ -23,7 +23,6 @@ public class WorkoutEntity {
     @Column(name = "nome", nullable = false, length = 200)
     private String nome;
 
-    @Lob
     @Column(name = "descricao", columnDefinition = "TEXT")
     private String descricao;
 

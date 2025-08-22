@@ -17,19 +17,15 @@ public class TimelineEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Lob
     @Column(name = "descricao_dia_um", columnDefinition = "TEXT")
     private String descricaoDiaUm;
 
-    @Lob
     @Column(name = "descricao_dia_dois", columnDefinition = "TEXT")
     private String descricaoDiaDois;
 
-    @Lob
     @Column(name = "descricao_dia_tres", columnDefinition = "TEXT")
     private String descricaoDiaTres;
 
-    @Lob
     @Column(name = "descricao_dia_quatro", columnDefinition = "TEXT")
     private String descricaoDiaQuatro;
 
