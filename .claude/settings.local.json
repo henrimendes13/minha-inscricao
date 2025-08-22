@@ -19,7 +19,10 @@
       "Bash(wmic process where processid=19200 delete:*)",
       "Bash(powershell:*)",
       "Bash(docker exec:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(wmic process where processid=23996 delete:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(wmic process where processid=14036 delete:*)"
     ],
     "deny": [],
     "ask": []

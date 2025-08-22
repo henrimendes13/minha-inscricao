@@ -29,7 +29,6 @@ public interface IEventoService {
      * Valida se o usuário logado é o organizador do evento.
      * @param eventoId ID do evento
      * @param usuarioId ID do usuário logado
-     * @throws UnauthorizedException se o usuário não for o organizador do evento
      */
     void validateEventoOwnership(Long eventoId, Long usuarioId);
     

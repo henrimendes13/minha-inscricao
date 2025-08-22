@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,7 +83,6 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
     @Operation(summary = "Buscar usuário por ID", description = "Busca um usuário específico pelo ID - Organizadores podem ver qualquer usuário, atletas apenas seu próprio perfil")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
@@ -105,7 +103,6 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}/com-organizador")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
     @Operation(summary = "Buscar usuário com informações de organizador", description = "Busca um usuário e suas informações de organizador (se aplicável) - Organizadores podem ver qualquer usuário, atletas apenas seu próprio perfil")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
@@ -126,7 +123,6 @@ public class UsuarioController {
     }
 
     @GetMapping("/email/{email}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     @Operation(summary = "Buscar usuário por email", description = "Busca um usuário específico pelo email - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
@@ -147,7 +143,6 @@ public class UsuarioController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     @Operation(summary = "Listar usuários", description = "Lista usuários com paginação e filtros opcionais - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso"),
@@ -170,7 +165,6 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
     @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente - Organizadores podem atualizar qualquer usuário, atletas apenas a si mesmos")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
@@ -197,7 +191,6 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/desativar")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     @Operation(summary = "Desativar usuário", description = "Desativa um usuário do sistema - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Usuário desativado com sucesso"),
@@ -217,7 +210,6 @@ public class UsuarioController {
     }
 
     @PatchMapping("/{id}/ativar")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     @Operation(summary = "Ativar usuário", description = "Ativa um usuário do sistema - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Usuário ativado com sucesso"),
@@ -237,7 +229,6 @@ public class UsuarioController {
     }
 
     @PostMapping("/{id}/login")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR') or (hasRole('ATLETA') and #id == authentication.principal.id)")
     @Operation(summary = "Registrar login", description = "Registra o login de um usuário - Usuários só podem registrar próprio login")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Login registrado com sucesso"),
@@ -257,7 +248,6 @@ public class UsuarioController {
     }
 
     @GetMapping("/estatisticas")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     @Operation(summary = "Obter estatísticas", description = "Obtém estatísticas gerais dos usuários - Apenas organizadores")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso"),

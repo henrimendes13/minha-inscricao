@@ -2,8 +2,6 @@ package br.com.eventsports.minha_inscricao.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,17 +28,7 @@ public class DebugController {
         response.put("method", request.getMethod());
         response.put("uri", request.getRequestURI());
         
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            response.put("authentication", Map.of(
-                "class", auth.getClass().getSimpleName(),
-                "principal", auth.getPrincipal().toString(),
-                "authorities", auth.getAuthorities().toString(),
-                "authenticated", auth.isAuthenticated()
-            ));
-        } else {
-            response.put("authentication", "null");
-        }
+        response.put("authentication", "Security removed");
         
         return ResponseEntity.ok(response);
     }
@@ -56,17 +44,7 @@ public class DebugController {
         response.put("uri", request.getRequestURI());
         response.put("receivedBody", body);
         
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null) {
-            response.put("authentication", Map.of(
-                "class", auth.getClass().getSimpleName(),
-                "principal", auth.getPrincipal().toString(),
-                "authorities", auth.getAuthorities().toString(),
-                "authenticated", auth.isAuthenticated()
-            ));
-        } else {
-            response.put("authentication", "null");
-        }
+        response.put("authentication", "Security removed");
         
         return ResponseEntity.ok(response);
     }
@@ -78,21 +56,8 @@ public class DebugController {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", LocalDateTime.now());
         
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
-            response.put("status", "NO_AUTHENTICATION");
-            response.put("authentication", null);
-        } else {
-            response.put("status", "AUTHENTICATED");
-            response.put("authentication", Map.of(
-                "class", auth.getClass().getSimpleName(),
-                "name", auth.getName(),
-                "principal", auth.getPrincipal().toString(),
-                "authorities", auth.getAuthorities().toString(),
-                "authenticated", auth.isAuthenticated(),
-                "details", auth.getDetails() != null ? auth.getDetails().toString() : "null"
-            ));
-        }
+        response.put("status", "SECURITY_REMOVED");
+        response.put("authentication", "Security system has been removed");
         
         return ResponseEntity.ok(response);
     }

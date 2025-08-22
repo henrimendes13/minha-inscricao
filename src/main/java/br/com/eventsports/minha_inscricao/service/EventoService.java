@@ -6,7 +6,6 @@ import br.com.eventsports.minha_inscricao.entity.OrganizadorEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
-import br.com.eventsports.minha_inscricao.exception.UnauthorizedException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import lombok.RequiredArgsConstructor;
@@ -216,7 +215,7 @@ public class EventoService implements IEventoService {
     @Transactional(readOnly = true)
     public void validateEventoOwnership(Long eventoId, Long usuarioId) {
         if (!isEventoOwner(eventoId, usuarioId)) {
-            throw new UnauthorizedException("Você não tem permissão para acessar este evento");
+            throw new IllegalArgumentException("Você não tem permissão para acessar este evento");
         }
     }
 

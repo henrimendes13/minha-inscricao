@@ -36,15 +36,6 @@ public class FilterOrderDebugConfig {
         return registration;
     }
 
-    @Bean
-    public FilterRegistrationBean<SecurityDebugFilter> securityDebugFilter() {
-        FilterRegistrationBean<SecurityDebugFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new SecurityDebugFilter());
-        registration.addUrlPatterns("/api/*");
-        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 100); // Execute after request debug
-        registration.setName("SecurityDebugFilter");
-        return registration;
-    }
 
     /**
      * Filter to log all incoming requests and their details
@@ -73,7 +64,7 @@ public class FilterOrderDebugConfig {
             System.out.println("📍 Remote Address: " + httpRequest.getRemoteAddr());
             System.out.println("🌐 Origin: " + httpRequest.getHeader("Origin"));
             System.out.println("📋 Content-Type: " + httpRequest.getHeader("Content-Type"));
-            System.out.println("🔑 Authorization: " + (httpRequest.getHeader("Authorization") != null ? "Present" : "None"));
+            System.out.println("🔑 Security: removed");
             
             // Log all headers for debugging
             System.out.println("📨 Request Headers:");
@@ -114,65 +105,4 @@ public class FilterOrderDebugConfig {
         }
     }
 
-    /**
-     * Filter to debug security-related processing
-     */
-    public static class SecurityDebugFilter implements Filter {
-
-        @Override
-        public void init(FilterConfig filterConfig) throws ServletException {
-            System.out.println("🛡️ SecurityDebugFilter initialized");
-        }
-
-        @Override
-        public void doFilter(ServletRequest request, ServletResponse response, 
-                           FilterChain chain) throws IOException, ServletException {
-            
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
-            HttpServletResponse httpResponse = (HttpServletResponse) response;
-            
-            String method = httpRequest.getMethod();
-            String uri = httpRequest.getRequestURI();
-            
-            System.out.println("🛡️ SECURITY CHECK: " + method + " " + uri);
-            
-            // Check if this is a preflight request
-            if ("OPTIONS".equalsIgnoreCase(method)) {
-                System.out.println("✈️ Preflight OPTIONS request detected");
-                String accessControlRequestMethod = httpRequest.getHeader("Access-Control-Request-Method");
-                if (accessControlRequestMethod != null) {
-                    System.out.println("🎯 Target method: " + accessControlRequestMethod);
-                }
-            }
-            
-            // Check authentication status
-            if (httpRequest.getUserPrincipal() != null) {
-                System.out.println("👤 Authenticated user: " + httpRequest.getUserPrincipal().getName());
-            } else {
-                System.out.println("👻 No authenticated user (anonymous)");
-            }
-            
-            try {
-                chain.doFilter(request, response);
-                
-                if (httpResponse.getStatus() == 403) {
-                    System.out.println("🚫 403 FORBIDDEN detected for: " + method + " " + uri);
-                    System.out.println("🔍 Possible causes:");
-                    System.out.println("  - CORS preflight failure");
-                    System.out.println("  - Security filter chain blocking request");
-                    System.out.println("  - Missing or invalid authentication");
-                    System.out.println("  - Method security annotations");
-                }
-                
-            } catch (Exception e) {
-                System.out.println("🛡️ Security filter exception: " + e.getMessage());
-                throw e;
-            }
-        }
-
-        @Override
-        public void destroy() {
-            System.out.println("🛡️ SecurityDebugFilter destroyed");
-        }
-    }
 }

@@ -1,26 +1,21 @@
 package br.com.eventsports.minha_inscricao.util;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class PasswordUtil {
 
-    private final PasswordEncoder passwordEncoder;
-
     /**
-     * Codifica uma senha usando BCrypt
+     * Retorna a senha sem codificação (security removed)
      */
     public String encode(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
+        return rawPassword;
     }
 
     /**
-     * Verifica se uma senha raw corresponde à senha codificada
+     * Verifica se duas senhas são iguais
      */
     public boolean matches(String rawPassword, String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
+        return rawPassword.equals(encodedPassword);
     }
 }
