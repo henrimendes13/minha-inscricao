@@ -1,5 +1,6 @@
 package br.com.eventsports.minha_inscricao.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -88,9 +89,13 @@ public class EventoController {
 
     @GetMapping("/between")
     public ResponseEntity<List<EventoSummaryDTO>> getEventosBetweenDates(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim) {
-        List<EventoSummaryDTO> eventos = eventoService.findEventosByDataBetween(inicio, fim);
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate inicio,
+            @RequestParam @DateTimeFormat(pattern = "dd-MM-yyyy") LocalDate fim) {
+        // Convert LocalDate to LocalDateTime (start of day and end of day)
+        LocalDateTime inicioDateTime = inicio.atStartOfDay();
+        LocalDateTime fimDateTime = fim.atTime(23, 59, 59);
+        
+        List<EventoSummaryDTO> eventos = eventoService.findEventosByDataBetween(inicioDateTime, fimDateTime);
         return ResponseEntity.ok(eventos);
     }
 

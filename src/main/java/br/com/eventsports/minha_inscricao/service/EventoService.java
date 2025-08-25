@@ -1,6 +1,20 @@
 package br.com.eventsports.minha_inscricao.service;
 
-import br.com.eventsports.minha_inscricao.dto.evento.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.eventsports.minha_inscricao.dto.evento.EventoCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.EventoResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.EventoUpdateDTO;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
@@ -8,15 +22,6 @@ import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -145,14 +150,20 @@ public class EventoService implements IEventoService {
     }
 
     private EventoEntity convertCreateDTOToEntity(EventoCreateDTO dto) {
+        // Convert LocalDate to LocalDateTime (start of day for inicio, end of day for
+        // fim)
+        LocalDateTime inicioDateTime = dto.getDataInicioDoEvento().atStartOfDay();
+        LocalDateTime fimDateTime = dto.getDataFimDoEvento().atTime(23, 59, 59);
+
         EventoEntity.EventoEntityBuilder builder = EventoEntity.builder()
                 .nome(dto.getNome())
-                .dataInicioDoEvento(dto.getDataInicioDoEvento())
-                .dataFimDoEvento(dto.getDataFimDoEvento())
+                .dataInicioDoEvento(inicioDateTime)
+                .dataFimDoEvento(fimDateTime)
                 .descricao(dto.getDescricao());
 
         // TODO: Implementar lógica para obter o organizador do usuário autenticado
-        // Por enquanto, usa o usuário organizador padrão (ID = 2) até implementar autenticação
+        // Por enquanto, usa o usuário organizador padrão (ID = 2) até implementar
+        // autenticação
         UsuarioEntity organizadorPadrao = getUsuarioOrganizadorPadrao();
         if (organizadorPadrao != null) {
             builder.organizador(organizadorPadrao);
@@ -162,32 +173,51 @@ public class EventoService implements IEventoService {
     }
 
     private void updateEventoFromUpdateDTO(EventoEntity evento, EventoUpdateDTO dto) {
-        evento.setNome(dto.getNome());
-        evento.setDataInicioDoEvento(dto.getDataInicioDoEvento());
-        evento.setDataFimDoEvento(dto.getDataFimDoEvento());
-        evento.setDescricao(dto.getDescricao());
+        // Convert LocalDate to LocalDateTime (start of day for inicio, end of day for
+        // fim)
+        LocalDateTime inicioDateTime = dto.getDataInicioDoEvento().atStartOfDay();
+        LocalDateTime fimDateTime = dto.getDataFimDoEvento().atTime(23, 59, 59);
 
-        // Update organizador if provided
-        if (dto.getOrganizadorId() != null) {
-            UsuarioEntity organizador = new UsuarioEntity();
-            organizador.setId(dto.getOrganizadorId());
-            evento.setOrganizador(organizador);
-        }
+        evento.setNome(dto.getNome());
+        evento.setDataInicioDoEvento(inicioDateTime);
+        evento.setDataFimDoEvento(fimDateTime);
+        evento.setDescricao(dto.getDescricao());
     }
 
     /**
-     * Valida se a data de fim é posterior à data de início do evento.
+     * Valida se a data de fim é igual ou posterior à data de início do evento.
+     * 
      * @param dataInicio Data de início do evento
-     * @param dataFim Data de fim do evento
-     * @throws InvalidDateRangeException se a data de fim não for posterior à data de início
+     * @param dataFim    Data de fim do evento
+     * @throws InvalidDateRangeException se a data de fim for anterior à data
+     *                                   de início
      */
     private void validateDateRange(LocalDateTime dataInicio, LocalDateTime dataFim) {
         if (dataInicio == null || dataFim == null) {
             return; // Deixa as validações @NotNull dos DTOs cuidarem disso
         }
-        
-        if (!dataFim.isAfter(dataInicio)) {
-            throw new InvalidDateRangeException("A data de fim do evento deve ser posterior à data de início");
+
+        if (dataFim.isBefore(dataInicio)) {
+            throw new InvalidDateRangeException("A data de fim do evento deve ser igual ou posterior à data de início");
+        }
+    }
+
+    /**
+     * Valida se a data de fim é igual ou posterior à data de início do evento (versão para
+     * LocalDate).
+     * 
+     * @param dataInicio Data de início do evento
+     * @param dataFim    Data de fim do evento
+     * @throws InvalidDateRangeException se a data de fim for anterior à data
+     *                                   de início
+     */
+    private void validateDateRange(LocalDate dataInicio, LocalDate dataFim) {
+        if (dataInicio == null || dataFim == null) {
+            return; // Deixa as validações @NotNull dos DTOs cuidarem disso
+        }
+
+        if (dataFim.isBefore(dataInicio)) {
+            throw new InvalidDateRangeException("A data de fim do evento deve ser igual ou posterior à data de início");
         }
     }
 

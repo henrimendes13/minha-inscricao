@@ -7,7 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 @NoArgsConstructor
@@ -23,13 +25,17 @@ public class EventoCreateDTO {
 
     @NotNull(message = "Data de início é obrigatória")
     @Future(message = "Data de início do evento deve ser no futuro")
-    @Schema(description = "Data e hora de início do evento", example = "2024-12-15T10:00:00", required = true, type = "string", format = "date-time")
-    private LocalDateTime dataInicioDoEvento;
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    @Schema(description = "Data de início do evento", example = "15-12-2024", required = true, type = "string", pattern = "dd-MM-yyyy")
+    private LocalDate dataInicioDoEvento;
 
     @NotNull(message = "Data de fim é obrigatória")
     @Future(message = "Data de fim do evento deve ser no futuro")
-    @Schema(description = "Data e hora de fim do evento", example = "2024-12-15T18:00:00", required = true, type = "string", format = "date-time")
-    private LocalDateTime dataFimDoEvento;
+    @DateTimeFormat(pattern = "dd-MM-yyyy")
+    @JsonFormat(pattern = "dd-MM-yyyy")
+    @Schema(description = "Data de fim do evento", example = "31-12-2024", required = true, type = "string", pattern = "dd-MM-yyyy")
+    private LocalDate dataFimDoEvento;
     
     @Size(max = 5000, message = "Descrição deve ter no máximo 5000 caracteres")
     @Schema(description = "Descrição detalhada do evento", example = "Competição de CrossFit com atletas de elite", maxLength = 5000)

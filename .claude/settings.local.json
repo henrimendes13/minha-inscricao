@@ -30,7 +30,8 @@
       "Bash(docker-compose:*)",
       "Bash(docker inspect:*)",
       "Bash(docker start:*)",
-      "Bash(ren:*)"
+      "Bash(ren:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

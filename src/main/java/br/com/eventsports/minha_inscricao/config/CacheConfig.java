@@ -13,7 +13,8 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager() {
         ConcurrentMapCacheManager cacheManager = new ConcurrentMapCacheManager();
-        cacheManager.setCacheNames(java.util.Arrays.asList("eventos", "equipes", "usuarios", "categorias", "inscricoes", "organizadores", "atletas"));
+        cacheManager.setCacheNames(java.util.Arrays.asList("eventos", "equipes", "usuarios", "categorias", "inscricoes",
+                "organizadores", "atletas", "workouts", "inscricoes_eventos"));
         cacheManager.setAllowNullValues(true);
         return cacheManager;
     }
