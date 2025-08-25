@@ -1,66 +1,51 @@
 package br.com.eventsports.minha_inscricao.controller;
 
-import br.com.eventsports.minha_inscricao.entity.AnexoEntity;
-import br.com.eventsports.minha_inscricao.service.Interfaces.IAnexoService;
-import br.com.eventsports.minha_inscricao.service.AnexoService.EstatisticasAnexo;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.List;
+import br.com.eventsports.minha_inscricao.entity.AnexoEntity;
+import br.com.eventsports.minha_inscricao.service.AnexoService.EstatisticasAnexo;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IAnexoService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/anexos")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Anexos", description = "API para gerenciamento de anexos de eventos")
 public class AnexoController {
     
     private final IAnexoService anexoService;
     
     @PostMapping("/upload")
-    @Operation(summary = "Fazer upload de anexo", 
-               description = "Faz upload de um arquivo anexo para um evento")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Anexo criado com sucesso"),
-        @ApiResponse(responseCode = "400", description = "Dados inválidos ou arquivo não permitido"),
-        @ApiResponse(responseCode = "413", description = "Arquivo muito grande"),
-        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
-    public ResponseEntity<AnexoEntity> uploadAnexo(
-            @Parameter(description = "Arquivo a ser enviado", required = true)
-            @RequestParam("arquivo") MultipartFile arquivo,
-            
-            @Parameter(description = "ID do evento", required = true, example = "1")
+    public ResponseEntity<AnexoEntity> uploadAnexo(@RequestParam("arquivo") MultipartFile arquivo,
             @RequestParam("eventoId") Long eventoId,
-            
-            @Parameter(description = "Descrição opcional do anexo", example = "Regulamento da competição")
             @RequestParam(value = "descricao", required = false) String descricao) {
         
         try {
             log.info("Upload de anexo iniciado - Evento: {}, Arquivo: {}", eventoId, arquivo.getOriginalFilename());
-            
             AnexoEntity anexo = anexoService.salvarAnexo(arquivo, eventoId, descricao);
-            
             return ResponseEntity.status(HttpStatus.CREATED).body(anexo);
-            
-        } catch (IllegalArgumentException e) {
-            log.warn("Erro de validação no upload: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
         } catch (IOException e) {
             log.error("Erro de I/O no upload", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -68,49 +53,20 @@ public class AnexoController {
     }
     
     @GetMapping("/evento/{eventoId}")
-    @Operation(summary = "Listar anexos de um evento", 
-               description = "Retorna todos os anexos ativos de um evento")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Lista de anexos retornada com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Evento não encontrado")
-    })
-    public ResponseEntity<List<AnexoEntity>> listarAnexosDoEvento(
-            @Parameter(description = "ID do evento", required = true, example = "1")
-            @PathVariable Long eventoId) {
-        
+    public ResponseEntity<List<AnexoEntity>> listarAnexosDoEvento(@PathVariable Long eventoId) {
         List<AnexoEntity> anexos = anexoService.buscarAnexosDoEvento(eventoId);
         return ResponseEntity.ok(anexos);
     }
     
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar anexo por ID", 
-               description = "Retorna os dados de um anexo específico")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Anexo encontrado"),
-        @ApiResponse(responseCode = "404", description = "Anexo não encontrado")
-    })
-    public ResponseEntity<AnexoEntity> buscarAnexo(
-            @Parameter(description = "ID do anexo", required = true, example = "1")
-            @PathVariable Long id) {
-        
+    public ResponseEntity<AnexoEntity> buscarAnexo(@PathVariable Long id) {
         return anexoService.buscarPorId(id)
             .map(anexo -> ResponseEntity.ok(anexo))
             .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/{id}/download")
-    @Operation(summary = "Baixar arquivo anexo", 
-               description = "Faz download do arquivo anexo")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Arquivo baixado com sucesso", 
-                    content = @Content(mediaType = "application/octet-stream")),
-        @ApiResponse(responseCode = "404", description = "Anexo não encontrado"),
-        @ApiResponse(responseCode = "500", description = "Erro ao acessar arquivo")
-    })
-    public ResponseEntity<Resource> baixarArquivo(
-            @Parameter(description = "ID do anexo", required = true, example = "1")
-            @PathVariable Long id) {
-        
+    public ResponseEntity<Resource> baixarArquivo(@PathVariable Long id) {
         try {
             AnexoEntity anexo = anexoService.buscarPorId(id)
                 .orElse(null);
@@ -134,94 +90,48 @@ public class AnexoController {
     }
     
     @PutMapping("/{id}/descricao")
-    @Operation(summary = "Atualizar descrição do anexo", 
-               description = "Atualiza a descrição de um anexo")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Descrição atualizada com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Anexo não encontrado")
-    })
-    public ResponseEntity<AnexoEntity> atualizarDescricao(
-            @Parameter(description = "ID do anexo", required = true, example = "1")
-            @PathVariable Long id,
-            
-            @Parameter(description = "Nova descrição", required = true)
-            @RequestBody String novaDescricao) {
-        
-        try {
-            AnexoEntity anexo = anexoService.atualizarDescricao(id, novaDescricao);
-            return ResponseEntity.ok(anexo);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<AnexoEntity> atualizarDescricao(@PathVariable Long id, @RequestBody String novaDescricao) {
+        AnexoEntity anexo = anexoService.atualizarDescricao(id, novaDescricao);
+        return ResponseEntity.ok(anexo);
     }
     
     @PutMapping("/{id}/status")
-    @Operation(summary = "Alterar status do anexo", 
-               description = "Ativa ou desativa um anexo")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Status alterado com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Anexo não encontrado")
-    })
-    public ResponseEntity<AnexoEntity> alterarStatus(
-            @Parameter(description = "ID do anexo", required = true, example = "1")
-            @PathVariable Long id,
-            
-            @Parameter(description = "Novo status (true = ativo, false = inativo)", required = true)
-            @RequestParam boolean ativo) {
-        
-        try {
-            AnexoEntity anexo = anexoService.alterarStatus(id, ativo);
-            return ResponseEntity.ok(anexo);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<AnexoEntity> alterarStatus(@PathVariable Long id, @RequestParam boolean ativo) {
+        AnexoEntity anexo = anexoService.alterarStatus(id, ativo);
+        return ResponseEntity.ok(anexo);
     }
     
     @DeleteMapping("/{id}")
-    @Operation(summary = "Remover anexo", 
-               description = "Remove um anexo (soft delete - apenas desativa)")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "204", description = "Anexo removido com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Anexo não encontrado")
-    })
-    public ResponseEntity<Void> removerAnexo(
-            @Parameter(description = "ID do anexo", required = true, example = "1")
-            @PathVariable Long id) {
-        
-        try {
-            anexoService.removerAnexo(id);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> removerAnexo(@PathVariable Long id) {
+        anexoService.removerAnexo(id);
+        return ResponseEntity.noContent().build();
     }
     
     @GetMapping("/evento/{eventoId}/estatisticas")
-    @Operation(summary = "Obter estatísticas de anexos", 
-               description = "Retorna estatísticas dos anexos de um evento")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Estatísticas obtidas com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Evento não encontrado")
-    })
-    public ResponseEntity<EstatisticasAnexo> obterEstatisticas(
-            @Parameter(description = "ID do evento", required = true, example = "1")
-            @PathVariable Long eventoId) {
-        
+    public ResponseEntity<EstatisticasAnexo> obterEstatisticas(@PathVariable Long eventoId) {
         EstatisticasAnexo estatisticas = anexoService.obterEstatisticas(eventoId);
         return ResponseEntity.ok(estatisticas);
     }
     
     @GetMapping("/tipo/{tipo}")
-    @Operation(summary = "Buscar anexos por tipo", 
-               description = "Busca anexos por tipo base (image/, application/, etc.)")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Anexos encontrados")
-    })
-    public ResponseEntity<List<AnexoEntity>> buscarPorTipo(
-            @Parameter(description = "Tipo base (ex: 'image', 'application')", required = true, example = "image")
-            @PathVariable String tipo) {
-        
+    public ResponseEntity<List<AnexoEntity>> buscarPorTipo(@PathVariable String tipo) {
         List<AnexoEntity> anexos = anexoService.buscarPorTipo(tipo);
         return ResponseEntity.ok(anexos);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
+        if (e.getMessage().contains("não encontrado")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Anexo não encontrado", "message", e.getMessage()));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Dados inválidos", "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Erro interno do servidor", "message", e.getMessage()));
     }
 }

@@ -1,15 +1,30 @@
 package br.com.eventsports.minha_inscricao.controller;
 
-import br.com.eventsports.minha_inscricao.dto.equipe.*;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.com.eventsports.minha_inscricao.dto.equipe.EquipeCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.equipe.EquipeInscricaoDTO;
+import br.com.eventsports.minha_inscricao.dto.equipe.EquipeResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.equipe.EquipeSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.equipe.EquipeUpdateDTO;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEquipeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/equipes")
@@ -27,57 +42,34 @@ public class EquipeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EquipeResponseDTO> getEquipeById(@PathVariable Long id) {
-        try {
-            EquipeResponseDTO equipe = equipeService.findById(id);
-            return ResponseEntity.ok(equipe);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        EquipeResponseDTO equipe = equipeService.findById(id);
+        return ResponseEntity.ok(equipe);
     }
 
     @PostMapping
     public ResponseEntity<EquipeResponseDTO> createEquipe(@Valid @RequestBody EquipeCreateDTO equipeCreateDTO) {
-        try {
-            EquipeResponseDTO createdEquipe = equipeService.save(equipeCreateDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipe);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        EquipeResponseDTO createdEquipe = equipeService.save(equipeCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipe);
     }
 
     @PostMapping("/evento/{eventoId}/inscricao")
-    public ResponseEntity<EquipeResponseDTO> criarEquipeParaInscricao(
-            @PathVariable Long eventoId, 
+    public ResponseEntity<EquipeResponseDTO> criarEquipeParaInscricao(@PathVariable Long eventoId,
             @Valid @RequestBody EquipeInscricaoDTO equipeInscricaoDTO,
             @RequestParam(required = false) Long usuarioLogadoId) {
-        try {
-            // TODO: Obter usuário logado do contexto de segurança
-            // Por enquanto, usando o parâmetro opcional ou o primeiro da lista
-            EquipeResponseDTO createdEquipe = equipeService.criarEquipeParaInscricao(eventoId, equipeInscricaoDTO, usuarioLogadoId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipe);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        EquipeResponseDTO createdEquipe = equipeService.criarEquipeParaInscricao(eventoId, equipeInscricaoDTO, usuarioLogadoId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipe);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<EquipeResponseDTO> updateEquipe(@PathVariable Long id, @Valid @RequestBody EquipeUpdateDTO equipeUpdateDTO) {
-        try {
-            EquipeResponseDTO updatedEquipe = equipeService.update(id, equipeUpdateDTO);
-            return ResponseEntity.ok(updatedEquipe);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        EquipeResponseDTO updatedEquipe = equipeService.update(id, equipeUpdateDTO);
+        return ResponseEntity.ok(updatedEquipe);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteEquipe(@PathVariable Long id) {
-        try {
-            equipeService.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "Equipe deletada com sucesso"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        equipeService.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Equipe deletada com sucesso"));
     }
 
     @GetMapping("/search")

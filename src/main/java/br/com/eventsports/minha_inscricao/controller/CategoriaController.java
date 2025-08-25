@@ -1,167 +1,125 @@
 package br.com.eventsports.minha_inscricao.controller;
 
-import br.com.eventsports.minha_inscricao.dto.categoria.*;
-import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
-import br.com.eventsports.minha_inscricao.service.Interfaces.ICategoriaService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaUpdateDTO;
+import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
+import br.com.eventsports.minha_inscricao.service.Interfaces.ICategoriaService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/categorias")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@Tag(name = "Categorias", description = "APIs para gerenciamento de categorias de eventos")
 public class CategoriaController {
 
     private final ICategoriaService categoriaService;
 
     @GetMapping
-    @Operation(summary = "Listar todas as categorias", description = "Retorna uma lista com todas as categorias cadastradas")
     public ResponseEntity<List<CategoriaSummaryDTO>> getAllCategorias() {
         List<CategoriaSummaryDTO> categorias = categoriaService.findAll();
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar categoria por ID", description = "Retorna os detalhes completos de uma categoria específica")
-    public ResponseEntity<CategoriaResponseDTO> getCategoriaById(
-            @Parameter(description = "ID da categoria") @PathVariable Long id) {
-        try {
-            CategoriaResponseDTO categoria = categoriaService.findById(id);
-            return ResponseEntity.ok(categoria);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CategoriaResponseDTO> getCategoriaById(@PathVariable Long id) {
+        CategoriaResponseDTO categoria = categoriaService.findById(id);
+        return ResponseEntity.ok(categoria);
     }
 
     @PostMapping("/evento/{eventoId}")
-    @Operation(summary = "Criar nova categoria", description = "Cria uma nova categoria para um evento específico")
-    public ResponseEntity<CategoriaResponseDTO> createCategoria(
-            @Parameter(description = "ID do evento") @PathVariable Long eventoId,
+    public ResponseEntity<CategoriaResponseDTO> createCategoria(@PathVariable Long eventoId,
             @Valid @RequestBody CategoriaCreateDTO categoriaCreateDTO) {
-        try {
-            CategoriaResponseDTO createdCategoria = categoriaService.save(eventoId, categoriaCreateDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdCategoria);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        CategoriaResponseDTO createdCategoria = categoriaService.save(eventoId, categoriaCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdCategoria);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar categoria", description = "Atualiza os dados de uma categoria existente")
-    public ResponseEntity<CategoriaResponseDTO> updateCategoria(
-            @Parameter(description = "ID da categoria") @PathVariable Long id,
+    public ResponseEntity<CategoriaResponseDTO> updateCategoria(@PathVariable Long id,
             @Valid @RequestBody CategoriaUpdateDTO categoriaUpdateDTO) {
-        try {
-            CategoriaResponseDTO updatedCategoria = categoriaService.update(id, categoriaUpdateDTO);
-            return ResponseEntity.ok(updatedCategoria);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        CategoriaResponseDTO updatedCategoria = categoriaService.update(id, categoriaUpdateDTO);
+        return ResponseEntity.ok(updatedCategoria);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar categoria", description = "Remove uma categoria do sistema")
-    public ResponseEntity<Map<String, String>> deleteCategoria(
-            @Parameter(description = "ID da categoria") @PathVariable Long id) {
-        try {
-            categoriaService.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "Categoria deletada com sucesso"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<Map<String, String>> deleteCategoria(@PathVariable Long id) {
+        categoriaService.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Categoria deletada com sucesso"));
     }
 
     @GetMapping("/evento/{eventoId}")
-    @Operation(summary = "Listar categorias por evento", description = "Retorna todas as categorias de um evento específico")
-    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasByEvento(
-            @Parameter(description = "ID do evento") @PathVariable Long eventoId) {
+    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasByEvento(@PathVariable Long eventoId) {
         List<CategoriaSummaryDTO> categorias = categoriaService.findByEventoId(eventoId);
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/ativas")
-    @Operation(summary = "Listar categorias ativas", description = "Retorna todas as categorias ativas do sistema")
     public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasAtivas() {
         List<CategoriaSummaryDTO> categorias = categoriaService.findCategoriasAtivas();
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/evento/{eventoId}/ativas")
-    @Operation(summary = "Listar categorias ativas por evento", description = "Retorna todas as categorias ativas de um evento específico")
-    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasAtivasByEvento(
-            @Parameter(description = "ID do evento") @PathVariable Long eventoId) {
+    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasAtivasByEvento(@PathVariable Long eventoId) {
         List<CategoriaSummaryDTO> categorias = categoriaService.findCategoriasAtivasByEvento(eventoId);
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/evento/{eventoId}/disponiveis")
-    @Operation(summary = "Listar categorias disponíveis para inscrição", 
-               description = "Retorna categorias ativas de um evento ativo que podem receber inscrições")
-    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasDisponiveis(
-            @Parameter(description = "ID do evento") @PathVariable Long eventoId) {
+    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasDisponiveis(@PathVariable Long eventoId) {
         List<CategoriaSummaryDTO> categorias = categoriaService.findCategoriasDisponiveis(eventoId);
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/tipo/{tipoParticipacao}")
-    @Operation(summary = "Listar categorias por tipo de participação", 
-               description = "Retorna categorias filtradas por tipo de participação (INDIVIDUAL ou EQUIPE)")
-    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasByTipo(
-            @Parameter(description = "Tipo de participação") @PathVariable TipoParticipacao tipoParticipacao) {
+    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasByTipo(@PathVariable TipoParticipacao tipoParticipacao) {
         List<CategoriaSummaryDTO> categorias = categoriaService.findByTipoParticipacao(tipoParticipacao);
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/evento/{eventoId}/tipo/{tipoParticipacao}")
-    @Operation(summary = "Listar categorias por evento e tipo de participação", 
-               description = "Retorna categorias de um evento específico filtradas por tipo de participação")
-    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasByEventoAndTipo(
-            @Parameter(description = "ID do evento") @PathVariable Long eventoId,
-            @Parameter(description = "Tipo de participação") @PathVariable TipoParticipacao tipoParticipacao) {
+    public ResponseEntity<List<CategoriaSummaryDTO>> getCategoriasByEventoAndTipo(@PathVariable Long eventoId,
+            @PathVariable TipoParticipacao tipoParticipacao) {
         List<CategoriaSummaryDTO> categorias = categoriaService.findByEventoIdAndTipoParticipacao(eventoId, tipoParticipacao);
         return ResponseEntity.ok(categorias);
     }
 
     @GetMapping("/search")
-    @Operation(summary = "Buscar categorias por nome", description = "Busca categorias que contenham o texto no nome")
-    public ResponseEntity<List<CategoriaSummaryDTO>> searchCategoriasByNome(
-            @Parameter(description = "Texto para busca no nome") @RequestParam String nome) {
+    public ResponseEntity<List<CategoriaSummaryDTO>> searchCategoriasByNome(@RequestParam String nome) {
         List<CategoriaSummaryDTO> categorias = categoriaService.findByNome(nome);
         return ResponseEntity.ok(categorias);
     }
 
     @PatchMapping("/{id}/ativar")
-    @Operation(summary = "Ativar categoria", description = "Ativa uma categoria para receber inscrições")
-    public ResponseEntity<CategoriaResponseDTO> ativarCategoria(
-            @Parameter(description = "ID da categoria") @PathVariable Long id) {
-        try {
-            CategoriaResponseDTO categoria = categoriaService.ativar(id);
-            return ResponseEntity.ok(categoria);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CategoriaResponseDTO> ativarCategoria(@PathVariable Long id) {
+        CategoriaResponseDTO categoria = categoriaService.ativar(id);
+        return ResponseEntity.ok(categoria);
     }
 
     @PatchMapping("/{id}/desativar")
-    @Operation(summary = "Desativar categoria", description = "Desativa uma categoria, impedindo novas inscrições")
-    public ResponseEntity<CategoriaResponseDTO> desativarCategoria(
-            @Parameter(description = "ID da categoria") @PathVariable Long id) {
-        try {
-            CategoriaResponseDTO categoria = categoriaService.desativar(id);
-            return ResponseEntity.ok(categoria);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<CategoriaResponseDTO> desativarCategoria(@PathVariable Long id) {
+        CategoriaResponseDTO categoria = categoriaService.desativar(id);
+        return ResponseEntity.ok(categoria);
     }
 
     // Exception Handlers

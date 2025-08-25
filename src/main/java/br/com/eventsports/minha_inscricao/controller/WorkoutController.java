@@ -1,155 +1,128 @@
 package br.com.eventsports.minha_inscricao.controller;
 
-import br.com.eventsports.minha_inscricao.dto.workout.*;
-import br.com.eventsports.minha_inscricao.service.Interfaces.IWorkoutService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutUpdateDTO;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IWorkoutService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/workouts")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@Tag(name = "Workouts", description = "APIs para gerenciamento de workouts de eventos")
 public class WorkoutController {
 
     private final IWorkoutService workoutService;
 
     @GetMapping
-    @Operation(summary = "Listar todos os workouts", description = "Retorna uma lista com todos os workouts cadastrados")
     public ResponseEntity<List<WorkoutSummaryDTO>> getAllWorkouts() {
         List<WorkoutSummaryDTO> workouts = workoutService.findAll();
         return ResponseEntity.ok(workouts);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar workout por ID", description = "Retorna os detalhes completos de um workout específico")
-    public ResponseEntity<WorkoutResponseDTO> getWorkoutById(
-            @Parameter(description = "ID do workout") @PathVariable Long id) {
-        try {
-            WorkoutResponseDTO workout = workoutService.findById(id);
-            return ResponseEntity.ok(workout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<WorkoutResponseDTO> getWorkoutById(@PathVariable Long id) {
+        WorkoutResponseDTO workout = workoutService.findById(id);
+        return ResponseEntity.ok(workout);
     }
 
     @PostMapping
-    @Operation(summary = "Criar novo workout", description = "Cria um novo workout")
-    public ResponseEntity<WorkoutResponseDTO> createWorkout(
-            @Valid @RequestBody WorkoutCreateDTO workoutCreateDTO) {
-        try {
-            WorkoutResponseDTO createdWorkout = workoutService.save(workoutCreateDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdWorkout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<WorkoutResponseDTO> createWorkout(@Valid @RequestBody WorkoutCreateDTO workoutCreateDTO) {
+        WorkoutResponseDTO createdWorkout = workoutService.save(workoutCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdWorkout);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Atualizar workout", description = "Atualiza os dados de um workout existente")
-    public ResponseEntity<WorkoutResponseDTO> updateWorkout(
-            @Parameter(description = "ID do workout") @PathVariable Long id,
+    public ResponseEntity<WorkoutResponseDTO> updateWorkout(@PathVariable Long id,
             @Valid @RequestBody WorkoutUpdateDTO workoutUpdateDTO) {
-        try {
-            WorkoutResponseDTO updatedWorkout = workoutService.update(id, workoutUpdateDTO);
-            return ResponseEntity.ok(updatedWorkout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        WorkoutResponseDTO updatedWorkout = workoutService.update(id, workoutUpdateDTO);
+        return ResponseEntity.ok(updatedWorkout);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Deletar workout", description = "Remove um workout do sistema")
-    public ResponseEntity<Void> deleteWorkout(
-            @Parameter(description = "ID do workout") @PathVariable Long id) {
-        try {
-            workoutService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Void> deleteWorkout(@PathVariable Long id) {
+        workoutService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/evento/{eventoId}")
-    @Operation(summary = "Listar workouts por evento", description = "Retorna todos os workouts de um evento específico")
-    public ResponseEntity<List<WorkoutSummaryDTO>> getWorkoutsByEvento(
-            @Parameter(description = "ID do evento") @PathVariable Long eventoId,
-            @Parameter(description = "Filtrar apenas workouts ativos") @RequestParam(defaultValue = "false") boolean apenasAtivos) {
+    public ResponseEntity<List<WorkoutSummaryDTO>> getWorkoutsByEvento(@PathVariable Long eventoId,
+            @RequestParam(defaultValue = "false") boolean apenasAtivos) {
         List<WorkoutSummaryDTO> workouts = workoutService.findByEventoIdAndAtivo(eventoId, apenasAtivos);
         return ResponseEntity.ok(workouts);
     }
 
     @GetMapping("/categoria/{categoriaId}")
-    @Operation(summary = "Listar workouts por categoria", description = "Retorna todos os workouts de uma categoria específica")
-    public ResponseEntity<List<WorkoutSummaryDTO>> getWorkoutsByCategoria(
-            @Parameter(description = "ID da categoria") @PathVariable Long categoriaId) {
+    public ResponseEntity<List<WorkoutSummaryDTO>> getWorkoutsByCategoria(@PathVariable Long categoriaId) {
         List<WorkoutSummaryDTO> workouts = workoutService.findByCategoriaId(categoriaId);
         return ResponseEntity.ok(workouts);
     }
 
     @GetMapping("/buscar")
-    @Operation(summary = "Buscar workouts por nome", description = "Busca workouts que contenham o termo no nome")
-    public ResponseEntity<List<WorkoutSummaryDTO>> searchWorkoutsByNome(
-            @Parameter(description = "Termo de busca") @RequestParam String nome) {
+    public ResponseEntity<List<WorkoutSummaryDTO>> searchWorkoutsByNome(@RequestParam String nome) {
         List<WorkoutSummaryDTO> workouts = workoutService.findByNome(nome);
         return ResponseEntity.ok(workouts);
     }
 
     @PatchMapping("/{id}/ativar")
-    @Operation(summary = "Ativar workout", description = "Ativa um workout específico")
-    public ResponseEntity<WorkoutResponseDTO> ativarWorkout(
-            @Parameter(description = "ID do workout") @PathVariable Long id) {
-        try {
-            WorkoutResponseDTO workout = workoutService.ativar(id);
-            return ResponseEntity.ok(workout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<WorkoutResponseDTO> ativarWorkout(@PathVariable Long id) {
+        WorkoutResponseDTO workout = workoutService.ativar(id);
+        return ResponseEntity.ok(workout);
     }
 
     @PatchMapping("/{id}/desativar")
-    @Operation(summary = "Desativar workout", description = "Desativa um workout específico")
-    public ResponseEntity<WorkoutResponseDTO> desativarWorkout(
-            @Parameter(description = "ID do workout") @PathVariable Long id) {
-        try {
-            WorkoutResponseDTO workout = workoutService.desativar(id);
-            return ResponseEntity.ok(workout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<WorkoutResponseDTO> desativarWorkout(@PathVariable Long id) {
+        WorkoutResponseDTO workout = workoutService.desativar(id);
+        return ResponseEntity.ok(workout);
     }
 
     @PostMapping("/{workoutId}/categorias/{categoriaId}")
-    @Operation(summary = "Adicionar categoria ao workout", description = "Associa uma categoria a um workout")
-    public ResponseEntity<WorkoutResponseDTO> adicionarCategoria(
-            @Parameter(description = "ID do workout") @PathVariable Long workoutId,
-            @Parameter(description = "ID da categoria") @PathVariable Long categoriaId) {
-        try {
-            WorkoutResponseDTO workout = workoutService.adicionarCategoria(workoutId, categoriaId);
-            return ResponseEntity.ok(workout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<WorkoutResponseDTO> adicionarCategoria(@PathVariable Long workoutId,
+            @PathVariable Long categoriaId) {
+        WorkoutResponseDTO workout = workoutService.adicionarCategoria(workoutId, categoriaId);
+        return ResponseEntity.ok(workout);
     }
 
     @DeleteMapping("/{workoutId}/categorias/{categoriaId}")
-    @Operation(summary = "Remover categoria do workout", description = "Remove a associação de uma categoria com um workout")
-    public ResponseEntity<WorkoutResponseDTO> removerCategoria(
-            @Parameter(description = "ID do workout") @PathVariable Long workoutId,
-            @Parameter(description = "ID da categoria") @PathVariable Long categoriaId) {
-        try {
-            WorkoutResponseDTO workout = workoutService.removerCategoria(workoutId, categoriaId);
-            return ResponseEntity.ok(workout);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<WorkoutResponseDTO> removerCategoria(@PathVariable Long workoutId,
+            @PathVariable Long categoriaId) {
+        WorkoutResponseDTO workout = workoutService.removerCategoria(workoutId, categoriaId);
+        return ResponseEntity.ok(workout);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException e) {
+        if (e.getMessage().contains("não encontrado")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "Workout não encontrado", "message", e.getMessage()));
         }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "Erro na operação", "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleGenericException(Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Erro interno do servidor", "message", e.getMessage()));
     }
 }
