@@ -25,7 +25,12 @@
       "Bash(wmic process where processid=14036 delete:*)",
       "Bash(wmic process where processid=26420 delete:*)",
       "Bash(wmic process where processid=12016 delete:*)",
-      "Bash(del:*)"
+      "Bash(del:*)",
+      "Bash(copy:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker inspect:*)",
+      "Bash(docker start:*)",
+      "Bash(ren:*)"
     ],
     "deny": [],
     "ask": []

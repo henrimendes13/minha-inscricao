@@ -1,0 +1,43 @@
+services:
+  # Use existing container: minha_inscricao
+  # docker start minha_inscricao to start the existing PostgreSQL container
+  
+  postgres:
+    # This configuration is for reference - use existing container instead
+    image: postgres:14.1-alpine
+    container_name: minha-inscricao-postgres-new
+    environment:
+      POSTGRES_DB: minha_inscricao
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"  # Different port to avoid conflict
+    volumes:
+      - postgres_data_new:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d minha_inscricao"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles: ["new-container"]  # Only start with --profile new-container
+
+  app:
+    build: .
+    container_name: minha-inscricao-app
+    ports:
+      - "8080:8080"
+    depends_on: []
+    # Note: Start existing container manually: docker start minha_inscricao
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5433/minha_inscricao
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data_new:
+    driver: local
+  # Note: Existing container uses volume: b39fea7023a7e46784f37549804dc923239434f8b5814c36690466bb879b30e7
