@@ -1,19 +1,33 @@
 package br.com.eventsports.minha_inscricao.controller;
 
-import br.com.eventsports.minha_inscricao.dto.evento.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import br.com.eventsports.minha_inscricao.dto.evento.EventoCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.EventoResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.EventoUpdateDTO;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/eventos")
@@ -31,47 +45,27 @@ public class EventoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EventoResponseDTO> getEventoById(@PathVariable Long id) {
-        try {
-            EventoResponseDTO evento = eventoService.findById(id);
-            return ResponseEntity.ok(evento);
-        } catch (EventoNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        EventoResponseDTO evento = eventoService.findById(id);
+        return ResponseEntity.ok(evento);
     }
 
     @PostMapping
     public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO) {
-        try {
-            EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdEvento);
-        } catch (InvalidDateRangeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvento);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id, 
-                                                         @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO) {
-        try {
-            
-            EventoResponseDTO updatedEvento = eventoService.update(id, eventoUpdateDTO);
-            return ResponseEntity.ok(updatedEvento);
-        } catch (EventoNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (InvalidDateRangeException e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id,
+            @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO) {
+        EventoResponseDTO updatedEvento = eventoService.update(id, eventoUpdateDTO);
+        return ResponseEntity.ok(updatedEvento);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id) {
-        try {
-            
-            eventoService.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "Evento deletado com sucesso"));
-        } catch (EventoNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+        eventoService.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Evento deletado com sucesso"));
     }
 
     @GetMapping("/search")
