@@ -164,10 +164,11 @@ public class EquipeService implements IEquipeService {
 
     @CacheEvict(value = "equipes", allEntries = true)
     public void deleteById(Long id) {
-        if (!equipeRepository.existsById(id)) {
-            throw new RuntimeException("Equipe não encontrada com ID: " + id);
-        }
-        equipeRepository.deleteById(id);
+        EquipeEntity equipe = equipeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipe não encontrada com ID: " + id));
+        
+        equipe.desativar();
+        equipeRepository.save(equipe);
     }
 
     @Cacheable(value = "equipes", key = "'search:' + #nome")
