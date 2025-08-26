@@ -2,12 +2,20 @@ package br.com.eventsports.minha_inscricao.service;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.*;
 import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
+import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
+import br.com.eventsports.minha_inscricao.entity.InscricaoEntity;
+import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.Genero;
+import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
+import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
 import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
+import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
+import br.com.eventsports.minha_inscricao.repository.InscricaoRepository;
+import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -16,7 +24,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +39,9 @@ public class AtletaService implements IAtletaService {
     private final AtletaRepository atletaRepository;
     private final EventoRepository eventoRepository;
     private final EquipeRepository equipeRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final InscricaoRepository inscricaoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Cacheable(value = "atletas", key = "#id")
     @Transactional(readOnly = true)
@@ -70,13 +83,54 @@ public class AtletaService implements IAtletaService {
         return convertToResponseDTO(savedAtleta);
     }
 
+    /**
+     * Cria um atleta individual com inscrição automática no evento.
+     * @param eventoId ID do evento
+     * @param atletaInscricaoDTO Dados do atleta e da inscrição
+     * @return AtletaResponseDTO com atleta criado e inscrição associada
+     */
     @CachePut(value = "atletas", key = "#result.id")
     @CacheEvict(value = "atletas", key = "'all'")
-    public AtletaResponseDTO saveForEvento(AtletaCreateDTO atletaCreateDTO, Long eventoId) {
-        validateAtletaData(atletaCreateDTO);
-        AtletaEntity atleta = convertCreateDTOToEntityForEvento(atletaCreateDTO, eventoId);
-        AtletaEntity savedAtleta = atletaRepository.save(atleta);
-        return convertToResponseDTO(savedAtleta);
+    @Transactional
+    public AtletaResponseDTO criarAtletaParaInscricao(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO) {
+        validateAtletaInscricaoData(eventoId, atletaInscricaoDTO);
+        
+        // Buscar entidades necessárias
+        EventoEntity evento = eventoRepository.findById(eventoId)
+            .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
+        CategoriaEntity categoria = categoriaRepository.findById(atletaInscricaoDTO.getCategoriaId())
+            .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+
+        // Verificar se já existe atleta com mesmo CPF
+        AtletaEntity atleta = null;
+        if (atletaInscricaoDTO.getCpf() != null) {
+            Optional<AtletaEntity> atletaExistente = atletaRepository.findByCpf(atletaInscricaoDTO.getCpf());
+            if (atletaExistente.isPresent()) {
+                atleta = atletaExistente.get();
+                // Verifica se já tem inscrição no mesmo evento
+                if (temInscricaoNoEvento(atleta, eventoId)) {
+                    throw new RuntimeException("Atleta já possui inscrição neste evento");
+                }
+            }
+        }
+
+        // Se não existe atleta, criar novo
+        if (atleta == null) {
+            atleta = convertInscricaoDTOToEntity(atletaInscricaoDTO, evento);
+            atleta = atletaRepository.save(atleta);
+        }
+
+        // Criar UsuarioEntity baseado no atleta para a inscrição
+        UsuarioEntity usuario = criarUsuarioParaInscricao(atleta, atletaInscricaoDTO);
+        usuario = usuarioRepository.save(usuario);
+
+        // Criar inscrição individual
+        InscricaoEntity inscricao = criarInscricaoParaAtleta(usuario, evento, categoria, atletaInscricaoDTO);
+        
+        // Recarregar atleta para obter dados atualizados
+        atleta = atletaRepository.findById(atleta.getId()).orElse(atleta);
+
+        return convertToResponseDTO(atleta);
     }
 
     @CachePut(value = "atletas", key = "#id")
@@ -334,5 +388,168 @@ public class AtletaService implements IAtletaService {
         if (dto.getAceitaTermos() == null || !dto.getAceitaTermos()) {
             throw new RuntimeException("É obrigatório aceitar os termos para cadastrar o atleta");
         }
+    }
+
+    /**
+     * Valida os dados de criação de atleta para inscrição.
+     */
+    private void validateAtletaInscricaoData(Long eventoId, AtletaInscricaoDTO dto) {
+        // Validações básicas do atleta
+        if (dto.getDataNascimento() != null) {
+            LocalDate hoje = LocalDate.now();
+            int idade = hoje.getYear() - dto.getDataNascimento().getYear();
+            if (dto.getDataNascimento().isAfter(hoje.minusYears(idade))) {
+                idade--;
+            }
+            
+            if (idade < 0) {
+                throw new RuntimeException("Data de nascimento não pode ser no futuro");
+            }
+        }
+
+        // Validar aceite dos termos
+        if (dto.getAceitaTermos() == null || !dto.getAceitaTermos()) {
+            throw new RuntimeException("É obrigatório aceitar os termos para cadastrar o atleta");
+        }
+
+        if (dto.getTermosInscricaoAceitos() == null || !dto.getTermosInscricaoAceitos()) {
+            throw new RuntimeException("É obrigatório aceitar os termos da inscrição");
+        }
+
+        // Validar categoria
+        CategoriaEntity categoria = categoriaRepository.findById(dto.getCategoriaId())
+            .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+
+        if (!categoria.getAtiva()) {
+            throw new RuntimeException("Categoria não está ativa para inscrições");
+        }
+
+        if (!TipoParticipacao.INDIVIDUAL.equals(categoria.getTipoParticipacao())) {
+            throw new RuntimeException("Esta categoria não aceita inscrições individuais");
+        }
+
+        // Validar compatibilidade do atleta com a categoria
+        if (!atletaEhCompativel(dto, categoria)) {
+            throw new RuntimeException("Atleta não atende aos critérios da categoria (idade/gênero)");
+        }
+    }
+
+    /**
+     * Verifica se um atleta é compatível com uma categoria.
+     */
+    private boolean atletaEhCompativel(AtletaInscricaoDTO dto, CategoriaEntity categoria) {
+        // Verificar gênero
+        if (categoria.getGenero() != null && !categoria.getGenero().equals(dto.getGenero())) {
+            return false;
+        }
+
+        // Calcular idade baseada na data de nascimento
+        int idade = java.time.Period.between(dto.getDataNascimento(), LocalDate.now()).getYears();
+
+        // Verificar idade mínima
+        if (categoria.getIdadeMinima() != null && idade < categoria.getIdadeMinima()) {
+            return false;
+        }
+
+        // Verificar idade máxima
+        if (categoria.getIdadeMaxima() != null && idade > categoria.getIdadeMaxima()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Verifica se o atleta já tem inscrição no evento.
+     */
+    private boolean temInscricaoNoEvento(AtletaEntity atleta, Long eventoId) {
+        // Implementar consulta para verificar se existe inscrição
+        return inscricaoRepository.existsByAtletaIdAndEventoId(atleta.getId(), eventoId);
+    }
+
+    /**
+     * Converte DTO de inscrição para AtletaEntity.
+     */
+    private AtletaEntity convertInscricaoDTOToEntity(AtletaInscricaoDTO dto, EventoEntity evento) {
+        return AtletaEntity.builder()
+                .nome(dto.getNome())
+                .cpf(dto.getCpf())
+                .dataNascimento(dto.getDataNascimento())
+                .genero(dto.getGenero())
+                .telefone(dto.getTelefone())
+                .emergenciaNome(dto.getEmergenciaNome())
+                .emergenciaTelefone(dto.getEmergenciaTelefone())
+                .observacoesMedicas(dto.getObservacoesMedicas())
+                .endereco(dto.getEndereco())
+                .email(dto.getEmail())
+                .aceitaTermos(dto.getAceitaTermos())
+                .evento(evento)
+                .build();
+    }
+
+    /**
+     * Cria UsuarioEntity baseado no atleta para a inscrição.
+     */
+    private UsuarioEntity criarUsuarioParaInscricao(AtletaEntity atleta, AtletaInscricaoDTO dto) {
+        // Verificar se já existe usuário com mesmo CPF
+        if (dto.getCpf() != null) {
+            Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findByCpf(dto.getCpf());
+            if (usuarioExistente.isPresent()) {
+                return usuarioExistente.get();
+            }
+        }
+
+        // Criar novo usuário baseado no atleta
+        return UsuarioEntity.builder()
+                .nome(atleta.getNome())
+                .cpf(atleta.getCpf())
+                .dataNascimento(atleta.getDataNascimento())
+                .genero(atleta.getGenero())
+                .telefone(atleta.getTelefone())
+                .email(atleta.getEmail())
+                .aceitaTermos(dto.getTermosInscricaoAceitos())
+                .ativo(true)
+                .senha("temp123") // Senha temporária - deve ser alterada pelo usuário
+                .build();
+    }
+
+    /**
+     * Cria uma inscrição para o atleta individual.
+     */
+    private InscricaoEntity criarInscricaoParaAtleta(UsuarioEntity usuario, EventoEntity evento, 
+                                                    CategoriaEntity categoria, AtletaInscricaoDTO dto) {
+        // Determinar valor da inscrição
+        BigDecimal valorInscricao = dto.getValorInscricao() != null 
+            ? dto.getValorInscricao()
+            : (categoria.getValorInscricao() != null 
+                ? categoria.getValorInscricao() 
+                : BigDecimal.ZERO);
+
+        // Criar a inscrição individual
+        InscricaoEntity inscricao = InscricaoEntity.builder()
+                .atleta(usuario) // Inscrição individual
+                .evento(evento)
+                .categoria(categoria)
+                .equipe(null) // Não é inscrição de equipe
+                .status(StatusInscricao.PENDENTE)
+                .valor(valorInscricao)
+                .dataInscricao(LocalDateTime.now())
+                .termosAceitos(dto.getTermosInscricaoAceitos())
+                .codigoDesconto(dto.getCodigoDesconto())
+                .build();
+
+        // Salvar inscrição
+        return inscricaoRepository.save(inscricao);
+    }
+
+    /**
+     * Método temporário para compatibilidade com EquipeService.
+     * Cria atleta apenas para evento, sem inscrição.
+     */
+    public AtletaResponseDTO saveForEvento(AtletaCreateDTO atletaCreateDTO, Long eventoId) {
+        validateAtletaData(atletaCreateDTO);
+        AtletaEntity atleta = convertCreateDTOToEntityForEvento(atletaCreateDTO, eventoId);
+        AtletaEntity savedAtleta = atletaRepository.save(atleta);
+        return convertToResponseDTO(savedAtleta);
     }
 }

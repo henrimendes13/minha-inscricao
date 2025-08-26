@@ -120,4 +120,7 @@ public interface InscricaoRepository extends JpaRepository<InscricaoEntity, Long
     @CacheEvict(value = "inscricoes", allEntries = true)
     @Query("UPDATE InscricaoEntity i SET i.status = :status WHERE i.id = :id")
     void updateStatus(@Param("id") Long id, @Param("status") StatusInscricao status);
+
+    @Query("SELECT COUNT(i) > 0 FROM InscricaoEntity i WHERE i.atleta.id = :atletaId AND i.evento.id = :eventoId")
+    boolean existsByAtletaIdAndEventoId(@Param("atletaId") Long atletaId, @Param("eventoId") Long eventoId);
 }

@@ -19,6 +19,8 @@ public interface IAtletaService {
     
     AtletaResponseDTO saveForInscricao(AtletaCreateDTO atletaCreateDTO, Long eventoId, Long equipeId);
     
+    AtletaResponseDTO criarAtletaParaInscricao(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO);
+    
     AtletaResponseDTO saveForEvento(AtletaCreateDTO atletaCreateDTO, Long eventoId);
     
     AtletaResponseDTO update(Long id, AtletaUpdateDTO atletaUpdateDTO);

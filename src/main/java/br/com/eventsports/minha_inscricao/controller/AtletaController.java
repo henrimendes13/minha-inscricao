@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.AtletaCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.atleta.AtletaInscricaoDTO;
 import br.com.eventsports.minha_inscricao.dto.atleta.AtletaResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.atleta.AtletaSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.atleta.AtletaUpdateDTO;
@@ -48,23 +49,10 @@ public class AtletaController {
         return ResponseEntity.ok(atleta);
     }
 
-    @PostMapping
-    public ResponseEntity<AtletaResponseDTO> createAtleta(@Valid @RequestBody AtletaCreateDTO atletaCreateDTO) {
-        AtletaResponseDTO createdAtleta = atletaService.save(atletaCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdAtleta);
-    }
-
     @PostMapping("/evento/{eventoId}/inscricao/atletas")
     public ResponseEntity<AtletaResponseDTO> createAtletaForInscricao(@PathVariable Long eventoId,
-            @Valid @RequestBody AtletaCreateDTO atletaCreateDTO) {
-        AtletaResponseDTO createdAtleta = atletaService.saveForEvento(atletaCreateDTO, eventoId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdAtleta);
-    }
-
-    @PostMapping("/evento/{eventoId}/inscricao/equipe/{equipeId}/atletas")
-    public ResponseEntity<AtletaResponseDTO> createAtletaForEquipeInscricao(@PathVariable Long eventoId,
-            @PathVariable Long equipeId, @Valid @RequestBody AtletaCreateDTO atletaCreateDTO) {
-        AtletaResponseDTO createdAtleta = atletaService.saveForInscricao(atletaCreateDTO, eventoId, equipeId);
+            @Valid @RequestBody AtletaInscricaoDTO atletaInscricaoDTO) {
+        AtletaResponseDTO createdAtleta = atletaService.criarAtletaParaInscricao(eventoId, atletaInscricaoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAtleta);
     }
 
