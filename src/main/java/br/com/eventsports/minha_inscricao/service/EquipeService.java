@@ -9,6 +9,9 @@ import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
+import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
+import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
+import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEquipeService;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
@@ -21,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +33,9 @@ import java.util.stream.Collectors;
 public class EquipeService implements IEquipeService {
 
     private final EquipeRepository equipeRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final AtletaRepository atletaRepository;
+    private final EventoRepository eventoRepository;
     private final IAtletaService atletaService;
     private final IUsuarioService usuarioService;
 
@@ -62,8 +69,6 @@ public class EquipeService implements IEquipeService {
      * Cria uma equipe no contexto de inscrição em um evento específico.
      * Este método é usado durante o processo de inscrição.
      */
-    @CachePut(value = "equipes", key = "#result.id")
-    @CacheEvict(value = "equipes", key = "'all'")
     public EquipeResponseDTO criarEquipeParaInscricao(Long eventoId, EquipeInscricaoDTO equipeInscricaoDTO) {
         return criarEquipeParaInscricao(eventoId, equipeInscricaoDTO, null);
     }
@@ -74,50 +79,75 @@ public class EquipeService implements IEquipeService {
      * @param equipeInscricaoDTO Dados da equipe
      * @param usuarioLogadoId ID do usuário logado (null para usar o primeiro da lista)
      */
-    @CachePut(value = "equipes", key = "#result.id")
-    @CacheEvict(value = "equipes", key = "'all'")
+    @Transactional
     public EquipeResponseDTO criarEquipeParaInscricao(Long eventoId, EquipeInscricaoDTO equipeInscricaoDTO, Long usuarioLogadoId) {
         validateEquipeInscricaoData(eventoId, equipeInscricaoDTO);
         
-        // Busca a categoria para determinar o tipo de participação
-        CategoriaEntity categoria = buscarCategoria(equipeInscricaoDTO.getCategoriaId());
+        // Buscar entidades necessárias
+        EventoEntity evento = eventoRepository.findById(eventoId)
+            .orElseThrow(() -> new RuntimeException("Evento não encontrado"));
+        CategoriaEntity categoria = categoriaRepository.findById(equipeInscricaoDTO.getCategoriaId())
+            .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
         
-        EquipeEntity equipe = convertInscricaoDTOToEntity(eventoId, equipeInscricaoDTO);
+        // Criar equipe básica (sem capitão ainda)
+        EquipeEntity equipe = new EquipeEntity();
+        equipe.setNome(equipeInscricaoDTO.getNome());
+        equipe.setEvento(evento);
+        equipe.setCategoria(categoria);
+        equipe.setDescricao(null);
+        equipe.setAtiva(true);
         
-        // Criar/buscar todos os atletas primeiro
-        List<Long> atletasIds = criarOuBuscarAtletas(equipeInscricaoDTO.getAtletas(), eventoId, null);
-        
-        // Os atletas já foram criados/buscados e associados à equipe no método criarOuBuscarAtletas
-        // Precisamos buscar as entidades para adicionar à equipe
-        for (Long atletaId : atletasIds) {
-            AtletaEntity atletaEntity = new AtletaEntity();
-            atletaEntity.setId(atletaId);
-            equipe.adicionarAtleta(atletaEntity);
-        }
-        
-        // Definir capitão baseado no CPF informado ou usar o primeiro
-        AtletaEntity capitao = null;
-        if (equipeInscricaoDTO.getCapitaoCpf() != null) {
-            // Buscar o atleta pelo CPF
-            var atletaCapitao = atletaService.findByCpf(equipeInscricaoDTO.getCapitaoCpf());
-            if (atletaCapitao.isPresent()) {
-                AtletaEntity capitaoEntity = new AtletaEntity();
-                capitaoEntity.setId(atletaCapitao.get().getId());
-                capitao = capitaoEntity;
+        // Criar todos os atletas primeiro
+        List<AtletaEntity> atletasCriados = new ArrayList<>();
+        for (AtletaCreateDTO atletaDto : equipeInscricaoDTO.getAtletas()) {
+            // Verificar se já existe
+            Optional<AtletaEntity> atletaExistente = atletaRepository.findByCpf(atletaDto.getCpf());
+            if (atletaExistente.isPresent()) {
+                atletasCriados.add(atletaExistente.get());
+            } else {
+                // Criar novo atleta
+                AtletaEntity novoAtleta = new AtletaEntity();
+                novoAtleta.setNome(atletaDto.getNome());
+                novoAtleta.setCpf(atletaDto.getCpf());
+                novoAtleta.setDataNascimento(atletaDto.getDataNascimento());
+                novoAtleta.setGenero(atletaDto.getGenero());
+                novoAtleta.setTelefone(atletaDto.getTelefone());
+                novoAtleta.setEmergenciaNome(atletaDto.getEmergenciaNome());
+                novoAtleta.setEmergenciaTelefone(atletaDto.getEmergenciaTelefone());
+                novoAtleta.setObservacoesMedicas(atletaDto.getObservacoesMedicas());
+                novoAtleta.setEndereco(atletaDto.getEndereco());
+                novoAtleta.setEmail(atletaDto.getEmail());
+                novoAtleta.setAceitaTermos(atletaDto.getAceitaTermos());
+                novoAtleta.setEvento(evento);
+                novoAtleta = atletaRepository.save(novoAtleta);
+                atletasCriados.add(novoAtleta);
             }
         }
-        if (capitao == null && !equipe.getAtletas().isEmpty()) {
-            capitao = equipe.getAtletas().get(0);
+        
+        // Definir capitão
+        AtletaEntity capitao = atletasCriados.get(0); // Default: primeiro atleta
+        if (equipeInscricaoDTO.getCapitaoCpf() != null) {
+            for (AtletaEntity atleta : atletasCriados) {
+                if (equipeInscricaoDTO.getCapitaoCpf().equals(atleta.getCpf())) {
+                    capitao = atleta;
+                    break;
+                }
+            }
         }
-        if (capitao != null) {
-            equipe.setCapitao(capitao);
+        
+        equipe.setCapitao(capitao);
+        
+        // Salvar a equipe
+        equipe = equipeRepository.save(equipe);
+        
+        // Associar atletas à equipe
+        for (AtletaEntity atleta : atletasCriados) {
+            atleta.setEquipe(equipe);
+            atletaRepository.save(atleta);
         }
         
-        EquipeEntity savedEquipe = equipeRepository.save(equipe);
-        
-        // TODO: Criar InscricaoEntity associada à equipe
-        
-        return convertToResponseDTO(savedEquipe);
+        // Retornar resposta simples
+        return convertToResponseDTO(equipe);
     }
 
     @CachePut(value = "equipes", key = "#id")
@@ -196,6 +226,10 @@ public class EquipeService implements IEquipeService {
 
     // Mapping methods
     private EquipeResponseDTO convertToResponseDTO(EquipeEntity equipe) {
+        // Buscar dados dos atletas diretamente do banco para garantir dados atualizados
+        long numeroAtletas = atletaRepository.countAtletasByEquipeId(equipe.getId());
+        List<String> nomesAtletas = equipeRepository.findNomesAtletasByEquipeId(equipe.getId());
+        
         return EquipeResponseDTO.builder()
                 .id(equipe.getId())
                 .nome(equipe.getNome())
@@ -207,17 +241,17 @@ public class EquipeService implements IEquipeService {
                 .nomeCapitao(equipe.getNomeCapitao())
                 .descricao(equipe.getDescricao())
                 .ativa(equipe.getAtiva())
-                .numeroAtletas(equipe.getNumeroAtletas())
-                .nomesAtletas(equipe.getNomesAtletas())
-                .equipeCompleta(equipe.isEquipeCompleta())
-                .podeAdicionarAtleta(equipe.podeAdicionarAtleta())
+                .numeroAtletas((int) numeroAtletas)
+                .nomesAtletas(nomesAtletas)
+                .equipeCompleta(numeroAtletas >= 2)
+                .podeAdicionarAtleta(numeroAtletas < 6)
                 .todosAtletasAceitaramTermos(equipe.todosAtletasAceitaramTermos())
                 .todosAtletasPodemParticipar(equipe.todosAtletasPodemParticipar())
                 .todosAtletasCompativeisComCategoria(equipe.todosAtletasCompativeisComCategoria())
-                .podeSeInscrever(equipe.podeSeInscrever())
+                .podeSeInscrever(numeroAtletas >= 2 && equipe.getAtiva() && equipe.todosAtletasAceitaramTermos() && equipe.todosAtletasPodemParticipar() && equipe.todosAtletasCompativeisComCategoria())
                 .temInscricao(equipe.temInscricao())
                 .inscricaoConfirmada(equipe.inscricaoConfirmada())
-                .descricaoCompleta(equipe.getDescricaoCompleta())
+                .descricaoCompleta(equipe.getNome() + " (" + numeroAtletas + " atletas)" + (equipe.getCapitao() != null ? " - Capitão: " + equipe.getCapitao().getNomeCompleto() : ""))
                 .createdAt(equipe.getCreatedAt())
                 .updatedAt(equipe.getUpdatedAt())
                 .build();
@@ -278,11 +312,8 @@ public class EquipeService implements IEquipeService {
     }
 
     private CategoriaEntity buscarCategoria(Long categoriaId) {
-        // TODO: Implementar busca real da categoria via repository
-        // Por enquanto, cria uma instância com apenas o ID
-        CategoriaEntity categoria = new CategoriaEntity();
-        categoria.setId(categoriaId);
-        return categoria;
+        return categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
     }
 
 

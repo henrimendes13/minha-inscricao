@@ -34,7 +34,8 @@
       "WebSearch",
       "Bash(wmic process where processid=28400 delete:*)",
       "Bash(wmic process where processid=23396 delete:*)",
-      "Read(/C:\\d C:\\Users\\Henrique\\source\\repos/**)"
+      "Read(/C:\\d C:\\Users\\Henrique\\source\\repos/**)",
+      "Bash(wmic process where processid=21868 delete:*)"
     ],
     "deny": [],
     "ask": []

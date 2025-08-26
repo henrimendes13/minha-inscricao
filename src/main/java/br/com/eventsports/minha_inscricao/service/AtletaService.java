@@ -38,6 +38,11 @@ public class AtletaService implements IAtletaService {
         return convertToResponseDTO(atleta);
     }
 
+    @Transactional(readOnly = true)
+    public Optional<AtletaEntity> findEntityById(Long id) {
+        return atletaRepository.findById(id);
+    }
+
     @Cacheable(value = "atletas", key = "'all'")
     @Transactional(readOnly = true)
     public List<AtletaSummaryDTO> findAll() {
@@ -98,6 +103,11 @@ public class AtletaService implements IAtletaService {
     public Optional<AtletaResponseDTO> findByCpf(String cpf) {
         return atletaRepository.findByCpf(cpf)
                 .map(this::convertToResponseDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<AtletaEntity> findEntityByCpf(String cpf) {
+        return atletaRepository.findByCpf(cpf);
     }
 
     @Cacheable(value = "atletas", key = "'byNome:' + #nome")

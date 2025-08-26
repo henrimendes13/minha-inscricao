@@ -7,14 +7,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableCaching
+//@EnableCaching
 public class CacheConfig {
 
     @Bean
     public CacheManager cacheManager() {
         ConcurrentMapCacheManager cacheManager = new ConcurrentMapCacheManager();
         cacheManager.setCacheNames(java.util.Arrays.asList("eventos", "equipes", "usuarios", "categorias", "inscricoes",
-                "organizadores", "atletas", "workouts", "inscricoes_eventos", "anexos", "timelines"));
+                "organizadores", "atletas", "workouts", "anexos", "timelines"));
         cacheManager.setAllowNullValues(true);
         return cacheManager;
     }

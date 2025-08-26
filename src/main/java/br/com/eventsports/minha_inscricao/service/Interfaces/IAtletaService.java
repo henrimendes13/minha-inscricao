@@ -1,6 +1,7 @@
 package br.com.eventsports.minha_inscricao.service.Interfaces;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.*;
+import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
 import br.com.eventsports.minha_inscricao.enums.Genero;
 
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.Optional;
 public interface IAtletaService {
     
     AtletaResponseDTO findById(Long id);
+    
+    Optional<AtletaEntity> findEntityById(Long id);
     
     List<AtletaSummaryDTO> findAll();
     
@@ -23,6 +26,8 @@ public interface IAtletaService {
     void deleteById(Long id);
     
     Optional<AtletaResponseDTO> findByCpf(String cpf);
+    
+    Optional<AtletaEntity> findEntityByCpf(String cpf);
     
     List<AtletaSummaryDTO> findByNome(String nome);
     

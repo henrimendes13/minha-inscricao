@@ -1,0 +1,46 @@
+{
+  "nome": "Warriors CrossFit",
+  "categoriaId": 11,
+  "atletas": [
+    {
+      "nome": "João Silva Santos",
+      "cpf": "123.456.789-00",
+      "dataNascimento": "1990-05-15",
+      "genero": "MASCULINO",
+      "telefone": "(11) 99999-9999",
+      "emergenciaNome": "Maria Silva Santos",
+      "emergenciaTelefone": "(11) 88888-8888",
+      "observacoesMedicas": "Alérgico a anti-inflamatórios. Problema no joelho direito.",
+      "endereco": "Rua das Palmeiras, 456 - Vila Nova - São Paulo/SP",
+      "email": "joao@email.com",
+      "aceitaTermos": true
+    },
+    {
+      "nome": "Pedro Oliveira Lima",
+      "cpf": "123.456.789-01",
+      "dataNascimento": "1992-08-20",
+      "genero": "MASCULINO",
+      "telefone": "(11) 88888-8888",
+      "emergenciaNome": "Ana Oliveira Lima",
+      "emergenciaTelefone": "(11) 77777-7777",
+      "observacoesMedicas": "Sem restrições médicas.",
+      "endereco": "Av. Paulista, 1000 - Bela Vista - São Paulo/SP",
+      "email": "pedro@email.com",
+      "aceitaTermos": true
+    },
+    {
+      "nome": "Carlos Fernando Costa",
+      "cpf": "123.456.789-02",
+      "dataNascimento": "1995-12-10",
+      "genero": "MASCULINO",
+      "telefone": "(11) 77777-7777",
+      "emergenciaNome": "Lucia Fernando Costa",
+      "emergenciaTelefone": "(11) 66666-6666",
+      "observacoesMedicas": "Hipertensão controlada com medicamento.",
+      "endereco": "Rua Augusta, 500 - Consolação - São Paulo/SP",
+      "email": "carlos@email.com",
+      "aceitaTermos": true
+    }
+  ],
+  "capitaoCpf": "123.456.789-00"
+}

@@ -97,4 +97,8 @@ public interface EquipeRepository extends JpaRepository<EquipeEntity, Long> {
     @Query("SELECT COUNT(e) FROM EquipeEntity e WHERE e.evento.id = :eventoId AND e.ativa = true")
     @Cacheable(value = "equipes", key = "'countAtivasByEvento:' + #eventoId")
     long countByEventoIdAndAtivaTrue(@Param("eventoId") Long eventoId);
+
+    @Query("SELECT a.nome FROM AtletaEntity a WHERE a.equipe.id = :equipeId ORDER BY a.nome")
+    @Cacheable(value = "equipes", key = "'nomesAtletas:' + #equipeId")
+    List<String> findNomesAtletasByEquipeId(@Param("equipeId") Long equipeId);
 }
