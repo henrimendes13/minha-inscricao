@@ -164,4 +164,44 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
         WHERE l.categoria.id = :categoriaId
         """)
     Object[] findEstatisticasCategoria(@Param("categoriaId") Long categoriaId);
+
+    /**
+     * Métodos específicos para WorkoutResultService
+     */
+    
+    /**
+     * Busca resultado de uma equipe específica em um workout
+     */
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.workout.id = :workoutId AND l.equipe.id = :equipeId")
+    Optional<LeaderboardEntity> findByWorkoutIdAndEquipeId(@Param("workoutId") Long workoutId, @Param("equipeId") Long equipeId);
+
+    /**
+     * Busca resultado de um atleta específico em um workout
+     */
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.workout.id = :workoutId AND l.atleta.id = :atletaId")
+    Optional<LeaderboardEntity> findByWorkoutIdAndAtletaId(@Param("workoutId") Long workoutId, @Param("atletaId") Long atletaId);
+
+    /**
+     * Verifica se existem resultados para um workout em uma categoria
+     */
+    @Query("SELECT COUNT(l) > 0 FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId")
+    boolean existsResultadosParaWorkout(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId);
+
+    /**
+     * Conta participantes que finalizaram um workout específico
+     */
+    @Query("SELECT COUNT(l) FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId AND l.finalizado = true")
+    long countFinalizadosByWorkout(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId);
+
+    /**
+     * Conta total de participantes em um workout específico
+     */
+    @Query("SELECT COUNT(l) FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId")
+    long countTotalByWorkout(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId);
+
+    /**
+     * Busca participantes que não finalizaram um workout
+     */
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId AND l.finalizado = false")
+    List<LeaderboardEntity> findByCategoriaIdAndWorkoutIdAndFinalizadoFalse(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId);
 }

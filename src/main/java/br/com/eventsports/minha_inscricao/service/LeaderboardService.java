@@ -554,7 +554,7 @@ public class LeaderboardService implements ILeaderboardService {
             case TEMPO:
                 if (dto.getResultadoTempo() != null && !dto.getResultadoTempo().trim().isEmpty()) {
                     try {
-                        Integer segundos = WorkoutEntity.converterTempoParaSegundos(dto.getResultadoTempo());
+                        Integer segundos = converterTempoParaSegundos(dto.getResultadoTempo());
                         leaderboard.setResultadoTempoSegundos(segundos);
                     } catch (IllegalArgumentException e) {
                         throw new RuntimeException("Formato de tempo inválido: " + e.getMessage());
@@ -579,7 +579,7 @@ public class LeaderboardService implements ILeaderboardService {
             case TEMPO:
                 if (dto.getResultadoTempo() != null && !dto.getResultadoTempo().trim().isEmpty()) {
                     try {
-                        Integer segundos = WorkoutEntity.converterTempoParaSegundos(dto.getResultadoTempo());
+                        Integer segundos = converterTempoParaSegundos(dto.getResultadoTempo());
                         leaderboard.setResultadoTempoSegundos(segundos);
                     } catch (IllegalArgumentException e) {
                         throw new RuntimeException("Formato de tempo inválido: " + e.getMessage());
@@ -612,5 +612,35 @@ public class LeaderboardService implements ILeaderboardService {
             default:
                 return 0;
         }
+    }
+
+    /**
+     * Converte string de tempo (mm:ss ou hh:mm:ss) para segundos
+     */
+    private static Integer converterTempoParaSegundos(String tempo) {
+        if (tempo == null || tempo.trim().isEmpty()) {
+            return null;
+        }
+        
+        String[] partes = tempo.trim().split(":");
+        
+        try {
+            if (partes.length == 2) {
+                // Formato mm:ss
+                int minutos = Integer.parseInt(partes[0]);
+                int segundos = Integer.parseInt(partes[1]);
+                return minutos * 60 + segundos;
+            } else if (partes.length == 3) {
+                // Formato hh:mm:ss
+                int horas = Integer.parseInt(partes[0]);
+                int minutos = Integer.parseInt(partes[1]);
+                int segundos = Integer.parseInt(partes[2]);
+                return horas * 3600 + minutos * 60 + segundos;
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
+        }
+        
+        throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
     }
 }

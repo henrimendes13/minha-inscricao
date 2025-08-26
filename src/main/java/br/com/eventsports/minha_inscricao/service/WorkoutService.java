@@ -234,8 +234,6 @@ public class WorkoutService implements IWorkoutService {
                 .categorias(new ArrayList<>())
                 .build();
 
-        // Definir resultado baseado no tipo
-        definirResultadoFromDTO(workout, workoutCreateDTO);
 
         // Adicionar categorias se fornecidas
         if (workoutCreateDTO.getCategoriasIds() != null && !workoutCreateDTO.getCategoriasIds().isEmpty()) {
@@ -257,16 +255,12 @@ public class WorkoutService implements IWorkoutService {
 
         if (workoutUpdateDTO.getTipo() != null) {
             workout.setTipo(workoutUpdateDTO.getTipo());
-            // Limpar resultados antigos quando muda o tipo
-            workout.limparResultado();
         }
 
         if (workoutUpdateDTO.getAtivo() != null) {
             workout.setAtivo(workoutUpdateDTO.getAtivo());
         }
 
-        // Atualizar resultado baseado no tipo
-        definirResultadoFromUpdateDTO(workout, workoutUpdateDTO);
 
         // Atualizar categorias se fornecidas
         if (workoutUpdateDTO.getCategoriasIds() != null) {
@@ -293,13 +287,7 @@ public class WorkoutService implements IWorkoutService {
                         .collect(Collectors.toList()))
                 .quantidadeCategorias(workout.getQuantidadeCategorias())
                 .nomesCategorias(workout.getNomesCategorias())
-                .resultadoReps(workout.getResultadoReps())
-                .resultadoPeso(workout.getResultadoPeso())
-                .resultadoTempo(workout.formatarTempo(workout.getResultadoTempoSegundos()))
-                .resultadoTempoSegundos(workout.getResultadoTempoSegundos())
-                .resultadoFormatado(workout.getResultadoFormatado())
                 .unidadeMedida(workout.getUnidadeMedida())
-                .temResultado(workout.temResultado())
                 .createdAt(workout.getCreatedAt())
                 .updatedAt(workout.getUpdatedAt())
                 .build();
@@ -314,9 +302,7 @@ public class WorkoutService implements IWorkoutService {
                 .quantidadeCategorias(workout.getQuantidadeCategorias())
                 .nomesCategorias(workout.getNomesCategorias())
                 .nomeEvento(workout.getNomeEvento())
-                .resultadoFormatado(workout.getResultadoFormatado())
                 .unidadeMedida(workout.getUnidadeMedida())
-                .temResultado(workout.temResultado())
                 .build();
     }
 
@@ -335,55 +321,4 @@ public class WorkoutService implements IWorkoutService {
                 .build();
     }
 
-    // Métodos auxiliares para definir resultados
-
-    private void definirResultadoFromDTO(WorkoutEntity workout, WorkoutCreateDTO dto) {
-        switch (workout.getTipo()) {
-            case REPS:
-                if (dto.getResultadoReps() != null) {
-                    workout.setResultadoReps(dto.getResultadoReps());
-                }
-                break;
-            case PESO:
-                if (dto.getResultadoPeso() != null) {
-                    workout.setResultadoPeso(dto.getResultadoPeso());
-                }
-                break;
-            case TEMPO:
-                if (dto.getResultadoTempo() != null && !dto.getResultadoTempo().trim().isEmpty()) {
-                    try {
-                        Integer segundos = WorkoutEntity.converterTempoParaSegundos(dto.getResultadoTempo());
-                        workout.setResultadoTempoSegundos(segundos);
-                    } catch (IllegalArgumentException e) {
-                        throw new RuntimeException("Formato de tempo inválido: " + e.getMessage());
-                    }
-                }
-                break;
-        }
-    }
-
-    private void definirResultadoFromUpdateDTO(WorkoutEntity workout, WorkoutUpdateDTO dto) {
-        switch (workout.getTipo()) {
-            case REPS:
-                if (dto.getResultadoReps() != null) {
-                    workout.setResultadoReps(dto.getResultadoReps());
-                }
-                break;
-            case PESO:
-                if (dto.getResultadoPeso() != null) {
-                    workout.setResultadoPeso(dto.getResultadoPeso());
-                }
-                break;
-            case TEMPO:
-                if (dto.getResultadoTempo() != null && !dto.getResultadoTempo().trim().isEmpty()) {
-                    try {
-                        Integer segundos = WorkoutEntity.converterTempoParaSegundos(dto.getResultadoTempo());
-                        workout.setResultadoTempoSegundos(segundos);
-                    } catch (IllegalArgumentException e) {
-                        throw new RuntimeException("Formato de tempo inválido: " + e.getMessage());
-                    }
-                }
-                break;
-        }
-    }
 }

@@ -18,11 +18,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.eventsports.minha_inscricao.dto.workout.WorkoutCreateDTO;
-import br.com.eventsports.minha_inscricao.dto.workout.WorkoutResponseDTO;
-import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.workout.WorkoutUpdateDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.*;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IWorkoutService;
+import br.com.eventsports.minha_inscricao.service.WorkoutResultService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class WorkoutController {
 
     private final IWorkoutService workoutService;
+    private final WorkoutResultService workoutResultService;
 
     @GetMapping
     public ResponseEntity<List<WorkoutSummaryDTO>> getAllWorkouts() {
@@ -108,6 +108,148 @@ public class WorkoutController {
             @PathVariable Long categoriaId) {
         WorkoutResponseDTO workout = workoutService.removerCategoria(workoutId, categoriaId);
         return ResponseEntity.ok(workout);
+    }
+
+    // ===============================================
+    // ENDPOINTS PARA GERENCIAMENTO DE RESULTADOS
+    // ===============================================
+
+    /**
+     * Inicializa resultados vazios para todas as equipes/atletas de uma categoria em um workout
+     */
+    @PostMapping("/{workoutId}/resultados/inicializar")
+    public ResponseEntity<List<LeaderboardResponseDTO>> inicializarResultados(
+            @PathVariable Long workoutId,
+            @Valid @RequestBody WorkoutResultInitializeDTO dto) {
+        List<LeaderboardResponseDTO> resultados = workoutResultService
+                .inicializarResultadosWorkout(workoutId, dto.getCategoriaId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultados);
+    }
+
+    /**
+     * Registra resultado individual para um participante específico
+     */
+    @PostMapping("/{workoutId}/resultados")
+    public ResponseEntity<LeaderboardResponseDTO> registrarResultado(
+            @PathVariable Long workoutId,
+            @Valid @RequestBody WorkoutResultCreateDTO dto) {
+        LeaderboardResponseDTO resultado = workoutResultService.registrarResultado(
+                workoutId, dto.getCategoriaId(), dto.getParticipanteId(), 
+                dto.getIsEquipe(), dto.getResultadoValor(), dto.getFinalizado());
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
+    }
+
+    /**
+     * Atualiza resultado de uma equipe específica
+     */
+    @PutMapping("/{workoutId}/resultados/equipe/{equipeId}")
+    public ResponseEntity<LeaderboardResponseDTO> atualizarResultadoEquipe(
+            @PathVariable Long workoutId,
+            @PathVariable Long equipeId,
+            @Valid @RequestBody WorkoutResultUpdateDTO dto) {
+        LeaderboardResponseDTO resultado = workoutResultService.atualizarResultadoEquipe(
+                workoutId, equipeId, dto.getResultadoValor(), dto.getFinalizado());
+        return ResponseEntity.ok(resultado);
+    }
+
+    /**
+     * Atualiza resultado de um atleta específico
+     */
+    @PutMapping("/{workoutId}/resultados/atleta/{atletaId}")
+    public ResponseEntity<LeaderboardResponseDTO> atualizarResultadoAtleta(
+            @PathVariable Long workoutId,
+            @PathVariable Long atletaId,
+            @Valid @RequestBody WorkoutResultUpdateDTO dto) {
+        LeaderboardResponseDTO resultado = workoutResultService.atualizarResultadoAtleta(
+                workoutId, atletaId, dto.getResultadoValor(), dto.getFinalizado());
+        return ResponseEntity.ok(resultado);
+    }
+
+    /**
+     * Busca todos os resultados de um workout em uma categoria
+     */
+    @GetMapping("/{workoutId}/resultados")
+    public ResponseEntity<List<LeaderboardSummaryDTO>> getResultadosWorkout(
+            @PathVariable Long workoutId,
+            @RequestParam Long categoriaId) {
+        List<LeaderboardSummaryDTO> resultados = workoutResultService
+                .getResultadosWorkout(categoriaId, workoutId);
+        return ResponseEntity.ok(resultados);
+    }
+
+    /**
+     * Finaliza um workout (calcula ranking e posições)
+     */
+    @PostMapping("/{workoutId}/finalizar")
+    public ResponseEntity<List<LeaderboardSummaryDTO>> finalizarWorkout(
+            @PathVariable Long workoutId,
+            @RequestParam Long categoriaId) {
+        List<LeaderboardSummaryDTO> ranking = workoutResultService
+                .finalizarWorkout(categoriaId, workoutId);
+        return ResponseEntity.ok(ranking);
+    }
+
+    /**
+     * Busca status e estatísticas de um workout
+     */
+    @GetMapping("/{workoutId}/status")
+    public ResponseEntity<WorkoutResultStatusDTO> getStatusWorkout(
+            @PathVariable Long workoutId,
+            @RequestParam Long categoriaId) {
+        
+        WorkoutResponseDTO workout = workoutService.findById(workoutId);
+        long totalParticipantes = workoutResultService.contarTotalParticipantes(categoriaId, workoutId);
+        long participantesFinalizados = workoutResultService.contarParticipantesFinalizados(categoriaId, workoutId);
+        List<String> participantesPendentes = workoutResultService.getParticipantesPendentes(categoriaId, workoutId);
+        
+        double porcentagem = totalParticipantes > 0 ? 
+                (double) participantesFinalizados / totalParticipantes * 100 : 0.0;
+        
+        WorkoutResultStatusDTO status = WorkoutResultStatusDTO.builder()
+                .workoutId(workoutId)
+                .nomeWorkout(workout.getNome())
+                .categoriaId(categoriaId)
+                .totalParticipantes(totalParticipantes)
+                .participantesFinalizados(participantesFinalizados)
+                .porcentagemFinalizados(porcentagem)
+                .workoutFinalizado(workoutResultService.isWorkoutFinalizado(categoriaId, workoutId))
+                .participantesPendentes(participantesPendentes)
+                .build();
+        
+        return ResponseEntity.ok(status);
+    }
+
+    /**
+     * Remove resultado de um participante
+     */
+    @DeleteMapping("/{workoutId}/resultados/equipe/{equipeId}")
+    public ResponseEntity<Void> removerResultadoEquipe(
+            @PathVariable Long workoutId,
+            @PathVariable Long equipeId) {
+        workoutResultService.removerResultado(workoutId, equipeId, true);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Remove resultado de um atleta
+     */
+    @DeleteMapping("/{workoutId}/resultados/atleta/{atletaId}")
+    public ResponseEntity<Void> removerResultadoAtleta(
+            @PathVariable Long workoutId,
+            @PathVariable Long atletaId) {
+        workoutResultService.removerResultado(workoutId, atletaId, false);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Verifica se um workout já tem resultados inicializados
+     */
+    @GetMapping("/{workoutId}/resultados/status")
+    public ResponseEntity<Map<String, Boolean>> verificarResultadosInicializados(
+            @PathVariable Long workoutId,
+            @RequestParam Long categoriaId) {
+        boolean temResultados = workoutResultService.workoutTemResultados(categoriaId, workoutId);
+        return ResponseEntity.ok(Map.of("temResultados", temResultados));
     }
 
     @ExceptionHandler(RuntimeException.class)

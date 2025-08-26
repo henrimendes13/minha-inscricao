@@ -33,12 +33,6 @@ public class WorkoutSummaryDTO {
     @Schema(description = "Nome do evento", example = "CrossFit Open 2024")
     private String nomeEvento;
 
-    @Schema(description = "Resultado formatado com unidade", example = "150 reps")
-    private String resultadoFormatado;
-
     @Schema(description = "Unidade de medida baseada no tipo", example = "repetições")
     private String unidadeMedida;
-
-    @Schema(description = "Indica se tem resultado definido", example = "true")
-    private Boolean temResultado;
 }

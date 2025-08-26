@@ -45,27 +45,8 @@ public class WorkoutResponseDTO {
             example = "Masculino Elite, Feminino Elite, Masters")
     private String nomesCategorias;
 
-    // Campos de resultado baseados no tipo
-    @Schema(description = "Resultado em repetições (apenas para tipo REPS)", example = "150")
-    private Integer resultadoReps;
-
-    @Schema(description = "Resultado em peso (apenas para tipo PESO)", example = "120.50")
-    private Double resultadoPeso;
-
-    @Schema(description = "Resultado em tempo como string formatada (apenas para tipo TEMPO)", example = "2:30")
-    private String resultadoTempo;
-
-    @Schema(description = "Resultado em segundos (apenas para tipo TEMPO)", example = "150")
-    private Integer resultadoTempoSegundos;
-
-    @Schema(description = "Resultado formatado com unidade", example = "150 reps")
-    private String resultadoFormatado;
-
     @Schema(description = "Unidade de medida baseada no tipo", example = "repetições")
     private String unidadeMedida;
-
-    @Schema(description = "Indica se tem resultado definido", example = "true")
-    private Boolean temResultado;
 
     @Schema(description = "Data de criação")
     private LocalDateTime createdAt;

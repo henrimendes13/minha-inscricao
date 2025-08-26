@@ -31,15 +31,6 @@ public class WorkoutEntity {
     @Builder.Default
     private TipoWorkout tipo = TipoWorkout.REPS;
 
-    // Campos de resultado baseados no tipo
-    @Column(name = "resultado_reps")
-    private Integer resultadoReps;
-
-    @Column(name = "resultado_peso")
-    private Double resultadoPeso;
-
-    @Column(name = "resultado_tempo_segundos")
-    private Integer resultadoTempoSegundos;
 
     // Relacionamento Many-to-Many com Categorias
     @ManyToMany(fetch = FetchType.LAZY)
@@ -130,54 +121,6 @@ public class WorkoutEntity {
         return this.categorias != null ? this.categorias.size() : 0;
     }
 
-    // Métodos de conveniência para resultados
-    
-    /**
-     * Define o resultado baseado no tipo do workout
-     */
-    public void definirResultado(Object resultado) {
-        switch (this.tipo) {
-            case REPS:
-                if (resultado instanceof Integer) {
-                    this.resultadoReps = (Integer) resultado;
-                }
-                break;
-            case PESO:
-                if (resultado instanceof Double) {
-                    this.resultadoPeso = (Double) resultado;
-                } else if (resultado instanceof Integer) {
-                    this.resultadoPeso = ((Integer) resultado).doubleValue();
-                }
-                break;
-            case TEMPO:
-                if (resultado instanceof Integer) {
-                    this.resultadoTempoSegundos = (Integer) resultado;
-                }
-                break;
-        }
-    }
-    
-    /**
-     * Retorna o resultado principal baseado no tipo
-     */
-    public Object getResultadoPrincipal() {
-        return switch (this.tipo) {
-            case REPS -> this.resultadoReps;
-            case PESO -> this.resultadoPeso;
-            case TEMPO -> this.resultadoTempoSegundos;
-        };
-    }
-    
-    /**
-     * Retorna o resultado formatado como string
-     */
-    public String getResultadoFormatado() {
-        return switch (this.tipo) {
-            case REPS -> this.resultadoReps != null ? this.resultadoReps + " reps" : "N/A";
-            case PESO -> this.resultadoPeso != null ? String.format("%.2f kg", this.resultadoPeso) : "N/A";
-            case TEMPO -> formatarTempo(this.resultadoTempoSegundos);
-        };
-    }
     
     /**
      * Converte segundos para formato de tempo (mm:ss ou hh:mm:ss)
@@ -228,25 +171,6 @@ public class WorkoutEntity {
         throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
     }
     
-    /**
-     * Verifica se tem resultado definido
-     */
-    public boolean temResultado() {
-        return switch (this.tipo) {
-            case REPS -> this.resultadoReps != null && this.resultadoReps > 0;
-            case PESO -> this.resultadoPeso != null && this.resultadoPeso > 0;
-            case TEMPO -> this.resultadoTempoSegundos != null && this.resultadoTempoSegundos > 0;
-        };
-    }
-    
-    /**
-     * Limpa o resultado
-     */
-    public void limparResultado() {
-        this.resultadoReps = null;
-        this.resultadoPeso = null;
-        this.resultadoTempoSegundos = null;
-    }
     
     /**
      * Retorna a unidade de medida baseada no tipo

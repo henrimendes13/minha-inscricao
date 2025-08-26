@@ -39,19 +39,6 @@ public class WorkoutCreateDTO {
             example = "[1, 2, 3]")
     private List<Long> categoriasIds;
 
-    // Campos de resultado baseados no tipo
-    @PositiveOrZero(message = "Número de repetições deve ser positivo ou zero")
-    @Schema(description = "Resultado em repetições (apenas para tipo REPS)", example = "150")
-    private Integer resultadoReps;
-
-    @DecimalMin(value = "0.0", inclusive = true, message = "Peso deve ser maior ou igual a zero")
-    @Digits(integer = 6, fraction = 2, message = "Peso deve ter no máximo 6 dígitos inteiros e 2 decimais")
-    @Schema(description = "Resultado em peso (apenas para tipo PESO)", example = "120.50")
-    private Double resultadoPeso;
-
-    @Schema(description = "Resultado em tempo no formato mm:ss ou hh:mm:ss (apenas para tipo TEMPO)", 
-            example = "2:30")
-    private String resultadoTempo;
 
     @Schema(description = "Indica se o workout está ativo", example = "true")
     private Boolean ativo;
