@@ -11,11 +11,6 @@ public interface IInscricaoService {
     
     List<InscricaoSummaryDTO> findAll();
     
-    InscricaoResponseDTO save(InscricaoCreateDTO inscricaoCreateDTO);
-    
-    InscricaoResponseDTO saveForEvento(InscricaoCreateDTO inscricaoCreateDTO, Long eventoId);
-    
-    InscricaoResponseDTO saveComEquipeForEvento(InscricaoComEquipeCreateDTO inscricaoComEquipeDTO, Long eventoId);
     
     InscricaoResponseDTO update(Long id, InscricaoUpdateDTO inscricaoUpdateDTO);
     
