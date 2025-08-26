@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoComEquipeCreateDTO;
-import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoUpdateDTO;
@@ -47,25 +45,6 @@ public class InscricaoController {
         return ResponseEntity.ok(inscricao);
     }
 
-    @PostMapping
-    public ResponseEntity<InscricaoResponseDTO> createInscricao(@Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO) {
-        InscricaoResponseDTO createdInscricao = inscricaoService.save(inscricaoCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdInscricao);
-    }
-
-    @PostMapping("/evento/{eventoId}")
-    public ResponseEntity<InscricaoResponseDTO> createInscricaoForEvento(@PathVariable Long eventoId,
-            @Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO) {
-        InscricaoResponseDTO createdInscricao = inscricaoService.saveForEvento(inscricaoCreateDTO, eventoId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdInscricao);
-    }
-
-    @PostMapping("/evento/{eventoId}/completa")
-    public ResponseEntity<InscricaoResponseDTO> createInscricaoCompletaForEvento(@PathVariable Long eventoId,
-            @Valid @RequestBody InscricaoComEquipeCreateDTO inscricaoComEquipeCreateDTO) {
-        InscricaoResponseDTO createdInscricao = inscricaoService.saveComEquipeForEvento(inscricaoComEquipeCreateDTO, eventoId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdInscricao);
-    }
 
     @PutMapping("/{id}")
     public ResponseEntity<InscricaoResponseDTO> updateInscricao(@PathVariable Long id,
