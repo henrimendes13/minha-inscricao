@@ -24,7 +24,7 @@ public class InscricaoEntity {
 
     // Relacionamento direto com Usuario como atleta
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "atleta_id", nullable = false)
+    @JoinColumn(name = "atleta_id", nullable = true)
     private UsuarioEntity atleta;
 
     @ManyToOne(fetch = FetchType.LAZY)

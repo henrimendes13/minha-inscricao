@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -37,4 +38,17 @@ public class EquipeInscricaoDTO {
     @Schema(description = "CPF do atleta que será capitão (opcional - se não informado, será o primeiro da lista)", 
             example = "123.456.789-00")
     private String capitaoCpf;
+
+    @Schema(description = "Valor personalizado da inscrição (opcional - se não informado, será usado o valor da categoria)", 
+            example = "50.00")
+    private BigDecimal valorInscricao;
+
+    @Schema(description = "Código de desconto aplicável (opcional)", 
+            example = "DESCONTO10")
+    private String codigoDesconto;
+
+    @NotNull(message = "Aceitação dos termos e condições é obrigatória")
+    @Schema(description = "Confirmação de que a equipe aceita os termos e condições do evento", 
+            example = "true", required = true)
+    private Boolean termosAceitos;
 }

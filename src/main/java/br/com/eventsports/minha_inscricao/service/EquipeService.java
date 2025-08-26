@@ -7,11 +7,14 @@ import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
 import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
+import br.com.eventsports.minha_inscricao.entity.InscricaoEntity;
+import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
 
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
 import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
 import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
+import br.com.eventsports.minha_inscricao.repository.InscricaoRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEquipeService;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
@@ -22,6 +25,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +41,7 @@ public class EquipeService implements IEquipeService {
     private final CategoriaRepository categoriaRepository;
     private final AtletaRepository atletaRepository;
     private final EventoRepository eventoRepository;
+    private final InscricaoRepository inscricaoRepository;
     private final IAtletaService atletaService;
     private final IUsuarioService usuarioService;
 
@@ -146,7 +152,13 @@ public class EquipeService implements IEquipeService {
             atletaRepository.save(atleta);
         }
         
-        // Retornar resposta simples
+        // Criar inscrição para a equipe
+        InscricaoEntity inscricao = criarInscricaoParaEquipe(equipe, equipeInscricaoDTO);
+        
+        // Recarregar a equipe com a inscrição associada
+        equipe = equipeRepository.findById(equipe.getId()).orElse(equipe);
+        
+        // Retornar resposta completa com inscrição
         return convertToResponseDTO(equipe);
     }
 
@@ -570,6 +582,45 @@ public class EquipeService implements IEquipeService {
         }
         
         return atletasIds;
+    }
+
+    /**
+     * Cria uma inscrição para a equipe recém-criada.
+     * @param equipe Equipe para a qual criar a inscrição
+     * @param equipeInscricaoDTO Dados da inscrição
+     * @return InscricaoEntity criada e salva
+     */
+    private InscricaoEntity criarInscricaoParaEquipe(EquipeEntity equipe, EquipeInscricaoDTO equipeInscricaoDTO) {
+        // Determinar valor da inscrição: usar valor personalizado ou da categoria
+        BigDecimal valorInscricao = equipeInscricaoDTO.getValorInscricao() != null 
+            ? equipeInscricaoDTO.getValorInscricao()
+            : (equipe.getCategoria().getValorInscricao() != null 
+                ? equipe.getCategoria().getValorInscricao() 
+                : BigDecimal.ZERO);
+
+        // Criar a inscrição
+        InscricaoEntity inscricao = InscricaoEntity.builder()
+                .atleta(null) // Inscrição de equipe, não individual
+                .evento(equipe.getEvento())
+                .categoria(equipe.getCategoria())
+                .equipe(equipe)
+                .status(StatusInscricao.PENDENTE)
+                .valor(valorInscricao)
+                .dataInscricao(LocalDateTime.now())
+                .termosAceitos(equipeInscricaoDTO.getTermosAceitos() != null 
+                    ? equipeInscricaoDTO.getTermosAceitos() 
+                    : false)
+                .codigoDesconto(equipeInscricaoDTO.getCodigoDesconto())
+                .build();
+
+        // Salvar inscrição
+        inscricao = inscricaoRepository.save(inscricao);
+
+        // Estabelecer relacionamento bidirecional
+        equipe.setInscricao(inscricao);
+        equipeRepository.save(equipe);
+
+        return inscricao;
     }
 
 }
