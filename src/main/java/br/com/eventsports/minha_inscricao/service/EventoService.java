@@ -15,8 +15,10 @@ import br.com.eventsports.minha_inscricao.dto.evento.EventoCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoUpdateDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.StatusChangeDTO;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
+import br.com.eventsports.minha_inscricao.enums.StatusEvento;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
@@ -269,6 +271,85 @@ public class EventoService implements IEventoService {
         } catch (Exception e) {
             // Em caso de erro, considera que não é o owner
             return false;
+        }
+    }
+
+    @Override
+    @CachePut(value = "eventos", key = "#eventoId")
+    public EventoResponseDTO changeStatus(Long eventoId, StatusChangeDTO statusChangeDTO) {
+        EventoEntity evento = eventoRepository.findById(eventoId)
+                .orElseThrow(() -> new EventoNotFoundException("Evento não encontrado com ID: " + eventoId));
+
+        StatusEvento statusAtual = evento.getStatus();
+        StatusEvento novoStatus = statusChangeDTO.getNovoStatus();
+
+        // Validar transições permitidas
+        validateStatusTransition(statusAtual, novoStatus);
+
+        // Aplicar a mudança de status usando os métodos da entidade
+        applyStatusChange(evento, novoStatus);
+
+        // Salvar e retornar
+        EventoEntity eventoSalvo = eventoRepository.save(evento);
+        return convertToResponseDTO(eventoSalvo);
+    }
+
+    private void validateStatusTransition(StatusEvento statusAtual, StatusEvento novoStatus) {
+        if (statusAtual == novoStatus) {
+            throw new IllegalArgumentException("O evento já está no status informado");
+        }
+
+        // Regras de transição
+        switch (statusAtual) {
+            case RASCUNHO -> {
+                if (novoStatus != StatusEvento.ABERTO && novoStatus != StatusEvento.CANCELADO) {
+                    throw new IllegalArgumentException("De RASCUNHO só é possível ir para ABERTO ou CANCELADO");
+                }
+            }
+            case ABERTO -> {
+                if (novoStatus != StatusEvento.INSCRICOES_ENCERRADAS && 
+                    novoStatus != StatusEvento.CANCELADO && 
+                    novoStatus != StatusEvento.ADIADO) {
+                    throw new IllegalArgumentException("De ABERTO só é possível ir para INSCRICOES_ENCERRADAS, CANCELADO ou ADIADO");
+                }
+            }
+            case INSCRICOES_ENCERRADAS -> {
+                if (novoStatus != StatusEvento.EM_ANDAMENTO && 
+                    novoStatus != StatusEvento.CANCELADO && 
+                    novoStatus != StatusEvento.ADIADO) {
+                    throw new IllegalArgumentException("De INSCRICOES_ENCERRADAS só é possível ir para EM_ANDAMENTO, CANCELADO ou ADIADO");
+                }
+            }
+            case EM_ANDAMENTO -> {
+                if (novoStatus != StatusEvento.FINALIZADO && novoStatus != StatusEvento.CANCELADO) {
+                    throw new IllegalArgumentException("De EM_ANDAMENTO só é possível ir para FINALIZADO ou CANCELADO");
+                }
+            }
+            case FINALIZADO -> {
+                throw new IllegalArgumentException("Não é possível alterar o status de um evento FINALIZADO");
+            }
+            case CANCELADO -> {
+                if (novoStatus != StatusEvento.ADIADO && novoStatus != StatusEvento.ABERTO) {
+                    throw new IllegalArgumentException("De CANCELADO só é possível ir para ADIADO ou ABERTO");
+                }
+            }
+            case ADIADO -> {
+                if (novoStatus != StatusEvento.ABERTO && novoStatus != StatusEvento.CANCELADO) {
+                    throw new IllegalArgumentException("De ADIADO só é possível ir para ABERTO ou CANCELADO");
+                }
+            }
+        }
+    }
+
+    private void applyStatusChange(EventoEntity evento, StatusEvento novoStatus) {
+        switch (novoStatus) {
+            case ABERTO -> evento.publicar();
+            case INSCRICOES_ENCERRADAS -> evento.encerrarInscricoes();
+            case EM_ANDAMENTO -> evento.iniciar();
+            case FINALIZADO -> evento.finalizar();
+            case CANCELADO -> evento.cancelar();
+            case ADIADO -> evento.adiar();
+            case RASCUNHO -> evento.setStatus(StatusEvento.RASCUNHO);
         }
     }
 }

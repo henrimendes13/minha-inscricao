@@ -19,10 +19,20 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import br.com.eventsports.minha_inscricao.dto.anexo.AnexoResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.anexo.AnexoSummaryDTO;
 import br.com.eventsports.minha_inscricao.entity.AnexoEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import br.com.eventsports.minha_inscricao.service.AnexoService.EstatisticasAnexo;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAnexoService;
 import lombok.RequiredArgsConstructor;
@@ -37,31 +47,31 @@ public class AnexoController {
     
     private final IAnexoService anexoService;
     
-    @PostMapping("/upload")
-    public ResponseEntity<AnexoEntity> uploadAnexo(@RequestParam("arquivo") MultipartFile arquivo,
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<AnexoResponseDTO> uploadAnexo(
+            @RequestPart("arquivo") 
+            @Schema(type = "string", format = "binary") MultipartFile arquivo,
             @RequestParam("eventoId") Long eventoId,
-            @RequestParam(value = "descricao", required = false) String descricao) {
-        
-        try {
-            log.info("Upload de anexo iniciado - Evento: {}, Arquivo: {}", eventoId, arquivo.getOriginalFilename());
-            AnexoEntity anexo = anexoService.salvarAnexo(arquivo, eventoId, descricao);
-            return ResponseEntity.status(HttpStatus.CREATED).body(anexo);
-        } catch (IOException e) {
-            log.error("Erro de I/O no upload", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+            @RequestParam(value = "descricao", required = false) String descricao) throws IOException {
+        AnexoEntity anexo = anexoService.salvarAnexo(arquivo, eventoId, descricao);
+        AnexoResponseDTO responseDTO = anexoService.toResponseDTO(anexo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
     
     @GetMapping("/evento/{eventoId}")
-    public ResponseEntity<List<AnexoEntity>> listarAnexosDoEvento(@PathVariable Long eventoId) {
+    public ResponseEntity<List<AnexoSummaryDTO>> listarAnexosDoEvento(@PathVariable Long eventoId) {
         List<AnexoEntity> anexos = anexoService.buscarAnexosDoEvento(eventoId);
-        return ResponseEntity.ok(anexos);
+        List<AnexoSummaryDTO> anexosDTO = anexos.stream()
+                .map(anexoService::toSummaryDTO)
+                .toList();
+        return ResponseEntity.ok(anexosDTO);
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<AnexoEntity> buscarAnexo(@PathVariable Long id) {
+    public ResponseEntity<AnexoResponseDTO> buscarAnexo(@PathVariable Long id) {
         return anexoService.buscarPorId(id)
-            .map(anexo -> ResponseEntity.ok(anexo))
+            .map(anexoService::toResponseDTO)
+            .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
     
@@ -90,15 +100,17 @@ public class AnexoController {
     }
     
     @PutMapping("/{id}/descricao")
-    public ResponseEntity<AnexoEntity> atualizarDescricao(@PathVariable Long id, @RequestBody String novaDescricao) {
+    public ResponseEntity<AnexoResponseDTO> atualizarDescricao(@PathVariable Long id, @RequestBody String novaDescricao) {
         AnexoEntity anexo = anexoService.atualizarDescricao(id, novaDescricao);
-        return ResponseEntity.ok(anexo);
+        AnexoResponseDTO responseDTO = anexoService.toResponseDTO(anexo);
+        return ResponseEntity.ok(responseDTO);
     }
     
     @PutMapping("/{id}/status")
-    public ResponseEntity<AnexoEntity> alterarStatus(@PathVariable Long id, @RequestParam boolean ativo) {
+    public ResponseEntity<AnexoResponseDTO> alterarStatus(@PathVariable Long id, @RequestParam boolean ativo) {
         AnexoEntity anexo = anexoService.alterarStatus(id, ativo);
-        return ResponseEntity.ok(anexo);
+        AnexoResponseDTO responseDTO = anexoService.toResponseDTO(anexo);
+        return ResponseEntity.ok(responseDTO);
     }
     
     @DeleteMapping("/{id}")
@@ -114,9 +126,12 @@ public class AnexoController {
     }
     
     @GetMapping("/tipo/{tipo}")
-    public ResponseEntity<List<AnexoEntity>> buscarPorTipo(@PathVariable String tipo) {
+    public ResponseEntity<List<AnexoSummaryDTO>> buscarPorTipo(@PathVariable String tipo) {
         List<AnexoEntity> anexos = anexoService.buscarPorTipo(tipo);
-        return ResponseEntity.ok(anexos);
+        List<AnexoSummaryDTO> anexosDTO = anexos.stream()
+                .map(anexoService::toSummaryDTO)
+                .toList();
+        return ResponseEntity.ok(anexosDTO);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -127,6 +142,13 @@ public class AnexoController {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Dados inválidos", "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<Map<String, String>> handleIOException(IOException e) {
+        log.error("Erro de I/O no processamento de anexo", e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Erro no processamento do arquivo", "message", e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)

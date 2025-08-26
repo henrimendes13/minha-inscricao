@@ -1,5 +1,7 @@
 package br.com.eventsports.minha_inscricao.service.Interfaces;
 
+import br.com.eventsports.minha_inscricao.dto.anexo.AnexoResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.anexo.AnexoSummaryDTO;
 import br.com.eventsports.minha_inscricao.entity.AnexoEntity;
 import br.com.eventsports.minha_inscricao.service.AnexoService.EstatisticasAnexo;
 import org.springframework.core.io.Resource;
@@ -60,4 +62,14 @@ public interface IAnexoService {
      * Obtém estatísticas de anexos de um evento
      */
     EstatisticasAnexo obterEstatisticas(Long eventoId);
+    
+    /**
+     * Converte uma entidade para DTO de resposta
+     */
+    AnexoResponseDTO toResponseDTO(AnexoEntity anexo);
+    
+    /**
+     * Converte uma entidade para DTO de resumo
+     */
+    AnexoSummaryDTO toSummaryDTO(AnexoEntity anexo);
 }

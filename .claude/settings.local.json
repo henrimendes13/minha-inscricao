@@ -31,7 +31,10 @@
       "Bash(docker inspect:*)",
       "Bash(docker start:*)",
       "Bash(ren:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(wmic process where processid=28400 delete:*)",
+      "Bash(wmic process where processid=23396 delete:*)",
+      "Read(/C:\\d C:\\Users\\Henrique\\source\\repos/**)"
     ],
     "deny": [],
     "ask": []

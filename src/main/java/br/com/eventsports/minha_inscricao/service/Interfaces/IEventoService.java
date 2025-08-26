@@ -26,6 +26,14 @@ public interface IEventoService {
     List<EventoSummaryDTO> findEventosByDataBetween(LocalDateTime inicio, LocalDateTime fim);
     
     /**
+     * Altera o status de um evento.
+     * @param eventoId ID do evento
+     * @param statusChangeDTO dados da mudança de status
+     * @return EventoResponseDTO com os dados atualizados
+     */
+    EventoResponseDTO changeStatus(Long eventoId, StatusChangeDTO statusChangeDTO);
+    
+    /**
      * Valida se o usuário logado é o organizador do evento.
      * @param eventoId ID do evento
      * @param usuarioId ID do usuário logado

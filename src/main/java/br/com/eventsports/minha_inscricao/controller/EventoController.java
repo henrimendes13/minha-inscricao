@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,6 +25,7 @@ import br.com.eventsports.minha_inscricao.dto.evento.EventoCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoUpdateDTO;
+import br.com.eventsports.minha_inscricao.dto.evento.StatusChangeDTO;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
@@ -97,6 +99,13 @@ public class EventoController {
         
         List<EventoSummaryDTO> eventos = eventoService.findEventosByDataBetween(inicioDateTime, fimDateTime);
         return ResponseEntity.ok(eventos);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<EventoResponseDTO> changeEventoStatus(@PathVariable Long id, 
+            @Valid @RequestBody StatusChangeDTO statusChangeDTO) {
+        EventoResponseDTO updatedEvento = eventoService.changeStatus(id, statusChangeDTO);
+        return ResponseEntity.ok(updatedEvento);
     }
 
     // Exception Handler for this controller
