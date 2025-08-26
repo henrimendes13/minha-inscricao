@@ -34,7 +34,7 @@ public class EquipeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "capitao_id", nullable = false)
-    private UsuarioEntity capitao;
+    private AtletaEntity capitao;
 
     @Column(name = "descricao", length = 300)
     private String descricao;
@@ -50,21 +50,15 @@ public class EquipeEntity {
     private LocalDateTime updatedAt;
 
     // Relacionamentos
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "equipe_usuarios",
-        joinColumns = @JoinColumn(name = "equipe_id"),
-        inverseJoinColumns = @JoinColumn(name = "usuario_id"),
-        uniqueConstraints = @UniqueConstraint(columnNames = {"equipe_id", "usuario_id"})
-    )
+    @OneToMany(mappedBy = "equipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<UsuarioEntity> atletas = new ArrayList<>();
+    private List<AtletaEntity> atletas = new ArrayList<>();
 
     @OneToOne(mappedBy = "equipe", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private InscricaoEntity inscricao;
 
     // Constructor customizado para campos essenciais
-    public EquipeEntity(String nome, EventoEntity evento, CategoriaEntity categoria, UsuarioEntity capitao, String descricao) {
+    public EquipeEntity(String nome, EventoEntity evento, CategoriaEntity categoria, AtletaEntity capitao, String descricao) {
         this.nome = nome;
         this.evento = evento;
         this.categoria = categoria;
@@ -89,7 +83,7 @@ public class EquipeEntity {
     }
 
     // Métodos de conveniência
-    public void adicionarAtleta(UsuarioEntity atleta) {
+    public void adicionarAtleta(AtletaEntity atleta) {
         if (this.atletas == null) {
             this.atletas = new ArrayList<>();
         }
@@ -99,26 +93,24 @@ public class EquipeEntity {
         }
         
         if (!this.atletas.contains(atleta)) {
+            atleta.setEquipe(this);
             this.atletas.add(atleta);
         }
     }
 
-    public void removerAtleta(UsuarioEntity atleta) {
+    public void removerAtleta(AtletaEntity atleta) {
         if (this.atletas != null) {
+            atleta.setEquipe(null);
             this.atletas.remove(atleta);
-            
-            // Se o capitão foi removido, escolhe um novo capitão
-            if (this.capitao != null && this.capitao.equals(atleta) && !this.atletas.isEmpty()) {
-                this.capitao = this.atletas.get(0);
-            }
         }
     }
 
-    public void definirCapitao(UsuarioEntity atleta) {
-        if (this.atletas == null || !this.atletas.contains(atleta)) {
-            throw new IllegalArgumentException("Atleta deve ser membro da equipe para ser capitão");
+    // Capitão agora é AtletaEntity (um dos atletas da equipe)
+    public void definirCapitao(AtletaEntity capitao) {
+        if (!contemAtleta(capitao)) {
+            throw new IllegalArgumentException("Capitão deve ser um dos atletas da equipe");
         }
-        this.capitao = atleta;
+        this.capitao = capitao;
     }
 
     public boolean isEquipeCompleta() {
@@ -133,7 +125,7 @@ public class EquipeEntity {
         return this.atletas != null ? this.atletas.size() : 0;
     }
 
-    public boolean contemAtleta(UsuarioEntity atleta) {
+    public boolean contemAtleta(AtletaEntity atleta) {
         return this.atletas != null && this.atletas.contains(atleta);
     }
 
@@ -151,7 +143,7 @@ public class EquipeEntity {
             return false;
         }
         
-        return this.atletas.stream().allMatch(UsuarioEntity::podeParticipar);
+        return this.atletas.stream().allMatch(AtletaEntity::podeParticipar);
     }
 
     public boolean todosAtletasCompativeisComCategoria() {
@@ -159,8 +151,23 @@ public class EquipeEntity {
             return false;
         }
         
+        // Criar método na CategoriaEntity para AtletaEntity ou adaptar aqui
         return this.atletas.stream()
-                .allMatch(atleta -> this.categoria.atletaPodeParticipar(atleta));
+                .allMatch(atleta -> {
+                    // Verificar gênero
+                    if (this.categoria.getGenero() != null && !this.categoria.getGenero().equals(atleta.getGenero())) {
+                        return false;
+                    }
+                    // Verificar idade
+                    int idade = atleta.getIdade();
+                    if (this.categoria.getIdadeMinima() != null && idade < this.categoria.getIdadeMinima()) {
+                        return false;
+                    }
+                    if (this.categoria.getIdadeMaxima() != null && idade > this.categoria.getIdadeMaxima()) {
+                        return false;
+                    }
+                    return true;
+                });
     }
 
     public boolean podeSeInscrever() {
@@ -205,7 +212,7 @@ public class EquipeEntity {
         }
         
         return this.atletas.stream()
-                .map(UsuarioEntity::getNomeCompleto)
+                .map(AtletaEntity::getNomeCompleto)
                 .sorted()
                 .toList();
     }

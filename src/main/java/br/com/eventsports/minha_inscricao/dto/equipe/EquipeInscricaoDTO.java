@@ -1,6 +1,8 @@
 package br.com.eventsports.minha_inscricao.dto.equipe;
 
+import br.com.eventsports.minha_inscricao.dto.atleta.AtletaCreateDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -27,12 +29,12 @@ public class EquipeInscricaoDTO {
 
     @NotEmpty(message = "Lista de atletas não pode estar vazia")
     @Size(min = 1, max = 6, message = "Uma equipe deve ter entre 1 e 6 atletas")
-    @Schema(description = "Lista de IDs dos atletas que farão parte da equipe (1-6 atletas)", 
-            example = "[1, 2, 3]", 
+    @Valid
+    @Schema(description = "Lista completa dos dados dos atletas que farão parte da equipe (1-6 atletas)", 
             required = true)
-    private List<Long> atletasIds;
+    private List<AtletaCreateDTO> atletas;
 
-    @Schema(description = "ID do atleta que será capitão (opcional - se não informado, será o primeiro da lista)", 
-            example = "1")
-    private Long capitaoId;
+    @Schema(description = "CPF do atleta que será capitão (opcional - se não informado, será o primeiro da lista)", 
+            example = "123.456.789-00")
+    private String capitaoCpf;
 }

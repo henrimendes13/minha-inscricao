@@ -129,6 +129,29 @@ public class CategoriaEntity {
         return true;
     }
 
+    // Sobrecarga para AtletaEntity
+    public boolean atletaPodeParticipar(AtletaEntity atleta) {
+        if (!this.ativa) {
+            return false;
+        }
+
+        // Verificar gênero
+        if (this.genero != null && !this.genero.equals(atleta.getGenero())) {
+            return false;
+        }
+
+        // Verificar idade
+        int idade = atleta.getIdade();
+        if (this.idadeMinima != null && idade < this.idadeMinima) {
+            return false;
+        }
+        if (this.idadeMaxima != null && idade > this.idadeMaxima) {
+            return false;
+        }
+
+        return true;
+    }
+
     public long getNumeroInscricoesAtivas() {
         return this.inscricoes != null 
                ? this.inscricoes.stream()

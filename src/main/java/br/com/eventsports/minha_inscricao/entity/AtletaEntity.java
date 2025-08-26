@@ -49,6 +49,9 @@ public class AtletaEntity {
     @Column(name = "endereco", length = 200)
     private String endereco;
 
+    @Column(name = "email", length = 150)
+    private String email;
+
     @Column(name = "aceita_termos", nullable = false)
     @Builder.Default
     private Boolean aceitaTermos = false;

@@ -1,6 +1,7 @@
 package br.com.eventsports.minha_inscricao.service.Interfaces;
 
 import br.com.eventsports.minha_inscricao.dto.usuario.*;
+import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,4 +38,6 @@ public interface IUsuarioService {
     boolean organizadorTemPerfilCompleto(Long usuarioId);
     
     UsuarioComOrganizadorResponseDTO buscarComOrganizador(Long usuarioId);
+    
+    UsuarioEntity findEntityById(Long id);
 }

@@ -469,4 +469,14 @@ public class UsuarioService implements IUsuarioService {
         public Long getTotalOrganizadores() { return totalOrganizadores; }
         public Long getUsuariosAtivosUltimos30Dias() { return usuariosAtivosUltimos30Dias; }
     }
+
+    /**
+     * Busca uma entidade de usuário pelo ID
+     */
+    public UsuarioEntity findEntityById(Long id) {
+        log.debug("Buscando entidade usuário por ID: {}", id);
+        
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com ID: " + id));
+    }
 }

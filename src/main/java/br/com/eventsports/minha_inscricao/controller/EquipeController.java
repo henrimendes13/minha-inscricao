@@ -46,11 +46,6 @@ public class EquipeController {
         return ResponseEntity.ok(equipe);
     }
 
-    @PostMapping
-    public ResponseEntity<EquipeResponseDTO> createEquipe(@Valid @RequestBody EquipeCreateDTO equipeCreateDTO) {
-        EquipeResponseDTO createdEquipe = equipeService.save(equipeCreateDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdEquipe);
-    }
 
     @PostMapping("/evento/{eventoId}/inscricao")
     public ResponseEntity<EquipeResponseDTO> criarEquipeParaInscricao(@PathVariable Long eventoId,

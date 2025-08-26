@@ -56,6 +56,11 @@ public class AtletaCreateDTO {
     @Schema(description = "Endereço completo", example = "Rua das Palmeiras, 456 - Vila Nova - São Paulo/SP")
     private String endereco;
 
+    @Email(message = "Email deve ter formato válido")
+    @Size(max = 150, message = "Email deve ter no máximo 150 caracteres")
+    @Schema(description = "Email para notificações (opcional)", example = "joao@email.com")
+    private String email;
+
     @NotNull(message = "Aceite dos termos é obrigatório")
     @Schema(description = "Indica se aceitou os termos", example = "true", required = true)
     private Boolean aceitaTermos;

@@ -1,13 +1,17 @@
 package br.com.eventsports.minha_inscricao.service;
 
+import br.com.eventsports.minha_inscricao.dto.atleta.AtletaCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.equipe.*;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
+import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
 import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEquipeService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -25,6 +29,8 @@ import java.util.stream.Collectors;
 public class EquipeService implements IEquipeService {
 
     private final EquipeRepository equipeRepository;
+    private final IAtletaService atletaService;
+    private final IUsuarioService usuarioService;
 
     @Cacheable(value = "equipes", key = "#id")
     @Transactional(readOnly = true)
@@ -76,16 +82,36 @@ public class EquipeService implements IEquipeService {
         // Busca a categoria para determinar o tipo de participação
         CategoriaEntity categoria = buscarCategoria(equipeInscricaoDTO.getCategoriaId());
         
-        // Ajusta a lista de atletas baseado no tipo da categoria
-        List<Long> atletasFinais = ajustarAtletasParaCategoria(categoria, equipeInscricaoDTO.getAtletasIds(), usuarioLogadoId);
-        
         EquipeEntity equipe = convertInscricaoDTOToEntity(eventoId, equipeInscricaoDTO);
         
-        // Adiciona os atletas à equipe
-        adicionarAtletasAEquipe(equipe, atletasFinais);
+        // Criar/buscar todos os atletas primeiro
+        List<Long> atletasIds = criarOuBuscarAtletas(equipeInscricaoDTO.getAtletas(), eventoId, null);
         
-        // Define o capitão baseado no tipo da categoria
-        definirCapitaoParaCategoria(equipe, categoria, atletasFinais, equipeInscricaoDTO.getCapitaoId());
+        // Os atletas já foram criados/buscados e associados à equipe no método criarOuBuscarAtletas
+        // Precisamos buscar as entidades para adicionar à equipe
+        for (Long atletaId : atletasIds) {
+            AtletaEntity atletaEntity = new AtletaEntity();
+            atletaEntity.setId(atletaId);
+            equipe.adicionarAtleta(atletaEntity);
+        }
+        
+        // Definir capitão baseado no CPF informado ou usar o primeiro
+        AtletaEntity capitao = null;
+        if (equipeInscricaoDTO.getCapitaoCpf() != null) {
+            // Buscar o atleta pelo CPF
+            var atletaCapitao = atletaService.findByCpf(equipeInscricaoDTO.getCapitaoCpf());
+            if (atletaCapitao.isPresent()) {
+                AtletaEntity capitaoEntity = new AtletaEntity();
+                capitaoEntity.setId(atletaCapitao.get().getId());
+                capitao = capitaoEntity;
+            }
+        }
+        if (capitao == null && !equipe.getAtletas().isEmpty()) {
+            capitao = equipe.getAtletas().get(0);
+        }
+        if (capitao != null) {
+            equipe.setCapitao(capitao);
+        }
         
         EquipeEntity savedEquipe = equipeRepository.save(equipe);
         
@@ -259,78 +285,7 @@ public class EquipeService implements IEquipeService {
         return categoria;
     }
 
-    private List<Long> ajustarAtletasParaCategoria(CategoriaEntity categoria, List<Long> atletasOriginais, Long usuarioLogadoId) {
-        // TODO: Implementar busca real da categoria para verificar tipoParticipacao
-        // Por enquanto, assumindo que a categoria já tem o tipo definido
-        
-        if (categoria.isIndividual()) {
-            // Para categoria individual, sempre deve ter exatamente 1 atleta
-            if (usuarioLogadoId != null) {
-                return List.of(usuarioLogadoId);
-            } else {
-                // Se não tem usuário logado, usa o primeiro da lista (fallback)
-                if (atletasOriginais != null && !atletasOriginais.isEmpty()) {
-                    return List.of(atletasOriginais.get(0));
-                } else {
-                    throw new RuntimeException("Para categoria individual, é necessário informar exatamente 1 atleta");
-                }
-            }
-        } else {
-            // Para categoria em equipe, verifica a quantidade específica definida na categoria
-            Integer quantidadeEsperada = categoria.getQuantidadeDeAtletasPorEquipe();
-            
-            if (quantidadeEsperada == null) {
-                // Fallback para validação antiga se não foi definido
-                if (atletasOriginais == null || atletasOriginais.size() < 2) {
-                    throw new RuntimeException("Para categoria em equipe, é necessário informar pelo menos 2 atletas");
-                }
-                if (atletasOriginais.size() > 6) {
-                    throw new RuntimeException("Para categoria em equipe, é possível informar no máximo 6 atletas");
-                }
-            } else {
-                // Validação baseada na quantidade específica da categoria
-                if (atletasOriginais == null || atletasOriginais.size() != quantidadeEsperada) {
-                    throw new RuntimeException("Para esta categoria, é necessário informar exatamente " + 
-                                             quantidadeEsperada + " atleta(s)");
-                }
-            }
-            
-            return new ArrayList<>(atletasOriginais);
-        }
-    }
 
-    private void definirCapitaoParaCategoria(EquipeEntity equipe, CategoriaEntity categoria, List<Long> atletasIds, Long capitaoIdSugerido) {
-        Long capitaoId;
-        
-        if (categoria.isIndividual()) {
-            // Para categoria individual, o capitão é o próprio atleta
-            capitaoId = atletasIds.get(0);
-        } else {
-            // Para categoria em equipe
-            if (capitaoIdSugerido != null && atletasIds.contains(capitaoIdSugerido)) {
-                capitaoId = capitaoIdSugerido;
-            } else {
-                // Se não foi sugerido ou não está na lista, usa o primeiro
-                capitaoId = atletasIds.get(0);
-            }
-        }
-        
-        UsuarioEntity capitao = new UsuarioEntity();
-        capitao.setId(capitaoId);
-        equipe.setCapitao(capitao);
-    }
-
-    private void adicionarAtletasAEquipe(EquipeEntity equipe, List<Long> atletasIds) {
-        if (atletasIds == null || atletasIds.isEmpty()) {
-            throw new RuntimeException("Lista de atletas não pode estar vazia");
-        }
-
-        for (Long atletaId : atletasIds) {
-            UsuarioEntity atleta = new UsuarioEntity();
-            atleta.setId(atletaId);
-            equipe.adicionarAtleta(atleta);
-        }
-    }
 
     /**
      * Atualiza a lista de atletas da equipe.
@@ -348,7 +303,7 @@ public class EquipeService implements IEquipeService {
 
         // Adiciona os novos atletas
         for (Long atletaId : novosAtletasIds) {
-            UsuarioEntity atleta = new UsuarioEntity();
+            AtletaEntity atleta = new AtletaEntity();
             atleta.setId(atletaId);
             equipe.adicionarAtleta(atleta);
         }
@@ -377,7 +332,7 @@ public class EquipeService implements IEquipeService {
 
         // Atualiza o capitão se fornecido
         if (dto.getCapitaoId() != null) {
-            UsuarioEntity novoCapitao = new UsuarioEntity();
+            AtletaEntity novoCapitao = new AtletaEntity();
             novoCapitao.setId(dto.getCapitaoId());
             
             // Verifica se o novo capitão está na lista de atletas da equipe
@@ -422,37 +377,72 @@ public class EquipeService implements IEquipeService {
         }
 
         // Validações básicas da lista de atletas
-        if (dto.getAtletasIds() == null || dto.getAtletasIds().isEmpty()) {
+        if (dto.getAtletas() == null || dto.getAtletas().isEmpty()) {
             throw new RuntimeException("Pelo menos um atleta deve ser informado");
         }
 
-        // Verifica se não há atletas duplicados na lista
-        long atletasUnicos = dto.getAtletasIds().stream().distinct().count();
-        if (atletasUnicos != dto.getAtletasIds().size()) {
-            throw new RuntimeException("Não é possível adicionar o mesmo atleta mais de uma vez na equipe");
+        // Verifica se não há atletas duplicados na lista (por CPF)
+        long atletasUnicos = dto.getAtletas().stream()
+                .map(AtletaCreateDTO::getCpf)
+                .filter(cpf -> cpf != null && !cpf.trim().isEmpty())
+                .distinct()
+                .count();
+        
+        long atletasComCpf = dto.getAtletas().stream()
+                .map(AtletaCreateDTO::getCpf)
+                .filter(cpf -> cpf != null && !cpf.trim().isEmpty())
+                .count();
+        
+        if (atletasUnicos != atletasComCpf) {
+            throw new RuntimeException("Não é possível adicionar atletas com o mesmo CPF na equipe");
         }
 
         // Se capitão foi informado, verifica se está na lista
-        if (dto.getCapitaoId() != null && !dto.getAtletasIds().contains(dto.getCapitaoId())) {
+        if (dto.getCapitaoCpf() != null && !dto.getAtletas().stream()
+                .anyMatch(atleta -> dto.getCapitaoCpf().equals(atleta.getCpf()))) {
             throw new RuntimeException("O capitão deve estar na lista de atletas da equipe");
         }
 
         // Validação da quantidade de atletas baseada na categoria
         CategoriaEntity categoria = buscarCategoria(dto.getCategoriaId());
-        if (!categoria.listaAtletasTemQuantidadeCorreta(dto.getAtletasIds())) {
-            Integer quantidadeEsperada = categoria.getQuantidadeDeAtletasPorEquipe();
-            if (quantidadeEsperada != null) {
-                throw new RuntimeException("Para esta categoria, é necessário informar exatamente " + 
-                                         quantidadeEsperada + " atleta(s)");
-            }
+        if (categoria.getQuantidadeDeAtletasPorEquipe() != null &&
+            dto.getAtletas().size() != categoria.getQuantidadeDeAtletasPorEquipe()) {
+            throw new RuntimeException("Para esta categoria, é necessário informar exatamente " + 
+                                     categoria.getQuantidadeDeAtletasPorEquipe() + " atleta(s)");
         }
 
-        // TODO: Adicionar outras validações:
-        // - Verificar se o evento existe e pode receber inscrições
-        // - Verificar se a categoria existe, pertence ao evento
-        // - Verificar se todos os atletas existem e podem participar
-        // - Verificar se todos os atletas são compatíveis com a categoria
-        // - Verificar se nenhum atleta já está inscrito em outra equipe do mesmo evento
+        // Verifica se todos os atletas são compatíveis com a categoria
+        for (AtletaCreateDTO atletaDto : dto.getAtletas()) {
+            if (!atletaEhCompativel(atletaDto, categoria)) {
+                throw new RuntimeException("O atleta " + atletaDto.getNome() + 
+                                         " não atende aos critérios da categoria (idade/gênero)");
+            }
+        }
+    }
+
+    /**
+     * Verifica se um atleta é compatível com uma categoria (idade e gênero).
+     */
+    private boolean atletaEhCompativel(AtletaCreateDTO atletaDto, CategoriaEntity categoria) {
+        // Verificar gênero
+        if (categoria.getGenero() != null && !categoria.getGenero().equals(atletaDto.getGenero())) {
+            return false;
+        }
+
+        // Calcular idade baseada na data de nascimento
+        int idade = java.time.Period.between(atletaDto.getDataNascimento(), java.time.LocalDate.now()).getYears();
+
+        // Verificar idade mínima
+        if (categoria.getIdadeMinima() != null && idade < categoria.getIdadeMinima()) {
+            return false;
+        }
+
+        // Verificar idade máxima
+        if (categoria.getIdadeMaxima() != null && idade > categoria.getIdadeMaxima()) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -515,4 +505,39 @@ public class EquipeService implements IEquipeService {
         // - Verificar se nenhum atleta já está inscrito em outra equipe do mesmo evento
         // - Verificar se a equipe pode ser editada (não está em competição)
     }
+
+    /**
+     * Cria ou busca atletas existentes baseado nos dados fornecidos.
+     * @param atletasDto Lista de dados dos atletas
+     * @param eventoId ID do evento para associar aos atletas
+     * @param equipeId ID da equipe para associar aos atletas (pode ser null)
+     * @return Lista de IDs dos atletas criados/encontrados
+     */
+    private List<Long> criarOuBuscarAtletas(List<AtletaCreateDTO> atletasDto, Long eventoId, Long equipeId) {
+        List<Long> atletasIds = new ArrayList<>();
+        
+        for (AtletaCreateDTO atletaDto : atletasDto) {
+            // Verifica se já existe um atleta com o mesmo CPF
+            if (atletaDto.getCpf() != null && atletaService.existsByCpf(atletaDto.getCpf())) {
+                // Atleta já existe, buscar o ID
+                var atletaExistente = atletaService.findByCpf(atletaDto.getCpf());
+                if (atletaExistente.isPresent()) {
+                    atletasIds.add(atletaExistente.get().getId());
+                }
+            } else {
+                // Atleta não existe, criar novo
+                if (equipeId != null) {
+                    var novoAtleta = atletaService.saveForInscricao(atletaDto, eventoId, equipeId);
+                    atletasIds.add(novoAtleta.getId());
+                } else {
+                    // Criar sem equipe por enquanto, será associado depois
+                    var novoAtleta = atletaService.saveForEvento(atletaDto, eventoId);
+                    atletasIds.add(novoAtleta.getId());
+                }
+            }
+        }
+        
+        return atletasIds;
+    }
+
 }
