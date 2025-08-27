@@ -97,12 +97,6 @@ public class WorkoutController {
         return ResponseEntity.ok(workout);
     }
 
-    @PostMapping("/{workoutId}/categorias/{categoriaId}")
-    public ResponseEntity<WorkoutResponseDTO> adicionarCategoria(@PathVariable Long workoutId,
-            @PathVariable Long categoriaId) {
-        WorkoutResponseDTO workout = workoutService.adicionarCategoria(workoutId, categoriaId);
-        return ResponseEntity.ok(workout);
-    }
 
     @DeleteMapping("/{workoutId}/categorias/{categoriaId}")
     public ResponseEntity<WorkoutResponseDTO> removerCategoria(@PathVariable Long workoutId,

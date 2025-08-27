@@ -85,15 +85,6 @@ public class WorkoutEntity {
     }
 
     // Métodos de conveniência para categorias
-    public void adicionarCategoria(CategoriaEntity categoria) {
-        if (this.categorias == null) {
-            this.categorias = new ArrayList<>();
-        }
-        if (!this.categorias.contains(categoria)) {
-            this.categorias.add(categoria);
-            categoria.getWorkouts().add(this);
-        }
-    }
 
     public void removerCategoria(CategoriaEntity categoria) {
         if (this.categorias != null) {

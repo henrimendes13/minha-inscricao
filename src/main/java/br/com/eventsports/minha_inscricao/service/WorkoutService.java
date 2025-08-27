@@ -127,23 +127,6 @@ public class WorkoutService implements IWorkoutService {
         return convertToResponseDTO(updatedWorkout);
     }
 
-    @CacheEvict(value = "workouts", allEntries = true)
-    public WorkoutResponseDTO adicionarCategoria(Long workoutId, Long categoriaId) {
-        WorkoutEntity workout = workoutRepository.findById(workoutId)
-                .orElseThrow(() -> new RuntimeException("Workout não encontrado com ID: " + workoutId));
-        
-        CategoriaEntity categoria = categoriaRepository.findById(categoriaId)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
-
-        // Verificar se a categoria pertence ao mesmo evento do workout
-        if (!workout.getEvento().getId().equals(categoria.getEvento().getId())) {
-            throw new RuntimeException("Categoria deve pertencer ao mesmo evento do workout");
-        }
-
-        workout.adicionarCategoria(categoria);
-        WorkoutEntity updatedWorkout = workoutRepository.save(workout);
-        return convertToResponseDTO(updatedWorkout);
-    }
 
     @CacheEvict(value = "workouts", allEntries = true)
     public WorkoutResponseDTO removerCategoria(Long workoutId, Long categoriaId) {

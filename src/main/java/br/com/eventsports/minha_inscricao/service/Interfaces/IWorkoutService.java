@@ -28,7 +28,6 @@ public interface IWorkoutService {
     
     WorkoutResponseDTO desativar(Long id);
     
-    WorkoutResponseDTO adicionarCategoria(Long workoutId, Long categoriaId);
     
     WorkoutResponseDTO removerCategoria(Long workoutId, Long categoriaId);
 }
