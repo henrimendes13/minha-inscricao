@@ -252,11 +252,11 @@ public class LeaderboardService implements ILeaderboardService {
                 .posicaoWorkout(leaderboard.getPosicaoWorkout())
                 .pontuacaoTotal(leaderboard.getPontuacaoTotal())
                 .finalizado(leaderboard.getFinalizado())
-                .evento(convertEventoToSummaryDTO(leaderboard.getEvento()))
-                .categoria(convertCategoriaToSummaryDTO(leaderboard.getCategoria()))
-                .workout(convertWorkoutToSummaryDTO(leaderboard.getWorkout()))
-                .equipe(leaderboard.getEquipe() != null ? convertEquipeToSummaryDTO(leaderboard.getEquipe()) : null)
-                .atleta(leaderboard.getAtleta() != null ? convertUsuarioToAtletaSummaryDTO(leaderboard.getAtleta()) : null)
+                .evento(convertEventoToSimpleDTO(leaderboard.getEvento()))
+                .categoria(convertCategoriaToSimpleDTO(leaderboard.getCategoria()))
+                .workout(convertWorkoutToSimpleDTO(leaderboard.getWorkout()))
+                .equipe(leaderboard.getEquipe() != null ? convertEquipeToSimpleDTO(leaderboard.getEquipe()) : null)
+                .atleta(leaderboard.getAtleta() != null ? convertAtletaToSimpleDTO(leaderboard.getAtleta()) : null)
                 .resultadoReps(leaderboard.getResultadoReps())
                 .resultadoPeso(leaderboard.getResultadoPeso())
                 .resultadoTempo(leaderboard.formatarTempo(leaderboard.getResultadoTempoSegundos()))
@@ -298,7 +298,6 @@ public class LeaderboardService implements ILeaderboardService {
         return CategoriaSummaryDTO.builder()
                 .id(categoria.getId())
                 .nome(categoria.getNome())
-                .ativa(categoria.getAtiva())
                 .build();
     }
 
@@ -307,7 +306,6 @@ public class LeaderboardService implements ILeaderboardService {
                 .id(workout.getId())
                 .nome(workout.getNome())
                 .tipo(workout.getTipo())
-                .ativo(workout.getAtivo())
                 .build();
     }
 
@@ -315,7 +313,6 @@ public class LeaderboardService implements ILeaderboardService {
         return EquipeSummaryDTO.builder()
                 .id(equipe.getId())
                 .nome(equipe.getNome())
-                .ativa(equipe.getAtiva())
                 .build();
     }
 
@@ -336,6 +333,44 @@ public class LeaderboardService implements ILeaderboardService {
                 .aceitaTermos(usuario.getAceitaTermos())
                 .idade(usuario.getIdade())
                 .podeParticipar(usuario.podeParticipar())
+                .build();
+    }
+
+    // Métodos de conversão mínimos para LeaderboardResponseDTO
+    
+    private EventoMinimalDTO convertEventoToSimpleDTO(EventoEntity evento) {
+        return EventoMinimalDTO.builder()
+                .id(evento.getId())
+                .nome(evento.getNome())
+                .build();
+    }
+    
+    private CategoriaMinimalDTO convertCategoriaToSimpleDTO(CategoriaEntity categoria) {
+        return CategoriaMinimalDTO.builder()
+                .id(categoria.getId())
+                .nome(categoria.getNome())
+                .build();
+    }
+    
+    private WorkoutMinimalDTO convertWorkoutToSimpleDTO(WorkoutEntity workout) {
+        return WorkoutMinimalDTO.builder()
+                .id(workout.getId())
+                .nome(workout.getNome())
+                .tipo(workout.getTipo())
+                .build();
+    }
+    
+    private EquipeMinimalDTO convertEquipeToSimpleDTO(EquipeEntity equipe) {
+        return EquipeMinimalDTO.builder()
+                .id(equipe.getId())
+                .nome(equipe.getNome())
+                .build();
+    }
+    
+    private AtletaMinimalDTO convertAtletaToSimpleDTO(UsuarioEntity atleta) {
+        return AtletaMinimalDTO.builder()
+                .id(atleta.getId())
+                .nome(atleta.getNomeCompleto())
                 .build();
     }
 

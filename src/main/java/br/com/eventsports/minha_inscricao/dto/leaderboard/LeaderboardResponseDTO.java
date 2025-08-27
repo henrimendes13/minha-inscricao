@@ -1,10 +1,10 @@
 package br.com.eventsports.minha_inscricao.dto.leaderboard;
 
-import br.com.eventsports.minha_inscricao.dto.atleta.AtletaSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.equipe.EquipeSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.AtletaMinimalDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.CategoriaMinimalDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.EquipeMinimalDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.EventoMinimalDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.WorkoutMinimalDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
@@ -31,19 +31,19 @@ public class LeaderboardResponseDTO {
     private Boolean finalizado;
 
     @Schema(description = "Evento da classificação")
-    private EventoSummaryDTO evento;
+    private EventoMinimalDTO evento;
 
     @Schema(description = "Categoria da classificação")
-    private CategoriaSummaryDTO categoria;
+    private CategoriaMinimalDTO categoria;
 
     @Schema(description = "Workout específico")
-    private WorkoutSummaryDTO workout;
+    private WorkoutMinimalDTO workout;
 
     @Schema(description = "Equipe (apenas se categoria for do tipo EQUIPE)")
-    private EquipeSummaryDTO equipe;
+    private EquipeMinimalDTO equipe;
 
     @Schema(description = "Atleta (apenas se categoria for do tipo INDIVIDUAL)")
-    private AtletaSummaryDTO atleta;
+    private AtletaMinimalDTO atleta;
 
     // Campos de resultado baseados no tipo do workout
     @Schema(description = "Resultado em repetições (apenas para workout tipo REPS)", example = "150")
