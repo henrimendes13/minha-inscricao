@@ -11,6 +11,7 @@ import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
 import br.com.eventsports.minha_inscricao.repository.LeaderboardRepository;
 import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
+import br.com.eventsports.minha_inscricao.service.Interfaces.IPontuacaoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,6 +31,7 @@ public class LeaderboardService implements ILeaderboardService {
     private final LeaderboardRepository leaderboardRepository;
     private final CategoriaRepository categoriaRepository;
     private final WorkoutRepository workoutRepository;
+    private final IPontuacaoService pontuacaoService;
 
     /**
      * Busca o leaderboard final de uma categoria (ranking geral)
@@ -137,13 +139,13 @@ public class LeaderboardService implements ILeaderboardService {
     // Métodos auxiliares privados
 
     private List<LeaderboardFinalDTO> getLeaderboardFinalEquipes(Long categoriaId, List<LeaderboardEntity> resultados) {
-        List<Object[]> ranking = leaderboardRepository.findRankingEquipesByCategoria(categoriaId);
+        List<EquipeEntity> ranking = leaderboardRepository.findRankingEquipesByCategoria(categoriaId);
         AtomicInteger posicao = new AtomicInteger(1);
 
         return ranking.stream()
-                .map(entry -> {
-                    EquipeEntity equipe = (EquipeEntity) entry[0];
-                    Integer pontuacaoTotal = (Integer) entry[1];
+                .map(equipe -> {
+                    Integer pontuacaoTotal = equipe.getPontuacaoTotal() != null ? 
+                            equipe.getPontuacaoTotal() : 0;
                     
                     List<LeaderboardEntity> resultadosEquipe = resultados.stream()
                             .filter(r -> equipe.equals(r.getEquipe()))
@@ -161,23 +163,23 @@ public class LeaderboardService implements ILeaderboardService {
     }
 
     private List<LeaderboardFinalDTO> getLeaderboardFinalAtletas(Long categoriaId, List<LeaderboardEntity> resultados) {
-        List<Object[]> ranking = leaderboardRepository.findRankingAtletasByCategoria(categoriaId);
+        List<AtletaEntity> ranking = leaderboardRepository.findRankingAtletasByCategoria(categoriaId);
         AtomicInteger posicao = new AtomicInteger(1);
 
         return ranking.stream()
-                .map(entry -> {
-                    UsuarioEntity atleta = (UsuarioEntity) entry[0];
-                    Integer pontuacaoTotal = (Integer) entry[1];
+                .map(atleta -> {
+                    Integer pontuacaoTotal = atleta.getPontuacaoTotal() != null ? 
+                            atleta.getPontuacaoTotal() : 0;
                     
                     List<LeaderboardEntity> resultadosAtleta = resultados.stream()
-                            .filter(r -> atleta.equals(r.getAtleta()))
+                            .filter(r -> atleta.getId().equals(r.getAtleta() != null ? r.getAtleta().getId() : null))
                             .collect(Collectors.toList());
 
                     return createLeaderboardFinalDTO(
                             posicao.getAndIncrement(),
                             pontuacaoTotal,
                             null,
-                            atleta,
+                            convertAtletaToUsuario(atleta),
                             resultadosAtleta
                     );
                 })
@@ -250,7 +252,6 @@ public class LeaderboardService implements ILeaderboardService {
         return LeaderboardResponseDTO.builder()
                 .id(leaderboard.getId())
                 .posicaoWorkout(leaderboard.getPosicaoWorkout())
-                .pontuacaoTotal(leaderboard.getPontuacaoTotal())
                 .finalizado(leaderboard.getFinalizado())
                 .evento(convertEventoToSimpleDTO(leaderboard.getEvento()))
                 .categoria(convertCategoriaToSimpleDTO(leaderboard.getCategoria()))
@@ -439,6 +440,9 @@ public class LeaderboardService implements ILeaderboardService {
         // Salvar
         LeaderboardEntity savedLeaderboard = leaderboardRepository.save(leaderboard);
 
+        // Atualizar pontuação do participante
+        pontuacaoService.atualizarPontuacaoAposSalvarResultado(savedLeaderboard);
+
         return convertToResponseDTO(savedLeaderboard);
     }
 
@@ -491,6 +495,10 @@ public class LeaderboardService implements ILeaderboardService {
         defineResultadoFromUpdateDTO(leaderboard, dto);
 
         LeaderboardEntity updatedLeaderboard = leaderboardRepository.save(leaderboard);
+        
+        // Atualizar pontuação do participante
+        pontuacaoService.atualizarPontuacaoAposSalvarResultado(updatedLeaderboard);
+        
         return convertToResponseDTO(updatedLeaderboard);
     }
 
@@ -529,6 +537,10 @@ public class LeaderboardService implements ILeaderboardService {
     public void deletarLeaderboardResultado(Long id) {
         LeaderboardEntity leaderboard = leaderboardRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resultado não encontrado com ID: " + id));
+        
+        // Atualizar pontuação antes de excluir
+        pontuacaoService.atualizarPontuacaoAposExcluirResultado(leaderboard);
+        
         leaderboardRepository.delete(leaderboard);
     }
 
@@ -692,5 +704,17 @@ public class LeaderboardService implements ILeaderboardService {
         }
         
         throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
+    }
+
+    private UsuarioEntity convertAtletaToUsuario(AtletaEntity atleta) {
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setId(atleta.getId());
+        usuario.setNome(atleta.getNome());
+        usuario.setCpf(atleta.getCpf());
+        usuario.setDataNascimento(atleta.getDataNascimento());
+        usuario.setGenero(atleta.getGenero());
+        usuario.setTelefone(atleta.getTelefone());
+        usuario.setAceitaTermos(atleta.getAceitaTermos());
+        return usuario;
     }
 }

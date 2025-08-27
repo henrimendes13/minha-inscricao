@@ -22,9 +22,6 @@ public class LeaderboardEntity {
     @Column(name = "posicao_workout", nullable = false)
     private Integer posicaoWorkout;
 
-    @Column(name = "pontuacao_total", precision = 10, scale = 2)
-    private BigDecimal pontuacaoTotal;
-
     @Column(name = "finalizado", nullable = false)
     @Builder.Default
     private Boolean finalizado = false;

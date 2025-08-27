@@ -56,6 +56,10 @@ public class AtletaEntity {
     @Builder.Default
     private Boolean aceitaTermos = false;
 
+    @Column(name = "pontuacao_total")
+    @Builder.Default
+    private Integer pontuacaoTotal = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -225,5 +229,36 @@ public class AtletaEntity {
 
     public boolean categoriaAtiva() {
         return this.categoria != null && this.categoria.getAtiva();
+    }
+
+    public void adicionarPontos(Integer pontos) {
+        if (pontos != null && pontos > 0) {
+            this.pontuacaoTotal += pontos;
+        }
+    }
+
+    public void subtrairPontos(Integer pontos) {
+        if (pontos != null && pontos > 0) {
+            this.pontuacaoTotal -= pontos;
+            if (this.pontuacaoTotal < 0) {
+                this.pontuacaoTotal = 0;
+            }
+        }
+    }
+
+    public void resetarPontuacao() {
+        this.pontuacaoTotal = 0;
+    }
+
+    public void definirPontuacao(Integer pontuacao) {
+        this.pontuacaoTotal = pontuacao != null ? pontuacao : 0;
+    }
+
+    public boolean temPontuacao() {
+        return this.pontuacaoTotal != null && this.pontuacaoTotal > 0;
+    }
+
+    public String getPontuacaoFormatada() {
+        return this.pontuacaoTotal != null ? this.pontuacaoTotal + " pts" : "0 pts";
     }
 }

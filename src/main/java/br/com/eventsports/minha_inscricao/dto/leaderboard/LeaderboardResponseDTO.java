@@ -24,9 +24,6 @@ public class LeaderboardResponseDTO {
     @Schema(description = "Posição da equipe/atleta neste workout específico", example = "1")
     private Integer posicaoWorkout;
 
-    @Schema(description = "Pontuação total acumulada (soma das posições)", example = "8.00")
-    private BigDecimal pontuacaoTotal;
-
     @Schema(description = "Indica se o participante finalizou este workout", example = "true")
     private Boolean finalizado;
 

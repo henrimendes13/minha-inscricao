@@ -1,5 +1,7 @@
 package br.com.eventsports.minha_inscricao.repository;
 
+import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
+import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.LeaderboardEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -91,32 +93,26 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
     Integer sumPosicoesByAtleta(@Param("categoriaId") Long categoriaId, @Param("atletaId") Long atletaId);
 
     /**
-     * Ranking de equipes por categoria (ordenado por soma das posições - menor primeiro)
+     * Ranking de equipes por categoria (ordenado por pontuação total - menor primeiro)
      */
     @Query("""
-        SELECT l.equipe, COALESCE(SUM(l.posicaoWorkout), 0) as pontuacaoTotal 
-        FROM LeaderboardEntity l 
-        WHERE l.categoria.id = :categoriaId 
-        AND l.equipe IS NOT NULL 
-        AND l.posicaoWorkout IS NOT NULL 
-        GROUP BY l.equipe 
-        ORDER BY pontuacaoTotal ASC
+        SELECT e FROM EquipeEntity e 
+        WHERE e.categoria.id = :categoriaId 
+        AND e.pontuacaoTotal IS NOT NULL
+        ORDER BY e.pontuacaoTotal ASC
         """)
-    List<Object[]> findRankingEquipesByCategoria(@Param("categoriaId") Long categoriaId);
+    List<EquipeEntity> findRankingEquipesByCategoria(@Param("categoriaId") Long categoriaId);
 
     /**
-     * Ranking de atletas por categoria (ordenado por soma das posições - menor primeiro)
+     * Ranking de atletas por categoria (ordenado por pontuação total - menor primeiro)
      */
     @Query("""
-        SELECT l.atleta, COALESCE(SUM(l.posicaoWorkout), 0) as pontuacaoTotal 
-        FROM LeaderboardEntity l 
-        WHERE l.categoria.id = :categoriaId 
-        AND l.atleta IS NOT NULL 
-        AND l.posicaoWorkout IS NOT NULL 
-        GROUP BY l.atleta 
-        ORDER BY pontuacaoTotal ASC
+        SELECT a FROM AtletaEntity a 
+        WHERE a.categoria.id = :categoriaId 
+        AND a.pontuacaoTotal IS NOT NULL
+        ORDER BY a.pontuacaoTotal ASC
         """)
-    List<Object[]> findRankingAtletasByCategoria(@Param("categoriaId") Long categoriaId);
+    List<AtletaEntity> findRankingAtletasByCategoria(@Param("categoriaId") Long categoriaId);
 
     /**
      * Busca workouts de uma categoria que ainda não têm resultados registrados
@@ -204,4 +200,44 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
      */
     @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.workout.id = :workoutId AND l.finalizado = false")
     List<LeaderboardEntity> findByCategoriaIdAndWorkoutIdAndFinalizadoFalse(@Param("categoriaId") Long categoriaId, @Param("workoutId") Long workoutId);
+
+    /**
+     * Queries adicionais para o novo modelo de pontuação
+     */
+    
+    /**
+     * Busca top N equipes de uma categoria por pontuação
+     */
+    @Query(value = """
+        SELECT e.* FROM equipes e 
+        WHERE e.categoria_id = :categoriaId 
+        AND e.pontuacao_total IS NOT NULL
+        ORDER BY e.pontuacao_total ASC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<EquipeEntity> findTopEquipesByCategoria(@Param("categoriaId") Long categoriaId, @Param("limit") int limit);
+
+    /**
+     * Busca top N atletas de uma categoria por pontuação
+     */
+    @Query(value = """
+        SELECT a.* FROM atletas a 
+        WHERE a.categoria_id = :categoriaId 
+        AND a.pontuacao_total IS NOT NULL
+        ORDER BY a.pontuacao_total ASC
+        LIMIT :limit
+        """, nativeQuery = true)
+    List<AtletaEntity> findTopAtletasByCategoria(@Param("categoriaId") Long categoriaId, @Param("limit") int limit);
+
+    /**
+     * Recalcula pontuação de um atleta baseado em seus resultados
+     */
+    @Query("SELECT COALESCE(SUM(l.posicaoWorkout), 0) FROM LeaderboardEntity l WHERE l.atleta.id = :atletaId AND l.posicaoWorkout IS NOT NULL")
+    Integer calcularPontuacaoAtleta(@Param("atletaId") Long atletaId);
+
+    /**
+     * Recalcula pontuação de uma equipe baseado em seus resultados
+     */
+    @Query("SELECT COALESCE(SUM(l.posicaoWorkout), 0) FROM LeaderboardEntity l WHERE l.equipe.id = :equipeId AND l.posicaoWorkout IS NOT NULL")
+    Integer calcularPontuacaoEquipe(@Param("equipeId") Long equipeId);
 }
