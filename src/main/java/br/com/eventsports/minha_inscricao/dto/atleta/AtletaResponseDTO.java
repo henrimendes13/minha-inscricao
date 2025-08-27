@@ -74,6 +74,12 @@ public class AtletaResponseDTO {
     @Schema(description = "Nome do evento vinculado", example = "Campeonato de CrossFit 2024")
     private String nomeEvento;
 
+    @Schema(description = "ID da categoria", example = "5")
+    private Long categoriaId;
+
+    @Schema(description = "Nome da categoria", example = "Masters 35+")
+    private String nomeCategoria;
+
     @Schema(description = "ID da inscrição", example = "1")
     private Long inscricaoId;
 

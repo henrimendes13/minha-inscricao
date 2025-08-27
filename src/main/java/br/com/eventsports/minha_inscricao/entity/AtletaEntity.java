@@ -68,6 +68,10 @@ public class AtletaEntity {
     private EventoEntity evento;
     
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "categoria_id")
+    private CategoriaEntity categoria;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "inscricao_id")
     private InscricaoEntity inscricao;
 
@@ -196,5 +200,30 @@ public class AtletaEntity {
 
     public boolean estaVinculadoAoEvento(Long eventoId) {
         return this.evento != null && this.evento.getId().equals(eventoId);
+    }
+
+    // Métodos para gerenciar categoria
+    public String getNomeCategoria() {
+        return this.categoria != null ? this.categoria.getNome() : "";
+    }
+
+    public Long getCategoriaId() {
+        return this.categoria != null ? this.categoria.getId() : null;
+    }
+
+    public boolean temCategoria() {
+        return this.categoria != null;
+    }
+
+    public boolean estaVinculadoACategoria(CategoriaEntity categoria) {
+        return this.categoria != null && this.categoria.equals(categoria);
+    }
+
+    public boolean estaVinculadoACategoria(Long categoriaId) {
+        return this.categoria != null && this.categoria.getId().equals(categoriaId);
+    }
+
+    public boolean categoriaAtiva() {
+        return this.categoria != null && this.categoria.getAtiva();
     }
 }

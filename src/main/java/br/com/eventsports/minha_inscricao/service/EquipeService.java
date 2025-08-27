@@ -109,7 +109,13 @@ public class EquipeService implements IEquipeService {
             // Verificar se já existe
             Optional<AtletaEntity> atletaExistente = atletaRepository.findByCpf(atletaDto.getCpf());
             if (atletaExistente.isPresent()) {
-                atletasCriados.add(atletaExistente.get());
+                AtletaEntity atleta = atletaExistente.get();
+                // Se atleta já existe mas não tem categoria, definir agora
+                if (atleta.getCategoria() == null) {
+                    atleta.setCategoria(categoria);
+                    atleta = atletaRepository.save(atleta);
+                }
+                atletasCriados.add(atleta);
             } else {
                 // Criar novo atleta
                 AtletaEntity novoAtleta = new AtletaEntity();
@@ -125,6 +131,7 @@ public class EquipeService implements IEquipeService {
                 novoAtleta.setEmail(atletaDto.getEmail());
                 novoAtleta.setAceitaTermos(atletaDto.getAceitaTermos());
                 novoAtleta.setEvento(evento);
+                novoAtleta.setCategoria(categoria);
                 novoAtleta = atletaRepository.save(novoAtleta);
                 atletasCriados.add(novoAtleta);
             }

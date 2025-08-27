@@ -1,9 +1,13 @@
 package br.com.eventsports.minha_inscricao.dto.equipe;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import java.util.List;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -32,6 +36,9 @@ public class EquipeSummaryDTO {
 
     @Schema(description = "Número de atletas na equipe", example = "4")
     private Integer numeroAtletas;
+
+    @Schema(description = "Lista de nomes dos atletas da equipe")
+    private List<String> nomesAtletas;
 
     @Schema(description = "Indica se a equipe está completa (mínimo 2 atletas)", example = "true")
     private Boolean equipeCompleta;

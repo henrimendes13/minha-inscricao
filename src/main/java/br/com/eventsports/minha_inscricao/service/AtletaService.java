@@ -117,7 +117,14 @@ public class AtletaService implements IAtletaService {
         // Se não existe atleta, criar novo
         if (atleta == null) {
             atleta = convertInscricaoDTOToEntity(atletaInscricaoDTO, evento);
+            atleta.setCategoria(categoria);
             atleta = atletaRepository.save(atleta);
+        } else {
+            // Se atleta já existe mas não tem categoria, definir agora
+            if (atleta.getCategoria() == null) {
+                atleta.setCategoria(categoria);
+                atleta = atletaRepository.save(atleta);
+            }
         }
 
         // Criar UsuarioEntity baseado no atleta para a inscrição
@@ -269,6 +276,8 @@ public class AtletaService implements IAtletaService {
                 .podeParticipar(atleta.podeParticipar())
                 .eventoId(atleta.getEvento() != null ? atleta.getEvento().getId() : null)
                 .nomeEvento(atleta.getNomeEvento())
+                .categoriaId(atleta.getCategoriaId())
+                .nomeCategoria(atleta.getNomeCategoria())
                 .inscricaoId(atleta.getInscricaoId())
                 .statusInscricao(atleta.getStatusInscricao())
                 .nomeCategoriaInscricao(atleta.getNomeCategoriaInscricao())
