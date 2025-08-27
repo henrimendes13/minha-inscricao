@@ -17,6 +17,11 @@ public interface ILeaderboardService {
     List<LeaderboardSummaryDTO> getLeaderboardWorkout(Long categoriaId, Long workoutId);
     
     /**
+     * Busca resultados de um workout com recálculo automático de posições
+     */
+    List<LeaderboardSummaryDTO> getLeaderboardWorkoutComRecalculo(Long categoriaId, Long workoutId);
+    
+    /**
      * Busca o leaderboard de uma categoria
      */
     List<LeaderboardResponseDTO> getLeaderboardCategoria(Long categoriaId);

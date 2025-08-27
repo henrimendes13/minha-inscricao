@@ -13,6 +13,7 @@ import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,6 +63,19 @@ public class LeaderboardService implements ILeaderboardService {
         return resultados.stream()
                 .map(this::convertToSummaryDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Busca resultados de um workout com recálculo automático de posições
+     */
+    @Transactional
+    @CacheEvict(value = "leaderboards", key = "'workout_' + #categoriaId + '_' + #workoutId")
+    public List<LeaderboardSummaryDTO> getLeaderboardWorkoutComRecalculo(Long categoriaId, Long workoutId) {
+        // Primeiro recalcular posições
+        calcularRankingWorkout(categoriaId, workoutId);
+        
+        // Depois retornar resultados atualizados
+        return getLeaderboardWorkout(categoriaId, workoutId);
     }
 
     /**
@@ -360,6 +374,7 @@ public class LeaderboardService implements ILeaderboardService {
                 .evento(evento)
                 .categoria(categoria)
                 .workout(workout)
+                .posicaoWorkout(999) // Posição padrão até ser recalculada
                 .finalizado(dto.getFinalizado() != null ? dto.getFinalizado() : false)
                 .build();
 

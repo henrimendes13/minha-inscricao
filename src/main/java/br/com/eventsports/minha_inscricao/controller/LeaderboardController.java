@@ -6,24 +6,16 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardFinalDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResponseDTO;
-import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoCreateDTO;
-import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoLoteDTO;
-import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoUpdateDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -34,41 +26,6 @@ public class LeaderboardController {
 
     private final ILeaderboardService leaderboardService;
 
-    // ========== ENDPOINTS PARA ORGANIZADOR REGISTRAR RESULTADOS ==========
-
-    @PostMapping("/leaderboard-resultado")
-    public ResponseEntity<LeaderboardResponseDTO> registrarLeaderboardResultado(
-            @Valid @RequestBody LeaderboardResultadoCreateDTO dto) {
-        LeaderboardResponseDTO resultado = leaderboardService.registrarLeaderboardResultado(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-    }
-
-    @PostMapping("/leaderboard-resultado/lote")
-    public ResponseEntity<List<LeaderboardResponseDTO>> registrarLeaderboardResultadosLote(
-            @Valid @RequestBody LeaderboardResultadoLoteDTO dto) {
-        List<LeaderboardResponseDTO> resultados = leaderboardService.registrarLeaderboardResultadosLote(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultados);
-    }
-
-    @PutMapping("/leaderboard-resultado/{id}")
-    public ResponseEntity<LeaderboardResponseDTO> atualizarLeaderboardResultado(@PathVariable Long id,
-            @Valid @RequestBody LeaderboardResultadoUpdateDTO dto) {
-        LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(id, dto);
-        return ResponseEntity.ok(resultado);
-    }
-
-    @PostMapping("/categoria/{categoriaId}/workout/{workoutId}/calcular-ranking")
-    public ResponseEntity<List<LeaderboardSummaryDTO>> calcularRankingWorkout(@PathVariable Long categoriaId,
-            @PathVariable Long workoutId) {
-        List<LeaderboardSummaryDTO> ranking = leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
-        return ResponseEntity.ok(ranking);
-    }
-
-    @DeleteMapping("/leaderboard-resultado/{id}")
-    public ResponseEntity<Void> deletarLeaderboardResultado(@PathVariable Long id) {
-        leaderboardService.deletarLeaderboardResultado(id);
-        return ResponseEntity.noContent().build();
-    }
 
     // ========== ENDPOINTS PARA CONSULTA DE LEADERBOARDS ==========
 
@@ -82,6 +39,13 @@ public class LeaderboardController {
     public ResponseEntity<List<LeaderboardSummaryDTO>> getLeaderboardWorkout(@PathVariable Long categoriaId,
             @PathVariable Long workoutId) {
         List<LeaderboardSummaryDTO> resultados = leaderboardService.getLeaderboardWorkout(categoriaId, workoutId);
+        return ResponseEntity.ok(resultados);
+    }
+
+    @GetMapping("/categoria/{categoriaId}/workout/{workoutId}/resultados")
+    public ResponseEntity<List<LeaderboardSummaryDTO>> getResultadosWorkoutComNomes(@PathVariable Long categoriaId,
+            @PathVariable Long workoutId) {
+        List<LeaderboardSummaryDTO> resultados = leaderboardService.getLeaderboardWorkoutComRecalculo(categoriaId, workoutId);
         return ResponseEntity.ok(resultados);
     }
 

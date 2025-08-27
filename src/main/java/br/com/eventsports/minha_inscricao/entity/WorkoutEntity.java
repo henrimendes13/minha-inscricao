@@ -31,7 +31,6 @@ public class WorkoutEntity {
     @Builder.Default
     private TipoWorkout tipo = TipoWorkout.REPS;
 
-
     // Relacionamento Many-to-Many com Categorias
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

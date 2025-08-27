@@ -24,73 +24,8 @@ public class WorkoutResultService {
     private final CategoriaRepository categoriaRepository;
     private final EquipeRepository equipeRepository;
     private final LeaderboardRepository leaderboardRepository;
+    private final EventoRepository eventoRepository;
 
-    /**
-     * Inicializa resultados vazios para todas as equipes de uma categoria em um workout
-     */
-    @Transactional
-    public List<LeaderboardResponseDTO> inicializarResultadosWorkout(Long workoutId, Long categoriaId) {
-        WorkoutEntity workout = workoutRepository.findById(workoutId)
-                .orElseThrow(() -> new RuntimeException("Workout não encontrado com ID: " + workoutId));
-
-        CategoriaEntity categoria = categoriaRepository.findById(categoriaId)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
-
-        // Verificar se workout pertence à categoria
-        if (!categoria.getWorkouts().contains(workout)) {
-            throw new RuntimeException("Workout não pertence a esta categoria");
-        }
-
-        // Verificar se já existem resultados
-        boolean jaExistemResultados = leaderboardRepository.existsResultadosParaWorkout(categoriaId, workoutId);
-        if (jaExistemResultados) {
-            throw new RuntimeException("Já existem resultados cadastrados para este workout nesta categoria");
-        }
-
-        List<LeaderboardResponseDTO> resultados = new java.util.ArrayList<>();
-
-        if (categoria.isEquipe()) {
-            // Criar resultados para todas as equipes da categoria
-            for (EquipeEntity equipe : categoria.getEquipes()) {
-                if (equipe.getAtiva() && equipe.inscricaoConfirmada()) {
-                    LeaderboardResultadoCreateDTO dto = LeaderboardResultadoCreateDTO.builder()
-                            .categoriaId(categoriaId)
-                            .workoutId(workoutId)
-                            .equipeId(equipe.getId())
-                            .finalizado(false)
-                            .build();
-
-                    try {
-                        LeaderboardResponseDTO resultado = leaderboardService.registrarLeaderboardResultado(dto);
-                        resultados.add(resultado);
-                    } catch (RuntimeException e) {
-                        System.err.println("Erro ao criar resultado para equipe " + equipe.getNome() + ": " + e.getMessage());
-                    }
-                }
-            }
-        } else {
-            // Criar resultados para todos os atletas inscritos na categoria
-            for (InscricaoEntity inscricao : categoria.getInscricoes()) {
-                if (inscricao.isConfirmada() && inscricao.getAtleta() != null) {
-                    LeaderboardResultadoCreateDTO dto = LeaderboardResultadoCreateDTO.builder()
-                            .categoriaId(categoriaId)
-                            .workoutId(workoutId)
-                            .atletaId(inscricao.getAtleta().getId())
-                            .finalizado(false)
-                            .build();
-
-                    try {
-                        LeaderboardResponseDTO resultado = leaderboardService.registrarLeaderboardResultado(dto);
-                        resultados.add(resultado);
-                    } catch (RuntimeException e) {
-                        System.err.println("Erro ao criar resultado para atleta " + inscricao.getAtleta().getNomeCompleto() + ": " + e.getMessage());
-                    }
-                }
-            }
-        }
-
-        return resultados;
-    }
 
     /**
      * Atualiza resultado de uma equipe específica em um workout
@@ -180,13 +115,6 @@ public class WorkoutResultService {
         return leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
     }
 
-    /**
-     * Finaliza um workout (calcula ranking e posições)
-     */
-    @Transactional
-    public List<LeaderboardSummaryDTO> finalizarWorkout(Long categoriaId, Long workoutId) {
-        return leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
-    }
 
     /**
      * Busca todos os resultados de um workout
@@ -270,51 +198,116 @@ public class WorkoutResultService {
     }
 
     /**
-     * Registra resultado único (método simplificado)
+     * Registra resultado único (método simplificado) - funciona como upsert
      */
     @Transactional
-    public LeaderboardResponseDTO registrarResultado(Long workoutId, Long categoriaId, 
+    public LeaderboardResponseDTO registrarResultado(Long eventoId, Long workoutId, Long categoriaId, 
                                                     Long participanteId, boolean isEquipe,
                                                     Object resultadoValor, Boolean finalizado) {
-        LeaderboardResultadoCreateDTO.LeaderboardResultadoCreateDTOBuilder dtoBuilder = 
-                LeaderboardResultadoCreateDTO.builder()
-                        .categoriaId(categoriaId)
-                        .workoutId(workoutId)
-                        .finalizado(finalizado != null ? finalizado : false);
+        
+        // Validar evento
+        EventoEntity evento = eventoRepository.findById(eventoId)
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + eventoId));
 
-        if (isEquipe) {
-            dtoBuilder.equipeId(participanteId);
-        } else {
-            dtoBuilder.atletaId(participanteId);
-        }
-
-        // Buscar o workout para determinar o tipo
+        // Validar workout
         WorkoutEntity workout = workoutRepository.findById(workoutId)
-                .orElseThrow(() -> new RuntimeException("Workout não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Workout não encontrado com ID: " + workoutId));
 
-        switch (workout.getTipo()) {
-            case REPS:
-                if (resultadoValor instanceof Integer) {
-                    dtoBuilder.resultadoReps((Integer) resultadoValor);
-                } else if (resultadoValor instanceof String) {
-                    dtoBuilder.resultadoReps(Integer.valueOf((String) resultadoValor));
-                }
-                break;
-            case PESO:
-                if (resultadoValor instanceof Double) {
-                    dtoBuilder.resultadoPeso((Double) resultadoValor);
-                } else if (resultadoValor instanceof String) {
-                    dtoBuilder.resultadoPeso(Double.valueOf((String) resultadoValor));
-                }
-                break;
-            case TEMPO:
-                if (resultadoValor instanceof String) {
-                    dtoBuilder.resultadoTempo((String) resultadoValor);
-                }
-                break;
+        // Validar categoria
+        CategoriaEntity categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
+
+        // Verificar se workout pertence à categoria
+        if (!categoria.getWorkouts().contains(workout)) {
+            throw new RuntimeException("Workout não pertence a esta categoria");
         }
 
-        LeaderboardResultadoCreateDTO dto = dtoBuilder.build();
-        return leaderboardService.registrarLeaderboardResultado(dto);
+        // Verificar se categoria pertence ao evento
+        if (!categoria.getEvento().getId().equals(eventoId)) {
+            throw new RuntimeException("Categoria não pertence ao evento especificado");
+        }
+
+        // Verificar se já existe resultado (para implementar upsert)
+        LeaderboardEntity resultadoExistente = null;
+        if (isEquipe) {
+            resultadoExistente = leaderboardRepository.findByCategoriaIdAndWorkoutIdAndEquipeId(categoriaId, workoutId, participanteId)
+                    .orElse(null);
+        } else {
+            resultadoExistente = leaderboardRepository.findByCategoriaIdAndWorkoutIdAndAtletaId(categoriaId, workoutId, participanteId)
+                    .orElse(null);
+        }
+
+        if (resultadoExistente != null) {
+            // Atualizar resultado existente
+            LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder updateBuilder = 
+                    LeaderboardResultadoUpdateDTO.builder();
+
+            switch (workout.getTipo()) {
+                case REPS:
+                    if (resultadoValor instanceof Integer) {
+                        updateBuilder.resultadoReps((Integer) resultadoValor);
+                    } else if (resultadoValor instanceof String) {
+                        updateBuilder.resultadoReps(Integer.valueOf((String) resultadoValor));
+                    }
+                    break;
+                case PESO:
+                    if (resultadoValor instanceof Double) {
+                        updateBuilder.resultadoPeso((Double) resultadoValor);
+                    } else if (resultadoValor instanceof String) {
+                        updateBuilder.resultadoPeso(Double.valueOf((String) resultadoValor));
+                    }
+                    break;
+                case TEMPO:
+                    if (resultadoValor instanceof String) {
+                        updateBuilder.resultadoTempo((String) resultadoValor);
+                    }
+                    break;
+            }
+
+            if (finalizado != null) {
+                updateBuilder.finalizado(finalizado);
+            }
+
+            LeaderboardResultadoUpdateDTO updateDto = updateBuilder.build();
+            return leaderboardService.atualizarLeaderboardResultado(resultadoExistente.getId(), updateDto);
+        } else {
+            // Criar novo resultado
+            LeaderboardResultadoCreateDTO.LeaderboardResultadoCreateDTOBuilder dtoBuilder = 
+                    LeaderboardResultadoCreateDTO.builder()
+                            .categoriaId(categoriaId)
+                            .workoutId(workoutId)
+                            .finalizado(finalizado != null ? finalizado : false);
+
+            if (isEquipe) {
+                dtoBuilder.equipeId(participanteId);
+            } else {
+                dtoBuilder.atletaId(participanteId);
+            }
+
+            switch (workout.getTipo()) {
+                case REPS:
+                    if (resultadoValor instanceof Integer) {
+                        dtoBuilder.resultadoReps((Integer) resultadoValor);
+                    } else if (resultadoValor instanceof String) {
+                        dtoBuilder.resultadoReps(Integer.valueOf((String) resultadoValor));
+                    }
+                    break;
+                case PESO:
+                    if (resultadoValor instanceof Double) {
+                        dtoBuilder.resultadoPeso((Double) resultadoValor);
+                    } else if (resultadoValor instanceof String) {
+                        dtoBuilder.resultadoPeso(Double.valueOf((String) resultadoValor));
+                    }
+                    break;
+                case TEMPO:
+                    if (resultadoValor instanceof String) {
+                        dtoBuilder.resultadoTempo((String) resultadoValor);
+                    }
+                    break;
+            }
+
+            LeaderboardResultadoCreateDTO dto = dtoBuilder.build();
+            return leaderboardService.registrarLeaderboardResultado(dto);
+        }
     }
 }

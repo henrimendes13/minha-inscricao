@@ -11,6 +11,11 @@ import lombok.*;
 @Schema(description = "DTO simplificado para registrar resultado de workout")
 public class WorkoutResultCreateDTO {
 
+    @NotNull(message = "ID do evento é obrigatório")
+    @Positive(message = "ID do evento deve ser um número positivo")
+    @Schema(description = "ID do evento", example = "1", required = true)
+    private Long eventoId;
+
     @NotNull(message = "ID da categoria é obrigatório")
     @Positive(message = "ID da categoria deve ser um número positivo")
     @Schema(description = "ID da categoria", example = "1", required = true)

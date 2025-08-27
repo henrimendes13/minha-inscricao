@@ -19,7 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.eventsports.minha_inscricao.dto.workout.*;
-import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IWorkoutService;
 import br.com.eventsports.minha_inscricao.service.WorkoutResultService;
 import jakarta.validation.Valid;
@@ -114,17 +115,6 @@ public class WorkoutController {
     // ENDPOINTS PARA GERENCIAMENTO DE RESULTADOS
     // ===============================================
 
-    /**
-     * Inicializa resultados vazios para todas as equipes/atletas de uma categoria em um workout
-     */
-    @PostMapping("/{workoutId}/resultados/inicializar")
-    public ResponseEntity<List<LeaderboardResponseDTO>> inicializarResultados(
-            @PathVariable Long workoutId,
-            @Valid @RequestBody WorkoutResultInitializeDTO dto) {
-        List<LeaderboardResponseDTO> resultados = workoutResultService
-                .inicializarResultadosWorkout(workoutId, dto.getCategoriaId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(resultados);
-    }
 
     /**
      * Registra resultado individual para um participante específico
@@ -134,7 +124,7 @@ public class WorkoutController {
             @PathVariable Long workoutId,
             @Valid @RequestBody WorkoutResultCreateDTO dto) {
         LeaderboardResponseDTO resultado = workoutResultService.registrarResultado(
-                workoutId, dto.getCategoriaId(), dto.getParticipanteId(), 
+                dto.getEventoId(), workoutId, dto.getCategoriaId(), dto.getParticipanteId(), 
                 dto.getIsEquipe(), dto.getResultadoValor(), dto.getFinalizado());
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }
@@ -177,17 +167,6 @@ public class WorkoutController {
         return ResponseEntity.ok(resultados);
     }
 
-    /**
-     * Finaliza um workout (calcula ranking e posições)
-     */
-    @PostMapping("/{workoutId}/finalizar")
-    public ResponseEntity<List<LeaderboardSummaryDTO>> finalizarWorkout(
-            @PathVariable Long workoutId,
-            @RequestParam Long categoriaId) {
-        List<LeaderboardSummaryDTO> ranking = workoutResultService
-                .finalizarWorkout(categoriaId, workoutId);
-        return ResponseEntity.ok(ranking);
-    }
 
     /**
      * Busca status e estatísticas de um workout
