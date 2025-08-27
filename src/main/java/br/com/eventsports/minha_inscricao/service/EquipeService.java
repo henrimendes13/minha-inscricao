@@ -447,11 +447,25 @@ public class EquipeService implements IEquipeService {
             throw new RuntimeException("O capitão deve estar na lista de atletas da equipe");
         }
 
-        // Validação da quantidade de atletas baseada na categoria
+        // Validação da categoria e tipo de participação
         CategoriaEntity categoria = buscarCategoria(dto.getCategoriaId());
+        
+        // Verifica se a categoria é de equipe (não individual)
+        if (categoria.isIndividual()) {
+            throw new RuntimeException("Categorias individuais devem usar o endpoint de inscrição de atletas (/atletas), não de equipes. " +
+                                     "Use POST /evento/{eventoId}/inscricao/atletas para inscrições individuais");
+        }
+
+        // Para categorias de equipe, verifica se tem mais de 1 atleta
+        if (categoria.isEquipe() && dto.getAtletas().size() == 1) {
+            throw new RuntimeException("Equipes devem ter mais de 1 atleta. Para categorias individuais, " +
+                                     "use o endpoint POST /evento/{eventoId}/inscricao/atletas");
+        }
+        
+        // Validação da quantidade de atletas baseada na categoria
         if (categoria.getQuantidadeDeAtletasPorEquipe() != null &&
             dto.getAtletas().size() != categoria.getQuantidadeDeAtletasPorEquipe()) {
-            throw new RuntimeException("Para esta categoria, é necessário informar exatamente " + 
+            throw new RuntimeException("Para esta categoria de equipe, é necessário informar exatamente " + 
                                      categoria.getQuantidadeDeAtletasPorEquipe() + " atleta(s)");
         }
 
@@ -514,10 +528,23 @@ public class EquipeService implements IEquipeService {
 
             // Verifica a quantidade específica de atletas para a categoria
             CategoriaEntity categoria = equipeAtual.getCategoria();
-            if (categoria != null && categoria.getQuantidadeDeAtletasPorEquipe() != null) {
-                if (dto.getAtletasIds().size() != categoria.getQuantidadeDeAtletasPorEquipe()) {
-                    throw new RuntimeException("Para esta categoria, é necessário informar exatamente " + 
-                                             categoria.getQuantidadeDeAtletasPorEquipe() + " atleta(s)");
+            if (categoria != null) {
+                // Verifica se é categoria de equipe
+                if (categoria.isIndividual()) {
+                    throw new RuntimeException("Não é possível atualizar uma equipe associada a categoria individual");
+                }
+                
+                // Para categorias de equipe, verifica se tem mais de 1 atleta
+                if (categoria.isEquipe() && dto.getAtletasIds().size() == 1) {
+                    throw new RuntimeException("Equipes devem ter mais de 1 atleta");
+                }
+                
+                // Verifica quantidade específica da categoria
+                if (categoria.getQuantidadeDeAtletasPorEquipe() != null) {
+                    if (dto.getAtletasIds().size() != categoria.getQuantidadeDeAtletasPorEquipe()) {
+                        throw new RuntimeException("Para esta categoria de equipe, é necessário informar exatamente " + 
+                                                 categoria.getQuantidadeDeAtletasPorEquipe() + " atleta(s)");
+                    }
                 }
             }
 
