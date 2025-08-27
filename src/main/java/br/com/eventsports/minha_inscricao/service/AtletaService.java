@@ -191,6 +191,15 @@ public class AtletaService implements IAtletaService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "atletas", key = "'byEventoCategoria:' + #eventoId + ':' + #categoriaId")
+    @Transactional(readOnly = true)
+    public List<AtletaSummaryDTO> findByEventoIdAndCategoriaId(Long eventoId, Long categoriaId) {
+        List<AtletaEntity> atletas = atletaRepository.findByEventoIdAndCategoriaId(eventoId, categoriaId);
+        return atletas.stream()
+                .map(this::convertToSummaryDTO)
+                .collect(Collectors.toList());
+    }
+
     @Cacheable(value = "atletas", key = "'byEquipe:' + #equipeId")
     @Transactional(readOnly = true)
     public List<AtletaSummaryDTO> findByEquipeId(Long equipeId) {

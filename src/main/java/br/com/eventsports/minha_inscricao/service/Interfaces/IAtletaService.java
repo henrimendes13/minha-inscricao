@@ -37,6 +37,8 @@ public interface IAtletaService {
     
     List<AtletaSummaryDTO> findByEventoId(Long eventoId);
     
+    List<AtletaSummaryDTO> findByEventoIdAndCategoriaId(Long eventoId, Long categoriaId);
+    
     List<AtletaSummaryDTO> findByEquipeId(Long equipeId);
     
     List<AtletaSummaryDTO> findAtletasAtivos();

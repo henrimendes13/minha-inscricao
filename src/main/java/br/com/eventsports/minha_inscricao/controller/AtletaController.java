@@ -94,6 +94,14 @@ public class AtletaController {
         return ResponseEntity.ok(atletas);
     }
 
+    @GetMapping("/evento/{eventoId}/categoria/{categoriaId}")
+    public ResponseEntity<List<AtletaSummaryDTO>> getAtletasByEventoIdAndCategoriaId(
+            @PathVariable Long eventoId, 
+            @PathVariable Long categoriaId) {
+        List<AtletaSummaryDTO> atletas = atletaService.findByEventoIdAndCategoriaId(eventoId, categoriaId);
+        return ResponseEntity.ok(atletas);
+    }
+
     @GetMapping("/evento/{eventoId}/inscricao/atletas")
     public ResponseEntity<List<AtletaSummaryDTO>> getAtletasInscricaoByEvento(@PathVariable Long eventoId) {
         List<AtletaSummaryDTO> atletas = atletaService.findByEventoId(eventoId);
