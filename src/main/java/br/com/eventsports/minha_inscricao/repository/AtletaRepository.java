@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -97,6 +98,12 @@ public interface AtletaRepository extends JpaRepository<AtletaEntity, Long> {
     boolean existsByCpf(String cpf);
 
     @CacheEvict(value = "atletas", allEntries = true)
+    @Modifying
     @Query("UPDATE AtletaEntity a SET a.aceitaTermos = :aceitaTermos WHERE a.id = :id")
     void updateAceitaTermos(@Param("id") Long id, @Param("aceitaTermos") Boolean aceitaTermos);
+
+    @CacheEvict(value = "atletas", allEntries = true)
+    @Modifying
+    @Query("UPDATE AtletaEntity a SET a.pontuacaoTotal = :pontuacao WHERE a.id = :id")
+    void updatePontuacaoTotal(@Param("id") Long id, @Param("pontuacao") Integer pontuacao);
 }

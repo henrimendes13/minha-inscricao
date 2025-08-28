@@ -37,7 +37,11 @@
       "Read(/C:\\d C:\\Users\\Henrique\\source\\repos/**)",
       "Bash(wmic process where processid=21868 delete:*)",
       "Bash(wmic process where processid=12808 delete:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(ping:*)",
+      "Bash(wmic process where processid=22660 delete:*)",
+      "Bash(wmic process where processid=19252 delete:*)",
+      "Bash(wmic process where processid=22224 delete:*)"
     ],
     "deny": [],
     "ask": []

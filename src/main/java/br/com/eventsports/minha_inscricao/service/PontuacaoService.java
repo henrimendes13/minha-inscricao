@@ -4,6 +4,8 @@ import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
 import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.LeaderboardEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
+import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
+import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
 import br.com.eventsports.minha_inscricao.repository.LeaderboardRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IPontuacaoService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,8 @@ import java.util.List;
 public class PontuacaoService implements IPontuacaoService {
 
     private final LeaderboardRepository leaderboardRepository;
+    private final EquipeRepository equipeRepository;
+    private final AtletaRepository atletaRepository;
 
     public void atualizarPontuacaoAtleta(AtletaEntity atleta) {
         if (atleta == null || atleta.getId() == null) {
@@ -33,7 +37,7 @@ public class PontuacaoService implements IPontuacaoService {
                 .mapToInt(LeaderboardEntity::getPosicaoWorkout)
                 .sum();
 
-        atleta.definirPontuacao(pontuacaoTotal);
+        atletaRepository.updatePontuacaoTotal(atleta.getId(), pontuacaoTotal);
         
         log.debug("Pontuação do atleta {} atualizada para {} pontos", 
                 atleta.getNomeCompleto(), pontuacaoTotal);
@@ -51,7 +55,7 @@ public class PontuacaoService implements IPontuacaoService {
                 .mapToInt(LeaderboardEntity::getPosicaoWorkout)
                 .sum();
 
-        equipe.definirPontuacao(pontuacaoTotal);
+        equipeRepository.updatePontuacaoTotal(equipe.getId(), pontuacaoTotal);
         
         log.debug("Pontuação da equipe {} atualizada para {} pontos", 
                 equipe.getNome(), pontuacaoTotal);
@@ -69,9 +73,45 @@ public class PontuacaoService implements IPontuacaoService {
                 .mapToInt(LeaderboardEntity::getPosicaoWorkout)
                 .sum();
 
-        // UsuarioEntity não tem método definirPontuacao por enquanto - implementar depois
+        atletaRepository.updatePontuacaoTotal(usuario.getId(), pontuacaoTotal);
         log.debug("Pontuação do usuário {} atualizada para {} pontos", 
                 usuario.getNomeCompleto(), pontuacaoTotal);
+    }
+
+    public void atualizarPontuacaoEquipePorId(Long equipeId) {
+        if (equipeId == null) {
+            return;
+        }
+
+        List<LeaderboardEntity> resultados = leaderboardRepository.findByEquipeIdOrderByWorkoutNomeAsc(equipeId);
+        
+        int pontuacaoTotal = resultados.stream()
+                .filter(r -> r.getPosicaoWorkout() != null)
+                .mapToInt(LeaderboardEntity::getPosicaoWorkout)
+                .sum();
+
+        equipeRepository.updatePontuacaoTotal(equipeId, pontuacaoTotal);
+        
+        log.debug("Pontuação da equipe ID {} atualizada para {} pontos", 
+                equipeId, pontuacaoTotal);
+    }
+
+    public void atualizarPontuacaoAtletaPorId(Long atletaId) {
+        if (atletaId == null) {
+            return;
+        }
+
+        List<LeaderboardEntity> resultados = leaderboardRepository.findByAtletaIdOrderByWorkoutNomeAsc(atletaId);
+        
+        int pontuacaoTotal = resultados.stream()
+                .filter(r -> r.getPosicaoWorkout() != null)
+                .mapToInt(LeaderboardEntity::getPosicaoWorkout)
+                .sum();
+
+        atletaRepository.updatePontuacaoTotal(atletaId, pontuacaoTotal);
+        
+        log.debug("Pontuação do atleta ID {} atualizada para {} pontos", 
+                atletaId, pontuacaoTotal);
     }
 
     public void atualizarPontuacaoAposSalvarResultado(LeaderboardEntity leaderboard) {
@@ -105,15 +145,15 @@ public class PontuacaoService implements IPontuacaoService {
         if (isCategoriaEquipe) {
             todosResultados.stream()
                     .filter(r -> r.getEquipe() != null)
-                    .map(LeaderboardEntity::getEquipe)
+                    .map(r -> r.getEquipe().getId())
                     .distinct()
-                    .forEach(this::atualizarPontuacaoEquipe);
+                    .forEach(this::atualizarPontuacaoEquipePorId);
         } else {
             todosResultados.stream()
                     .filter(r -> r.getAtleta() != null)
-                    .map(LeaderboardEntity::getAtleta)
+                    .map(r -> r.getAtleta().getId())
                     .distinct()
-                    .forEach(this::atualizarPontuacaoUsuario);
+                    .forEach(this::atualizarPontuacaoAtletaPorId);
         }
 
         log.info("Recálculo de pontuações concluído para categoria ID: {}", categoriaId);

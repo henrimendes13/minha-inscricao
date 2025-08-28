@@ -25,6 +25,7 @@ public class WorkoutResultService {
     private final EquipeRepository equipeRepository;
     private final LeaderboardRepository leaderboardRepository;
     private final EventoRepository eventoRepository;
+    private final PontuacaoService pontuacaoService;
 
 
     /**
@@ -68,7 +69,15 @@ public class WorkoutResultService {
         }
 
         LeaderboardResultadoUpdateDTO dto = dtoBuilder.build();
-        return leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
+        LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
+        
+        // Recalcular posições do workout
+        leaderboardService.calcularRankingWorkout(leaderboard.getCategoria().getId(), leaderboard.getWorkout().getId());
+        
+        // Recalcular pontuações totais após atualizar posições
+        pontuacaoService.recalcularTodasPontuacoesPorCategoria(leaderboard.getCategoria().getId());
+        
+        return resultado;
     }
 
     /**
@@ -112,7 +121,15 @@ public class WorkoutResultService {
         }
 
         LeaderboardResultadoUpdateDTO dto = dtoBuilder.build();
-        return leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
+        LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
+        
+        // Recalcular posições do workout
+        leaderboardService.calcularRankingWorkout(leaderboard.getCategoria().getId(), leaderboard.getWorkout().getId());
+        
+        // Recalcular pontuações totais após atualizar posições
+        pontuacaoService.recalcularTodasPontuacoesPorCategoria(leaderboard.getCategoria().getId());
+        
+        return resultado;
     }
 
 
@@ -269,7 +286,15 @@ public class WorkoutResultService {
             }
 
             LeaderboardResultadoUpdateDTO updateDto = updateBuilder.build();
-            return leaderboardService.atualizarLeaderboardResultado(resultadoExistente.getId(), updateDto);
+            LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(resultadoExistente.getId(), updateDto);
+            
+            // Recalcular posições do workout
+            leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
+            
+            // Recalcular pontuações totais após atualizar posições
+            pontuacaoService.recalcularTodasPontuacoesPorCategoria(categoriaId);
+            
+            return resultado;
         } else {
             // Criar novo resultado
             LeaderboardResultadoCreateDTO.LeaderboardResultadoCreateDTOBuilder dtoBuilder = 
@@ -307,7 +332,15 @@ public class WorkoutResultService {
             }
 
             LeaderboardResultadoCreateDTO dto = dtoBuilder.build();
-            return leaderboardService.registrarLeaderboardResultado(dto);
+            LeaderboardResponseDTO resultado = leaderboardService.registrarLeaderboardResultado(dto);
+            
+            // Recalcular posições do workout
+            leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
+            
+            // Recalcular pontuações totais após atualizar posições
+            pontuacaoService.recalcularTodasPontuacoesPorCategoria(categoriaId);
+            
+            return resultado;
         }
     }
 }

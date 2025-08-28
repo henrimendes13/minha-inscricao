@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
+import br.com.eventsports.minha_inscricao.service.PontuacaoService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,12 +25,13 @@ import lombok.RequiredArgsConstructor;
 public class LeaderboardController {
 
     private final ILeaderboardService leaderboardService;
+    private final PontuacaoService pontuacaoService;
 
 
     @GetMapping("/categoria/{categoriaId}/workout/{workoutId}/resultados")
     public ResponseEntity<List<LeaderboardSummaryDTO>> getResultadosWorkoutComNomes(@PathVariable Long categoriaId,
             @PathVariable Long workoutId) {
-        List<LeaderboardSummaryDTO> resultados = leaderboardService.getLeaderboardWorkoutComRecalculo(categoriaId, workoutId);
+        List<LeaderboardSummaryDTO> resultados = leaderboardService.getLeaderboardWorkout(categoriaId, workoutId);
         return ResponseEntity.ok(resultados);
     }
 
@@ -42,6 +45,17 @@ public class LeaderboardController {
     public ResponseEntity<List<LeaderboardSummaryDTO>> getLeaderboardAtleta(@PathVariable Long atletaId) {
         List<LeaderboardSummaryDTO> resultados = leaderboardService.getLeaderboardAtleta(atletaId);
         return ResponseEntity.ok(resultados);
+    }
+
+    @PostMapping("/categoria/{categoriaId}/recalcular-pontuacoes")
+    public ResponseEntity<Map<String, String>> recalcularPontuacoesCategoria(@PathVariable Long categoriaId) {
+        try {
+            pontuacaoService.recalcularTodasPontuacoesPorCategoria(categoriaId);
+            return ResponseEntity.ok(Map.of("status", "sucesso", "message", "Pontuações recalculadas com sucesso para categoria " + categoriaId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("status", "erro", "message", "Erro ao recalcular pontuações: " + e.getMessage()));
+        }
     }
 
     @ExceptionHandler(RuntimeException.class)

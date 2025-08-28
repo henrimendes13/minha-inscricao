@@ -242,9 +242,6 @@ public class LeaderboardService implements ILeaderboardService {
         // Salvar
         LeaderboardEntity savedLeaderboard = leaderboardRepository.save(leaderboard);
 
-        // Atualizar pontuação do participante
-        pontuacaoService.atualizarPontuacaoAposSalvarResultado(savedLeaderboard);
-
         return convertToResponseDTO(savedLeaderboard);
     }
 
@@ -297,9 +294,6 @@ public class LeaderboardService implements ILeaderboardService {
         defineResultadoFromUpdateDTO(leaderboard, dto);
 
         LeaderboardEntity updatedLeaderboard = leaderboardRepository.save(leaderboard);
-        
-        // Atualizar pontuação do participante
-        pontuacaoService.atualizarPontuacaoAposSalvarResultado(updatedLeaderboard);
         
         return convertToResponseDTO(updatedLeaderboard);
     }

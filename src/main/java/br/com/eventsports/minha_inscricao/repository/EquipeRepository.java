@@ -5,6 +5,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.NonNull;
@@ -101,4 +102,9 @@ public interface EquipeRepository extends JpaRepository<EquipeEntity, Long> {
     @Query("SELECT a.nome FROM AtletaEntity a WHERE a.equipe.id = :equipeId ORDER BY a.nome")
     @Cacheable(value = "equipes", key = "'nomesAtletas:' + #equipeId")
     List<String> findNomesAtletasByEquipeId(@Param("equipeId") Long equipeId);
+
+    @CacheEvict(value = "equipes", allEntries = true)
+    @Modifying
+    @Query("UPDATE EquipeEntity e SET e.pontuacaoTotal = :pontuacao WHERE e.id = :id")
+    void updatePontuacaoTotal(@Param("id") Long id, @Param("pontuacao") Integer pontuacao);
 }
