@@ -1,14 +1,27 @@
 package br.com.eventsports.minha_inscricao.service;
 
-import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
-import br.com.eventsports.minha_inscricao.entity.*;
-import br.com.eventsports.minha_inscricao.repository.*;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoUpdateDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
+import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
+import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
+import br.com.eventsports.minha_inscricao.entity.EventoEntity;
+import br.com.eventsports.minha_inscricao.entity.LeaderboardEntity;
+import br.com.eventsports.minha_inscricao.entity.WorkoutEntity;
+import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
+import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
+import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
+import br.com.eventsports.minha_inscricao.repository.EventoRepository;
+import br.com.eventsports.minha_inscricao.repository.LeaderboardRepository;
+import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Service especializado para gerenciar resultados de workouts
@@ -23,24 +36,31 @@ public class WorkoutResultService {
     private final WorkoutRepository workoutRepository;
     private final CategoriaRepository categoriaRepository;
     private final EquipeRepository equipeRepository;
+    private final AtletaRepository atletaRepository;
     private final LeaderboardRepository leaderboardRepository;
     private final EventoRepository eventoRepository;
     private final PontuacaoService pontuacaoService;
-
 
     /**
      * Atualiza resultado de uma equipe específica em um workout
      */
     @Transactional
-    public LeaderboardResponseDTO atualizarResultadoEquipe(Long workoutId, Long equipeId, 
-                                                          Object resultadoValor, Boolean finalizado) {
+    public LeaderboardResponseDTO atualizarResultadoEquipe(Long workoutId, Long equipeId,
+            Object resultadoValor, Boolean finalizado) {
+        // Validar se equipe está ativa
+        EquipeEntity equipe = equipeRepository.findById(equipeId)
+                .orElseThrow(() -> new RuntimeException("Equipe não encontrada com ID: " + equipeId));
+        if (equipe.getAtiva() == null || !equipe.getAtiva()) {
+            throw new RuntimeException("Não é possível atualizar resultados para equipe inativa: " + equipe.getNome());
+        }
+
         // Buscar o registro de leaderboard existente
         LeaderboardEntity leaderboard = leaderboardRepository.findByWorkoutIdAndEquipeId(workoutId, equipeId)
                 .orElseThrow(() -> new RuntimeException("Resultado não encontrado para esta equipe neste workout"));
 
         // Criar DTO de atualização baseado no tipo do workout
-        LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder dtoBuilder = 
-                LeaderboardResultadoUpdateDTO.builder();
+        LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder dtoBuilder = LeaderboardResultadoUpdateDTO
+                .builder();
 
         switch (leaderboard.getWorkout().getTipo()) {
             case REPS:
@@ -70,13 +90,13 @@ public class WorkoutResultService {
 
         LeaderboardResultadoUpdateDTO dto = dtoBuilder.build();
         LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
-        
+
         // Recalcular posições do workout
         leaderboardService.calcularRankingWorkout(leaderboard.getCategoria().getId(), leaderboard.getWorkout().getId());
-        
+
         // Recalcular pontuações totais após atualizar posições
         pontuacaoService.recalcularTodasPontuacoesPorCategoria(leaderboard.getCategoria().getId());
-        
+
         return resultado;
     }
 
@@ -84,15 +104,15 @@ public class WorkoutResultService {
      * Atualiza resultado de um atleta específico em um workout
      */
     @Transactional
-    public LeaderboardResponseDTO atualizarResultadoAtleta(Long workoutId, Long atletaId, 
-                                                          Object resultadoValor, Boolean finalizado) {
+    public LeaderboardResponseDTO atualizarResultadoAtleta(Long workoutId, Long atletaId,
+            Object resultadoValor, Boolean finalizado) {
         // Buscar o registro de leaderboard existente
         LeaderboardEntity leaderboard = leaderboardRepository.findByWorkoutIdAndAtletaId(workoutId, atletaId)
                 .orElseThrow(() -> new RuntimeException("Resultado não encontrado para este atleta neste workout"));
 
         // Criar DTO de atualização baseado no tipo do workout
-        LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder dtoBuilder = 
-                LeaderboardResultadoUpdateDTO.builder();
+        LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder dtoBuilder = LeaderboardResultadoUpdateDTO
+                .builder();
 
         switch (leaderboard.getWorkout().getTipo()) {
             case REPS:
@@ -122,16 +142,15 @@ public class WorkoutResultService {
 
         LeaderboardResultadoUpdateDTO dto = dtoBuilder.build();
         LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(leaderboard.getId(), dto);
-        
+
         // Recalcular posições do workout
         leaderboardService.calcularRankingWorkout(leaderboard.getCategoria().getId(), leaderboard.getWorkout().getId());
-        
+
         // Recalcular pontuações totais após atualizar posições
         pontuacaoService.recalcularTodasPontuacoesPorCategoria(leaderboard.getCategoria().getId());
-        
+
         return resultado;
     }
-
 
     /**
      * Busca todos os resultados de um workout
@@ -160,7 +179,7 @@ public class WorkoutResultService {
     @Transactional
     public void removerResultado(Long workoutId, Long participanteId, boolean isEquipe) {
         LeaderboardEntity leaderboard;
-        
+
         if (isEquipe) {
             leaderboard = leaderboardRepository.findByWorkoutIdAndEquipeId(workoutId, participanteId)
                     .orElseThrow(() -> new RuntimeException("Resultado não encontrado para esta equipe"));
@@ -218,10 +237,10 @@ public class WorkoutResultService {
      * Registra resultado único (método simplificado) - funciona como upsert
      */
     @Transactional
-    public LeaderboardResponseDTO registrarResultado(Long eventoId, Long workoutId, Long categoriaId, 
-                                                    Long participanteId, boolean isEquipe,
-                                                    Object resultadoValor, Boolean finalizado) {
-        
+    public LeaderboardResponseDTO registrarResultado(Long eventoId, Long workoutId, Long categoriaId,
+            Long participanteId, boolean isEquipe,
+            Object resultadoValor, Boolean finalizado) {
+
         // Validar evento
         EventoEntity evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + eventoId));
@@ -244,20 +263,32 @@ public class WorkoutResultService {
             throw new RuntimeException("Categoria não pertence ao evento especificado");
         }
 
+        // Validar se participante está ativo
+        if (isEquipe) {
+            EquipeEntity equipe = equipeRepository.findById(participanteId)
+                    .orElseThrow(() -> new RuntimeException("Equipe não encontrada com ID: " + participanteId));
+            if (equipe.getAtiva() == null || !equipe.getAtiva()) {
+                throw new RuntimeException(
+                        "Não é possível inserir resultados para equipe inativa: " + equipe.getNome());
+            }
+        }
+
         // Verificar se já existe resultado (para implementar upsert)
         LeaderboardEntity resultadoExistente = null;
         if (isEquipe) {
-            resultadoExistente = leaderboardRepository.findByCategoriaIdAndWorkoutIdAndEquipeId(categoriaId, workoutId, participanteId)
+            resultadoExistente = leaderboardRepository
+                    .findByCategoriaIdAndWorkoutIdAndEquipeId(categoriaId, workoutId, participanteId)
                     .orElse(null);
         } else {
-            resultadoExistente = leaderboardRepository.findByCategoriaIdAndWorkoutIdAndAtletaId(categoriaId, workoutId, participanteId)
+            resultadoExistente = leaderboardRepository
+                    .findByCategoriaIdAndWorkoutIdAndAtletaId(categoriaId, workoutId, participanteId)
                     .orElse(null);
         }
 
         if (resultadoExistente != null) {
             // Atualizar resultado existente
-            LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder updateBuilder = 
-                    LeaderboardResultadoUpdateDTO.builder();
+            LeaderboardResultadoUpdateDTO.LeaderboardResultadoUpdateDTOBuilder updateBuilder = LeaderboardResultadoUpdateDTO
+                    .builder();
 
             switch (workout.getTipo()) {
                 case REPS:
@@ -286,22 +317,23 @@ public class WorkoutResultService {
             }
 
             LeaderboardResultadoUpdateDTO updateDto = updateBuilder.build();
-            LeaderboardResponseDTO resultado = leaderboardService.atualizarLeaderboardResultado(resultadoExistente.getId(), updateDto);
-            
+            LeaderboardResponseDTO resultado = leaderboardService
+                    .atualizarLeaderboardResultado(resultadoExistente.getId(), updateDto);
+
             // Recalcular posições do workout
             leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
-            
+
             // Recalcular pontuações totais após atualizar posições
             pontuacaoService.recalcularTodasPontuacoesPorCategoria(categoriaId);
-            
+
             return resultado;
         } else {
             // Criar novo resultado
-            LeaderboardResultadoCreateDTO.LeaderboardResultadoCreateDTOBuilder dtoBuilder = 
-                    LeaderboardResultadoCreateDTO.builder()
-                            .categoriaId(categoriaId)
-                            .workoutId(workoutId)
-                            .finalizado(finalizado != null ? finalizado : false);
+            LeaderboardResultadoCreateDTO.LeaderboardResultadoCreateDTOBuilder dtoBuilder = LeaderboardResultadoCreateDTO
+                    .builder()
+                    .categoriaId(categoriaId)
+                    .workoutId(workoutId)
+                    .finalizado(finalizado != null ? finalizado : false);
 
             if (isEquipe) {
                 dtoBuilder.equipeId(participanteId);
@@ -333,13 +365,13 @@ public class WorkoutResultService {
 
             LeaderboardResultadoCreateDTO dto = dtoBuilder.build();
             LeaderboardResponseDTO resultado = leaderboardService.registrarLeaderboardResultado(dto);
-            
+
             // Recalcular posições do workout
             leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
-            
+
             // Recalcular pontuações totais após atualizar posições
             pontuacaoService.recalcularTodasPontuacoesPorCategoria(categoriaId);
-            
+
             return resultado;
         }
     }
