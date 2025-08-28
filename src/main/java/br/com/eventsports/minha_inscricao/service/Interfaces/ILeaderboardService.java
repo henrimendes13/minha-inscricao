@@ -1,15 +1,14 @@
 package br.com.eventsports.minha_inscricao.service.Interfaces;
 
-import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoLoteDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoUpdateDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
 
 import java.util.List;
 
 public interface ILeaderboardService {
-    
-    /**
-     * Busca o leaderboard final de uma categoria (ranking geral)
-     */
-    List<LeaderboardFinalDTO> getLeaderboardFinalCategoria(Long categoriaId);
     
     /**
      * Busca o leaderboard de um workout específico
@@ -22,11 +21,6 @@ public interface ILeaderboardService {
     List<LeaderboardSummaryDTO> getLeaderboardWorkoutComRecalculo(Long categoriaId, Long workoutId);
     
     /**
-     * Busca o leaderboard de uma categoria
-     */
-    List<LeaderboardResponseDTO> getLeaderboardCategoria(Long categoriaId);
-    
-    /**
      * Busca todos os resultados de uma equipe
      */
     List<LeaderboardSummaryDTO> getLeaderboardEquipe(Long equipeId);
@@ -35,16 +29,6 @@ public interface ILeaderboardService {
      * Busca todos os resultados de um atleta
      */
     List<LeaderboardSummaryDTO> getLeaderboardAtleta(Long atletaId);
-    
-    /**
-     * Busca o leaderboard de um evento
-     */
-    List<LeaderboardResponseDTO> getLeaderboardEvento(Long eventoId);
-    
-    /**
-     * Busca estatísticas de uma categoria
-     */
-    Object[] getEstatisticasCategoria(Long categoriaId);
     
     /**
      * Registra um resultado no leaderboard

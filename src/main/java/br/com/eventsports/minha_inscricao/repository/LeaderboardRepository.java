@@ -92,27 +92,7 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
     @Query("SELECT COALESCE(SUM(l.posicaoWorkout), 0) FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND l.atleta.id = :atletaId AND l.posicaoWorkout IS NOT NULL")
     Integer sumPosicoesByAtleta(@Param("categoriaId") Long categoriaId, @Param("atletaId") Long atletaId);
 
-    /**
-     * Ranking de equipes por categoria (ordenado por pontuação total - menor primeiro)
-     */
-    @Query("""
-        SELECT e FROM EquipeEntity e 
-        WHERE e.categoria.id = :categoriaId 
-        AND e.pontuacaoTotal IS NOT NULL
-        ORDER BY e.pontuacaoTotal ASC
-        """)
-    List<EquipeEntity> findRankingEquipesByCategoria(@Param("categoriaId") Long categoriaId);
 
-    /**
-     * Ranking de atletas por categoria (ordenado por pontuação total - menor primeiro)
-     */
-    @Query("""
-        SELECT a FROM AtletaEntity a 
-        WHERE a.categoria.id = :categoriaId 
-        AND a.pontuacaoTotal IS NOT NULL
-        ORDER BY a.pontuacaoTotal ASC
-        """)
-    List<AtletaEntity> findRankingAtletasByCategoria(@Param("categoriaId") Long categoriaId);
 
     /**
      * Busca workouts de uma categoria que ainda não têm resultados registrados
@@ -147,19 +127,6 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
                                           @Param("workoutId") Long workoutId, 
                                           @Param("participanteId") Long participanteId);
 
-    /**
-     * Busca estatísticas gerais de uma categoria
-     */
-    @Query("""
-        SELECT 
-            COUNT(DISTINCT CASE WHEN l.equipe IS NOT NULL THEN l.equipe.id ELSE l.atleta.id END) as totalParticipantes,
-            COUNT(DISTINCT l.workout.id) as totalWorkouts,
-            COUNT(CASE WHEN l.finalizado = true THEN 1 END) as totalFinalizados,
-            COUNT(l) as totalResultados
-        FROM LeaderboardEntity l 
-        WHERE l.categoria.id = :categoriaId
-        """)
-    Object[] findEstatisticasCategoria(@Param("categoriaId") Long categoriaId);
 
     /**
      * Métodos específicos para WorkoutResultService

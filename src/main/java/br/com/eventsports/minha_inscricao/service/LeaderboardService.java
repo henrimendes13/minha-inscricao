@@ -1,9 +1,6 @@
 package br.com.eventsports.minha_inscricao.service;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.AtletaSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.equipe.EquipeSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
 import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
 import br.com.eventsports.minha_inscricao.entity.*;
@@ -33,26 +30,6 @@ public class LeaderboardService implements ILeaderboardService {
     private final WorkoutRepository workoutRepository;
     private final IPontuacaoService pontuacaoService;
 
-    /**
-     * Busca o leaderboard final de uma categoria (ranking geral)
-     */
-    @Cacheable(value = "leaderboards", key = "'final_categoria_' + #categoriaId")
-    public List<LeaderboardFinalDTO> getLeaderboardFinalCategoria(Long categoriaId) {
-        List<LeaderboardEntity> resultados = leaderboardRepository.findByCategoriaIdOrderByPosicaoWorkoutAsc(categoriaId);
-        
-        if (resultados.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        LeaderboardEntity primeiroResultado = resultados.get(0);
-        boolean isCategoriaEquipe = primeiroResultado.isCategoriaEquipe();
-
-        if (isCategoriaEquipe) {
-            return getLeaderboardFinalEquipes(categoriaId, resultados);
-        } else {
-            return getLeaderboardFinalAtletas(categoriaId, resultados);
-        }
-    }
 
     /**
      * Busca resultados de um workout específico em uma categoria
@@ -80,17 +57,6 @@ public class LeaderboardService implements ILeaderboardService {
         return getLeaderboardWorkout(categoriaId, workoutId);
     }
 
-    /**
-     * Busca todos os resultados de uma categoria
-     */
-    @Cacheable(value = "leaderboards", key = "'categoria_' + #categoriaId")
-    public List<LeaderboardResponseDTO> getLeaderboardCategoria(Long categoriaId) {
-        List<LeaderboardEntity> resultados = leaderboardRepository.findByCategoriaIdOrderByPosicaoWorkoutAsc(categoriaId);
-        
-        return resultados.stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
 
     /**
      * Busca resultados de uma equipe específica
@@ -116,135 +82,14 @@ public class LeaderboardService implements ILeaderboardService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Busca todos os leaderboards de um evento
-     */
-    @Cacheable(value = "leaderboards", key = "'evento_' + #eventoId")
-    public List<LeaderboardResponseDTO> getLeaderboardEvento(Long eventoId) {
-        List<LeaderboardEntity> resultados = leaderboardRepository
-                .findByEventoIdOrderByCategoriaNomeAscPosicaoWorkoutAsc(eventoId);
-        
-        return resultados.stream()
-                .map(this::convertToResponseDTO)
-                .collect(Collectors.toList());
-    }
 
-    /**
-     * Busca estatísticas de uma categoria
-     */
-    public Object[] getEstatisticasCategoria(Long categoriaId) {
-        return leaderboardRepository.findEstatisticasCategoria(categoriaId);
-    }
 
     // Métodos auxiliares privados
 
-    private List<LeaderboardFinalDTO> getLeaderboardFinalEquipes(Long categoriaId, List<LeaderboardEntity> resultados) {
-        List<EquipeEntity> ranking = leaderboardRepository.findRankingEquipesByCategoria(categoriaId);
-        AtomicInteger posicao = new AtomicInteger(1);
 
-        return ranking.stream()
-                .map(equipe -> {
-                    Integer pontuacaoTotal = equipe.getPontuacaoTotal() != null ? 
-                            equipe.getPontuacaoTotal() : 0;
-                    
-                    List<LeaderboardEntity> resultadosEquipe = resultados.stream()
-                            .filter(r -> equipe.equals(r.getEquipe()))
-                            .collect(Collectors.toList());
 
-                    return createLeaderboardFinalDTO(
-                            posicao.getAndIncrement(),
-                            pontuacaoTotal,
-                            equipe,
-                            null,
-                            resultadosEquipe
-                    );
-                })
-                .collect(Collectors.toList());
-    }
 
-    private List<LeaderboardFinalDTO> getLeaderboardFinalAtletas(Long categoriaId, List<LeaderboardEntity> resultados) {
-        List<AtletaEntity> ranking = leaderboardRepository.findRankingAtletasByCategoria(categoriaId);
-        AtomicInteger posicao = new AtomicInteger(1);
 
-        return ranking.stream()
-                .map(atleta -> {
-                    Integer pontuacaoTotal = atleta.getPontuacaoTotal() != null ? 
-                            atleta.getPontuacaoTotal() : 0;
-                    
-                    List<LeaderboardEntity> resultadosAtleta = resultados.stream()
-                            .filter(r -> atleta.getId().equals(r.getAtleta() != null ? r.getAtleta().getId() : null))
-                            .collect(Collectors.toList());
-
-                    return createLeaderboardFinalDTO(
-                            posicao.getAndIncrement(),
-                            pontuacaoTotal,
-                            null,
-                            convertAtletaToUsuario(atleta),
-                            resultadosAtleta
-                    );
-                })
-                .collect(Collectors.toList());
-    }
-
-    private LeaderboardFinalDTO createLeaderboardFinalDTO(int posicaoFinal, Integer pontuacaoTotal, 
-                                                          EquipeEntity equipe, UsuarioEntity atleta, 
-                                                          List<LeaderboardEntity> resultados) {
-        if (resultados.isEmpty()) {
-            return null;
-        }
-
-        LeaderboardEntity primeiro = resultados.get(0);
-        boolean isCategoriaEquipe = primeiro.isCategoriaEquipe();
-        
-        List<LeaderboardSummaryDTO> resultadosWorkouts = resultados.stream()
-                .map(this::convertToSummaryDTO)
-                .collect(Collectors.toList());
-
-        long workoutsFinalizados = resultados.stream()
-                .filter(LeaderboardEntity::isFinalizadoWorkout)
-                .count();
-
-        int totalWorkouts = resultados.size();
-        boolean finalizouTodos = workoutsFinalizados == totalWorkouts;
-
-        String nomeParticipante = isCategoriaEquipe ? 
-                (equipe != null ? equipe.getNome() : "") : 
-                (atleta != null ? atleta.getNomeCompleto() : "");
-
-        return LeaderboardFinalDTO.builder()
-                .posicaoFinal(posicaoFinal)
-                .pontuacaoTotal(pontuacaoTotal)
-                .evento(convertEventoToSummaryDTO(primeiro.getEvento()))
-                .categoria(convertCategoriaToSummaryDTO(primeiro.getCategoria()))
-                .equipe(isCategoriaEquipe && equipe != null ? convertEquipeToSummaryDTO(equipe) : null)
-                .atleta(!isCategoriaEquipe && atleta != null ? convertUsuarioToAtletaSummaryDTO(atleta) : null)
-                .nomeParticipante(nomeParticipante)
-                .resultadosWorkouts(resultadosWorkouts)
-                .workoutsFinalizados((int) workoutsFinalizados)
-                .totalWorkouts(totalWorkouts)
-                .finalizouTodos(finalizouTodos)
-                .isCategoriaEquipe(isCategoriaEquipe)
-                .isPodioFinal(posicaoFinal <= 3)
-                .medalhaFinal(getMedalhaFinal(posicaoFinal))
-                .descricaoPerformance(createDescricaoPerformance(posicaoFinal, nomeParticipante, 
-                        pontuacaoTotal, (int) workoutsFinalizados, totalWorkouts))
-                .build();
-    }
-
-    private String getMedalhaFinal(int posicao) {
-        return switch (posicao) {
-            case 1 -> "🥇";
-            case 2 -> "🥈";
-            case 3 -> "🥉";
-            default -> "";
-        };
-    }
-
-    private String createDescricaoPerformance(int posicao, String nome, Integer pontuacao, 
-                                            int finalizados, int total) {
-        return String.format("%dº lugar: %s - %d pts (%d/%d workouts finalizados)", 
-                posicao, nome, pontuacao, finalizados, total);
-    }
 
     // Métodos de conversão
 
@@ -288,54 +133,11 @@ public class LeaderboardService implements ILeaderboardService {
                 .build();
     }
 
-    private EventoSummaryDTO convertEventoToSummaryDTO(EventoEntity evento) {
-        return EventoSummaryDTO.builder()
-                .id(evento.getId())
-                .nome(evento.getNome())
-                .build();
-    }
 
-    private CategoriaSummaryDTO convertCategoriaToSummaryDTO(CategoriaEntity categoria) {
-        return CategoriaSummaryDTO.builder()
-                .id(categoria.getId())
-                .nome(categoria.getNome())
-                .build();
-    }
 
-    private WorkoutSummaryDTO convertWorkoutToSummaryDTO(WorkoutEntity workout) {
-        return WorkoutSummaryDTO.builder()
-                .id(workout.getId())
-                .nome(workout.getNome())
-                .tipo(workout.getTipo())
-                .build();
-    }
 
-    private EquipeSummaryDTO convertEquipeToSummaryDTO(EquipeEntity equipe) {
-        return EquipeSummaryDTO.builder()
-                .id(equipe.getId())
-                .nome(equipe.getNome())
-                .build();
-    }
 
-    private AtletaSummaryDTO convertAtletaToSummaryDTO(UsuarioEntity atleta) {
-        return AtletaSummaryDTO.builder()
-                .id(atleta.getId())
-                .nome(atleta.getNomeCompleto())
-                .build();
-    }
 
-    private AtletaSummaryDTO convertUsuarioToAtletaSummaryDTO(UsuarioEntity usuario) {
-        return AtletaSummaryDTO.builder()
-                .id(usuario.getId())
-                .nome(usuario.getNomeCompleto())
-                .dataNascimento(usuario.getDataNascimento())
-                .genero(usuario.getGenero())
-                .telefone(usuario.getTelefone())
-                .aceitaTermos(usuario.getAceitaTermos())
-                .idade(usuario.getIdade())
-                .podeParticipar(usuario.podeParticipar())
-                .build();
-    }
 
     // Métodos de conversão mínimos para LeaderboardResponseDTO
     
