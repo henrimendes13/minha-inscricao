@@ -22,6 +22,12 @@ public class InscricaoResponseDTO {
     @Schema(description = "Lista de atletas vinculados à inscrição")
     private List<AtletaSummaryDTO> atletas;
 
+    @Schema(description = "ID do usuário que fez a inscrição", example = "1")
+    private Long usuarioInscricaoId;
+
+    @Schema(description = "Nome do usuário que fez a inscrição", example = "João Silva")
+    private String nomeUsuarioInscricao;
+
     @Schema(description = "ID do evento", example = "1")
     private Long eventoId;
 

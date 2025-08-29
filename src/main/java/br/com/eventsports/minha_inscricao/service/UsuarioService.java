@@ -358,9 +358,9 @@ public class UsuarioService implements IUsuarioService {
     private UsuarioResponseDTO mapToResponseDTO(UsuarioEntity usuario) {
         // Determinar características dinâmicas
         boolean temEventos = usuario.getEventosOrganizados() != null && !usuario.getEventosOrganizados().isEmpty();
-        boolean temInscricoes = usuario.getInscricoes() != null && !usuario.getInscricoes().isEmpty();
+        boolean temInscricoes = usuario.getInscricoesCriadas() != null && !usuario.getInscricoesCriadas().isEmpty();
         int totalEventos = usuario.getEventosOrganizados() != null ? usuario.getEventosOrganizados().size() : 0;
-        int totalInscricoes = usuario.getInscricoes() != null ? usuario.getInscricoes().size() : 0;
+        int totalInscricoes = usuario.getInscricoesCriadas() != null ? usuario.getInscricoesCriadas().size() : 0;
         
         return UsuarioResponseDTO.builder()
                 .id(usuario.getId())

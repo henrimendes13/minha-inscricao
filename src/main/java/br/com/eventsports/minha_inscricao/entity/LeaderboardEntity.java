@@ -56,7 +56,7 @@ public class LeaderboardEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atleta_id")
-    private UsuarioEntity atleta;
+    private AtletaEntity atleta;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -72,41 +72,15 @@ public class LeaderboardEntity {
         if (this.finalizado == null) {
             this.finalizado = false;
         }
-        
-        // Validar que apenas equipe OU atleta está definido
-        validarParticipante();
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
-        validarParticipante();
     }
 
     // Métodos de conveniência
 
-    /**
-     * Valida que apenas equipe OU atleta está definido baseado no tipo da categoria
-     */
-    private void validarParticipante() {
-        if (this.categoria != null) {
-            if (this.categoria.isEquipe()) {
-                if (this.equipe == null) {
-                    throw new IllegalStateException("Equipe é obrigatória para categoria do tipo EQUIPE");
-                }
-                if (this.atleta != null) {
-                    throw new IllegalStateException("Atleta deve ser null para categoria do tipo EQUIPE");
-                }
-            } else if (this.categoria.isIndividual()) {
-                if (this.atleta == null) {
-                    throw new IllegalStateException("Atleta é obrigatório para categoria do tipo INDIVIDUAL");
-                }
-                if (this.equipe != null) {
-                    throw new IllegalStateException("Equipe deve ser null para categoria do tipo INDIVIDUAL");
-                }
-            }
-        }
-    }
 
     /**
      * Verifica se é uma categoria de equipe

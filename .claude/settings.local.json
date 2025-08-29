@@ -41,7 +41,10 @@
       "Bash(ping:*)",
       "Bash(wmic process where processid=22660 delete:*)",
       "Bash(wmic process where processid=19252 delete:*)",
-      "Bash(wmic process where processid=22224 delete:*)"
+      "Bash(wmic process where processid=22224 delete:*)",
+      "Bash(wmic process where processid=14636 delete:*)",
+      "Bash(wmic process where processid=8560 delete:*)",
+      "Bash(wmic process where processid=18400 delete:*)"
     ],
     "deny": [],
     "ask": []

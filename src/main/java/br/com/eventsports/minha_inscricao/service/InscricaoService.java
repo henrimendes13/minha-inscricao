@@ -172,7 +172,7 @@ public class InscricaoService implements IInscricaoService {
     // Métodos de conversão
     private InscricaoResponseDTO convertToResponseDTO(InscricaoEntity inscricao) {
         List<AtletaSummaryDTO> atletasDTO = inscricao.getAtleta() != null 
-                ? List.of(convertUsuarioToAtletaSummaryDTO(inscricao.getAtleta()))
+                ? List.of(convertAtletaToSummaryDTO(inscricao.getAtleta()))
                 : List.of();
 
         return InscricaoResponseDTO.builder()
@@ -204,6 +204,8 @@ public class InscricaoService implements IInscricaoService {
                 .tipoInscricao(inscricao.getTipoInscricao())
                 .numeroParticipantes(inscricao.getNumeroParticipantes())
                 .nomeParticipante(inscricao.getNomeParticipante())
+                .usuarioInscricaoId(inscricao.getUsuarioInscricao() != null ? inscricao.getUsuarioInscricao().getId() : null)
+                .nomeUsuarioInscricao(inscricao.getNomeUsuarioInscricao())
                 .temPagamento(inscricao.getPagamento() != null)
                 .build();
     }
@@ -244,21 +246,6 @@ public class InscricaoService implements IInscricaoService {
                 .build();
     }
 
-    private AtletaSummaryDTO convertUsuarioToAtletaSummaryDTO(UsuarioEntity usuario) {
-        return AtletaSummaryDTO.builder()
-                .id(usuario.getId())
-                .nome(usuario.getNome())
-                .dataNascimento(usuario.getDataNascimento())
-                .genero(usuario.getGenero())
-                .telefone(usuario.getTelefone())
-                .aceitaTermos(usuario.getAceitaTermos())
-                .idade(usuario.getIdade())
-                .podeParticipar(usuario.podeParticipar())
-                .nomeEvento("") // Não aplicável diretamente
-                .statusInscricao("") // Será obtido da inscrição
-                .nomeEquipe("") // Não aplicável diretamente
-                .build();
-    }
 
 
     private void updateInscricaoFromDTO(InscricaoEntity inscricao, InscricaoUpdateDTO dto) {

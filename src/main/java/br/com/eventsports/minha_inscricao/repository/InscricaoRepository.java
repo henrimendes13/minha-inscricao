@@ -5,6 +5,7 @@ import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EquipeEntity;
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
+import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
 import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
@@ -70,7 +71,11 @@ public interface InscricaoRepository extends JpaRepository<InscricaoEntity, Long
 
     @Query("SELECT i FROM InscricaoEntity i WHERE i.atleta = :atleta")
     @Cacheable(value = "inscricoes", key = "'byAtleta:' + #atleta.id")
-    List<InscricaoEntity> findByAtleta(@Param("atleta") UsuarioEntity atleta);
+    List<InscricaoEntity> findByAtleta(@Param("atleta") AtletaEntity atleta);
+
+    @Query("SELECT i FROM InscricaoEntity i WHERE i.usuarioInscricao = :usuario")
+    @Cacheable(value = "inscricoes", key = "'byUsuarioInscricao:' + #usuario.id")
+    List<InscricaoEntity> findByUsuarioInscricao(@Param("usuario") UsuarioEntity usuario);
 
     @Query("SELECT i FROM InscricaoEntity i WHERE i.evento.id = :eventoId AND i.status = :status")
     @Cacheable(value = "inscricoes", key = "'byEventoAndStatus:' + #eventoId + ':' + #status")

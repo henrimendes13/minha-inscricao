@@ -78,6 +78,7 @@ public class PontuacaoService implements IPontuacaoService {
                 usuario.getNomeCompleto(), pontuacaoTotal);
     }
 
+
     public void atualizarPontuacaoEquipePorId(Long equipeId) {
         if (equipeId == null) {
             return;
@@ -122,7 +123,7 @@ public class PontuacaoService implements IPontuacaoService {
         if (leaderboard.isCategoriaEquipe() && leaderboard.getEquipe() != null) {
             atualizarPontuacaoEquipe(leaderboard.getEquipe());
         } else if (leaderboard.isCategoriaIndividual() && leaderboard.getAtleta() != null) {
-            atualizarPontuacaoUsuario(leaderboard.getAtleta());
+            atualizarPontuacaoAtleta(leaderboard.getAtleta());
         }
     }
 

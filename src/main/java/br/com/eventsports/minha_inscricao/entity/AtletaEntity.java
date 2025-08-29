@@ -14,7 +14,7 @@ import java.time.Period;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"evento", "inscricao", "equipe"})
+@ToString(exclude = {"evento", "equipe"})
 public class AtletaEntity {
 
     @Id
@@ -75,9 +75,6 @@ public class AtletaEntity {
     @JoinColumn(name = "categoria_id")
     private CategoriaEntity categoria;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "inscricao_id")
-    private InscricaoEntity inscricao;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipe_id")
@@ -117,39 +114,39 @@ public class AtletaEntity {
     }
 
     public boolean temInscricao() {
-        return this.inscricao != null;
+        return false; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public boolean inscricaoAtiva() {
-        return this.inscricao != null && this.inscricao.isAtiva();
+        return false; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public boolean inscricaoConfirmada() {
-        return this.inscricao != null && this.inscricao.isConfirmada();
+        return false; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public boolean inscricaoPendente() {
-        return this.inscricao != null && this.inscricao.isPendente();
+        return false; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public boolean inscricaoCancelada() {
-        return this.inscricao != null && this.inscricao.isCancelada();
+        return false; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public String getStatusInscricao() {
-        return this.inscricao != null ? this.inscricao.getDescricaoStatus() : "Sem inscrição";
+        return "Sem inscrição"; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public String getNomeEventoInscricao() {
-        return this.inscricao != null ? this.inscricao.getNomeEvento() : "";
+        return ""; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public String getNomeCategoriaInscricao() {
-        return this.inscricao != null ? this.inscricao.getNomeCategoria() : "";
+        return ""; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public Long getInscricaoId() {
-        return this.inscricao != null ? this.inscricao.getId() : null;
+        return null; // TODO: Implementar busca via InscricaoRepository se necessário
     }
 
     public boolean temEquipe() {

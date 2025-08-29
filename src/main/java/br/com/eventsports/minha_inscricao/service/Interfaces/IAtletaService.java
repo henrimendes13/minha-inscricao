@@ -2,6 +2,7 @@ package br.com.eventsports.minha_inscricao.service.Interfaces;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.*;
 import br.com.eventsports.minha_inscricao.entity.AtletaEntity;
+import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.Genero;
 
 import java.util.List;
@@ -19,7 +20,9 @@ public interface IAtletaService {
     
     AtletaResponseDTO saveForInscricao(AtletaCreateDTO atletaCreateDTO, Long eventoId, Long equipeId);
     
-    AtletaResponseDTO criarAtletaParaInscricao(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO);
+    AtletaResponseDTO criarAtletaParaInscricao(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO, UsuarioEntity usuarioInscricao);
+    
+    AtletaResponseDTO criarAtletaParaInscricaoComUsuario(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO, Long usuarioInscricaoId);
     
     AtletaResponseDTO saveForEvento(AtletaCreateDTO atletaCreateDTO, Long eventoId);
     

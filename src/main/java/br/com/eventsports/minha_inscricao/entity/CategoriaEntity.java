@@ -306,7 +306,7 @@ public class CategoriaEntity {
     /**
      * Calcula a pontuação total de um atleta (soma das posições em todos os workouts)
      */
-    public Integer calcularPontuacaoTotalAtleta(UsuarioEntity atleta) {
+    public Integer calcularPontuacaoTotalAtleta(AtletaEntity atleta) {
         if (this.leaderboards == null || !isIndividual()) {
             return null;
         }
@@ -344,7 +344,7 @@ public class CategoriaEntity {
                     .collect(Collectors.groupingBy(LeaderboardEntity::getAtleta))
                     .entrySet().stream()
                     .map(entry -> {
-                        UsuarioEntity atleta = entry.getKey();
+                        AtletaEntity atleta = entry.getKey();
                         Integer pontuacaoTotal = calcularPontuacaoTotalAtleta(atleta);
                         return new Object[]{atleta, pontuacaoTotal};
                     })

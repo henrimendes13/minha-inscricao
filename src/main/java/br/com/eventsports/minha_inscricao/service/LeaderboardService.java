@@ -4,7 +4,9 @@ import br.com.eventsports.minha_inscricao.dto.atleta.AtletaSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
 import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
 import br.com.eventsports.minha_inscricao.entity.*;
+import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
 import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
+import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
 import br.com.eventsports.minha_inscricao.repository.LeaderboardRepository;
 import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
@@ -28,6 +30,8 @@ public class LeaderboardService implements ILeaderboardService {
     private final LeaderboardRepository leaderboardRepository;
     private final CategoriaRepository categoriaRepository;
     private final WorkoutRepository workoutRepository;
+    private final AtletaRepository atletaRepository;
+    private final EquipeRepository equipeRepository;
     private final IPontuacaoService pontuacaoService;
 
 
@@ -170,7 +174,7 @@ public class LeaderboardService implements ILeaderboardService {
                 .build();
     }
     
-    private AtletaMinimalDTO convertAtletaToSimpleDTO(UsuarioEntity atleta) {
+    private AtletaMinimalDTO convertAtletaToSimpleDTO(AtletaEntity atleta) {
         return AtletaMinimalDTO.builder()
                 .id(atleta.getId())
                 .nome(atleta.getNomeCompleto())
@@ -219,18 +223,35 @@ public class LeaderboardService implements ILeaderboardService {
         // Definir participante baseado no tipo da categoria
         if (categoria.isEquipe() && dto.getEquipeId() != null) {
             // Buscar equipe e verificar se pertence à categoria
-            EquipeEntity equipe = categoria.getEquipes().stream()
-                    .filter(e -> e.getId().equals(dto.getEquipeId()))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("Equipe não encontrada ou não pertence a esta categoria"));
+            EquipeEntity equipe = equipeRepository.findById(dto.getEquipeId())
+                    .orElseThrow(() -> new RuntimeException("Equipe não encontrada com ID: " + dto.getEquipeId()));
+            
+            // Verificar se equipe pertence à categoria
+            if (!equipe.getCategoria().getId().equals(dto.getCategoriaId())) {
+                throw new RuntimeException("Equipe não pertence a esta categoria");
+            }
+            
+            // Verificar se equipe está ativa
+            if (equipe.getAtiva() == null || !equipe.getAtiva()) {
+                throw new RuntimeException("Não é possível registrar resultados para equipe inativa: " + equipe.getNome());
+            }
+            
             leaderboard.setEquipe(equipe);
         } else if (categoria.isIndividual() && dto.getAtletaId() != null) {
-            // Buscar usuário atleta nas inscrições da categoria
-            UsuarioEntity atleta = categoria.getInscricoes().stream()
-                    .map(InscricaoEntity::getAtleta)
-                    .filter(a -> a != null && a.getId().equals(dto.getAtletaId()))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("Atleta não encontrado ou não está inscrito nesta categoria"));
+            // Buscar atleta diretamente no repositório
+            AtletaEntity atleta = atletaRepository.findById(dto.getAtletaId())
+                    .orElseThrow(() -> new RuntimeException("Atleta não encontrado com ID: " + dto.getAtletaId()));
+            
+            // Verificar se atleta pertence à categoria
+            if (atleta.getCategoria() == null || !atleta.getCategoria().getId().equals(dto.getCategoriaId())) {
+                throw new RuntimeException("Atleta não pertence a esta categoria");
+            }
+            
+            // Verificar se atleta está ativo (aceita termos)
+            if (atleta.getAceitaTermos() == null || !atleta.getAceitaTermos()) {
+                throw new RuntimeException("Não é possível registrar resultados para atleta inativo: " + atleta.getNome());
+            }
+            
             leaderboard.setAtleta(atleta);
         } else {
             throw new RuntimeException("Deve informar equipeId para categoria EQUIPE ou atletaId para categoria INDIVIDUAL");
@@ -502,15 +523,4 @@ public class LeaderboardService implements ILeaderboardService {
         throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
     }
 
-    private UsuarioEntity convertAtletaToUsuario(AtletaEntity atleta) {
-        UsuarioEntity usuario = new UsuarioEntity();
-        usuario.setId(atleta.getId());
-        usuario.setNome(atleta.getNome());
-        usuario.setCpf(atleta.getCpf());
-        usuario.setDataNascimento(atleta.getDataNascimento());
-        usuario.setGenero(atleta.getGenero());
-        usuario.setTelefone(atleta.getTelefone());
-        usuario.setAceitaTermos(atleta.getAceitaTermos());
-        return usuario;
-    }
 }

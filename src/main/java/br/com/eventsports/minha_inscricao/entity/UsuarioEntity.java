@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"senha", "eventosOrganizados", "inscricoes"})
+@ToString(exclude = {"senha", "eventosOrganizados", "inscricoesCriadas"})
 public class UsuarioEntity {
 
     @Id
@@ -32,7 +32,7 @@ public class UsuarioEntity {
     @Column(name = "nome", nullable = false, length = 100)
     private String nome;
 
-    // Campos consolidados de AtletaEntity
+    // Campos pessoais do usuário (para cadastro completo)
     @Column(name = "cpf", length = 14, unique = true)
     private String cpf;
 
@@ -97,9 +97,9 @@ public class UsuarioEntity {
     @Builder.Default
     private List<EventoEntity> eventosOrganizados = new ArrayList<>();
 
-    @OneToMany(mappedBy = "atleta", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "usuarioInscricao", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
-    private List<InscricaoEntity> inscricoes = new ArrayList<>();
+    private List<InscricaoEntity> inscricoesCriadas = new ArrayList<>();
 
     // Lifecycle methods
     @PrePersist
@@ -127,8 +127,8 @@ public class UsuarioEntity {
         return this.eventosOrganizados != null && !this.eventosOrganizados.isEmpty();
     }
 
-    public boolean isAtleta() {
-        return this.inscricoes != null && !this.inscricoes.isEmpty();
+    public boolean jaFezInscricoes() {
+        return this.inscricoesCriadas != null && !this.inscricoesCriadas.isEmpty();
     }
 
     public TipoUsuario getTipoUsuario() {
@@ -172,7 +172,7 @@ public class UsuarioEntity {
         return this.eventosOrganizados != null ? this.eventosOrganizados.size() : 0;
     }
 
-    // Métodos de atleta
+    // Métodos relacionados aos dados pessoais do usuário
     public int getIdade() {
         return this.dataNascimento != null 
                ? java.time.Period.between(this.dataNascimento, LocalDate.now()).getYears()
@@ -194,17 +194,21 @@ public class UsuarioEntity {
         return this.aceitaTermos && this.ativo;
     }
 
+    public boolean podeInteragir() {
+        return this.ativo;
+    }
+
     public String getNomeCompleto() {
         return this.nome != null ? this.nome : "Usuário " + (this.id != null ? this.id : "Sem ID");
     }
 
-    public int getTotalInscricoes() {
-        return this.inscricoes != null ? this.inscricoes.size() : 0;
+    public int getTotalInscricoesCriadas() {
+        return this.inscricoesCriadas != null ? this.inscricoesCriadas.size() : 0;
     }
 
-    public long getInscricoesAtivas() {
-        return this.inscricoes != null 
-               ? this.inscricoes.stream()
+    public long getInscricoesCriadasAtivas() {
+        return this.inscricoesCriadas != null 
+               ? this.inscricoesCriadas.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
                    .count()
                : 0;
@@ -231,22 +235,22 @@ public class UsuarioEntity {
         }
     }
 
-    public void adicionarInscricao(InscricaoEntity inscricao) {
-        if (this.inscricoes == null) {
-            this.inscricoes = new ArrayList<>();
+    public void adicionarInscricaoCriada(InscricaoEntity inscricao) {
+        if (this.inscricoesCriadas == null) {
+            this.inscricoesCriadas = new ArrayList<>();
         }
         
-        if (!this.inscricoes.contains(inscricao)) {
-            this.inscricoes.add(inscricao);
-            inscricao.setAtleta(this);
+        if (!this.inscricoesCriadas.contains(inscricao)) {
+            this.inscricoesCriadas.add(inscricao);
+            inscricao.setUsuarioInscricao(this);
         }
     }
 
-    public void removerInscricao(InscricaoEntity inscricao) {
-        if (this.inscricoes != null) {
-            this.inscricoes.remove(inscricao);
-            if (inscricao.getAtleta() != null && inscricao.getAtleta().equals(this)) {
-                inscricao.setAtleta(null);
+    public void removerInscricaoCriada(InscricaoEntity inscricao) {
+        if (this.inscricoesCriadas != null) {
+            this.inscricoesCriadas.remove(inscricao);
+            if (inscricao.getUsuarioInscricao() != null && inscricao.getUsuarioInscricao().equals(this)) {
+                inscricao.setUsuarioInscricao(null);
             }
         }
     }

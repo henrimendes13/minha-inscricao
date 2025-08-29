@@ -87,12 +87,21 @@ public class AtletaService implements IAtletaService {
      * Cria um atleta individual com inscrição automática no evento.
      * @param eventoId ID do evento
      * @param atletaInscricaoDTO Dados do atleta e da inscrição
+     * @param usuarioInscricao Usuário que está fazendo a inscrição
      * @return AtletaResponseDTO com atleta criado e inscrição associada
      */
     @CachePut(value = "atletas", key = "#result.id")
     @CacheEvict(value = "atletas", key = "'all'")
     @Transactional
-    public AtletaResponseDTO criarAtletaParaInscricao(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO) {
+    public AtletaResponseDTO criarAtletaParaInscricaoComUsuario(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO, Long usuarioInscricaoId) {
+        // Buscar usuário que está fazendo a inscrição
+        UsuarioEntity usuarioInscricao = usuarioRepository.findById(usuarioInscricaoId)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + usuarioInscricaoId));
+        
+        return criarAtletaParaInscricao(eventoId, atletaInscricaoDTO, usuarioInscricao);
+    }
+
+    public AtletaResponseDTO criarAtletaParaInscricao(Long eventoId, AtletaInscricaoDTO atletaInscricaoDTO, UsuarioEntity usuarioInscricao) {
         validateAtletaInscricaoData(eventoId, atletaInscricaoDTO);
         
         // Buscar entidades necessárias
@@ -127,12 +136,8 @@ public class AtletaService implements IAtletaService {
             }
         }
 
-        // Criar UsuarioEntity baseado no atleta para a inscrição
-        UsuarioEntity usuario = criarUsuarioParaInscricao(atleta, atletaInscricaoDTO);
-        usuario = usuarioRepository.save(usuario);
-
-        // Criar inscrição individual
-        InscricaoEntity inscricao = criarInscricaoParaAtleta(usuario, evento, categoria, atletaInscricaoDTO);
+        // Criar inscrição individual (novo modelo: atleta + usuarioInscricao)
+        InscricaoEntity inscricao = criarInscricaoParaAtleta(atleta, usuarioInscricao, evento, categoria, atletaInscricaoDTO);
         
         // Recarregar atleta para obter dados atualizados
         atleta = atletaRepository.findById(atleta.getId()).orElse(atleta);
@@ -256,6 +261,10 @@ public class AtletaService implements IAtletaService {
 
     // Métodos de conversão
     private AtletaResponseDTO convertToResponseDTO(AtletaEntity atleta) {
+        // Buscar inscrição do atleta
+        List<InscricaoEntity> inscricoes = inscricaoRepository.findByAtleta(atleta);
+        InscricaoEntity inscricao = inscricoes.isEmpty() ? null : inscricoes.get(0);
+        
         return AtletaResponseDTO.builder()
                 .id(atleta.getId())
                 .nome(atleta.getNome())
@@ -278,9 +287,9 @@ public class AtletaService implements IAtletaService {
                 .nomeEvento(atleta.getNomeEvento())
                 .categoriaId(atleta.getCategoriaId())
                 .nomeCategoria(atleta.getNomeCategoria())
-                .inscricaoId(atleta.getInscricaoId())
-                .statusInscricao(atleta.getStatusInscricao())
-                .nomeCategoriaInscricao(atleta.getNomeCategoriaInscricao())
+                .inscricaoId(inscricao != null ? inscricao.getId() : null)
+                .statusInscricao(inscricao != null ? inscricao.getDescricaoStatus() : "Sem inscrição")
+                .nomeCategoriaInscricao(inscricao != null ? inscricao.getNomeCategoria() : "")
                 .equipeId(atleta.getEquipeId())
                 .nomeEquipe(atleta.getNomeEquipe())
                 .build();
@@ -505,37 +514,12 @@ public class AtletaService implements IAtletaService {
                 .build();
     }
 
-    /**
-     * Cria UsuarioEntity baseado no atleta para a inscrição.
-     */
-    private UsuarioEntity criarUsuarioParaInscricao(AtletaEntity atleta, AtletaInscricaoDTO dto) {
-        // Verificar se já existe usuário com mesmo CPF
-        if (dto.getCpf() != null) {
-            Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findByCpf(dto.getCpf());
-            if (usuarioExistente.isPresent()) {
-                return usuarioExistente.get();
-            }
-        }
-
-        // Criar novo usuário baseado no atleta
-        return UsuarioEntity.builder()
-                .nome(atleta.getNome())
-                .cpf(atleta.getCpf())
-                .dataNascimento(atleta.getDataNascimento())
-                .genero(atleta.getGenero())
-                .telefone(atleta.getTelefone())
-                .email(atleta.getEmail())
-                .aceitaTermos(dto.getTermosInscricaoAceitos())
-                .ativo(true)
-                .senha("temp123") // Senha temporária - deve ser alterada pelo usuário
-                .build();
-    }
 
     /**
      * Cria uma inscrição para o atleta individual.
      */
-    private InscricaoEntity criarInscricaoParaAtleta(UsuarioEntity usuario, EventoEntity evento, 
-                                                    CategoriaEntity categoria, AtletaInscricaoDTO dto) {
+    private InscricaoEntity criarInscricaoParaAtleta(AtletaEntity atleta, UsuarioEntity usuarioInscricao,
+                                                    EventoEntity evento, CategoriaEntity categoria, AtletaInscricaoDTO dto) {
         // Determinar valor da inscrição
         BigDecimal valorInscricao = dto.getValorInscricao() != null 
             ? dto.getValorInscricao()
@@ -543,9 +527,10 @@ public class AtletaService implements IAtletaService {
                 ? categoria.getValorInscricao() 
                 : BigDecimal.ZERO);
 
-        // Criar a inscrição individual
+        // Criar a inscrição individual (novo modelo)
         InscricaoEntity inscricao = InscricaoEntity.builder()
-                .atleta(usuario) // Inscrição individual
+                .atleta(atleta) // Quem vai participar
+                .usuarioInscricao(usuarioInscricao) // Quem fez a inscrição
                 .evento(evento)
                 .categoria(categoria)
                 .equipe(null) // Não é inscrição de equipe

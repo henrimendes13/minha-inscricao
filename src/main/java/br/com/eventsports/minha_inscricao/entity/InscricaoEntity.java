@@ -15,17 +15,22 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"atleta", "evento", "categoria", "equipe", "pagamento"})
+@ToString(exclude = {"atleta", "usuarioInscricao", "evento", "categoria", "equipe", "pagamento"})
 public class InscricaoEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relacionamento direto com Usuario como atleta
+    // Relacionamento com Atleta (quem vai participar do evento)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atleta_id", nullable = true)
-    private UsuarioEntity atleta;
+    private AtletaEntity atleta;
+
+    // Relacionamento com Usuario que fez a inscrição (quem logou e inscreveu)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_inscricao_id", nullable = false)
+    private UsuarioEntity usuarioInscricao;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evento_id", nullable = false)
@@ -96,6 +101,11 @@ public class InscricaoEntity {
         
         if ((!temAtleta && !temEquipe) || (temAtleta && temEquipe)) {
             throw new IllegalStateException("Inscrição deve ter um atleta OU uma equipe, mas não ambos");
+        }
+        
+        // Validação: deve sempre ter usuário que fez a inscrição
+        if (this.usuarioInscricao == null) {
+            throw new IllegalStateException("Inscrição deve ter um usuário responsável");
         }
     }
 
@@ -232,12 +242,12 @@ public class InscricaoEntity {
         return this.atleta != null ? 1 : 0;
     }
 
-    public boolean contemAtleta(UsuarioEntity usuario) {
-        return this.atleta != null && this.atleta.equals(usuario);
+    public boolean contemAtleta(AtletaEntity atleta) {
+        return this.atleta != null && this.atleta.equals(atleta);
     }
 
-    public boolean contemAtletaPorId(Long usuarioId) {
-        return this.atleta != null && this.atleta.getId().equals(usuarioId);
+    public boolean contemAtletaPorId(Long atletaId) {
+        return this.atleta != null && this.atleta.getId().equals(atletaId);
     }
 
     public List<String> getNomesAtletas() {
@@ -246,8 +256,12 @@ public class InscricaoEntity {
                : new ArrayList<>();
     }
 
-    public boolean podeSerEditadaPeloAtleta(UsuarioEntity usuario) {
-        return this.atleta != null && this.atleta.equals(usuario);
+    public boolean podeSerEditadaPeloUsuarioInscricao(UsuarioEntity usuario) {
+        return this.usuarioInscricao != null && this.usuarioInscricao.equals(usuario);
+    }
+
+    public boolean podeSerEditadaPeloAtleta(AtletaEntity atleta) {
+        return this.atleta != null && this.atleta.equals(atleta);
     }
 
     // Métodos de conveniência adicionais
@@ -255,8 +269,16 @@ public class InscricaoEntity {
         return this.atleta != null ? this.atleta.getEmail() : "";
     }
 
-    public boolean atletaVerificado() {
-        return this.atleta != null && this.atleta.getAtivo();
+    public String getNomeUsuarioInscricao() {
+        return this.usuarioInscricao != null ? this.usuarioInscricao.getNome() : "";
+    }
+
+    public String getEmailUsuarioInscricao() {
+        return this.usuarioInscricao != null ? this.usuarioInscricao.getEmail() : "";
+    }
+
+    public boolean usuarioInscricaoAtivo() {
+        return this.usuarioInscricao != null && this.usuarioInscricao.getAtivo();
     }
 
     public boolean atletaPodeParticipar() {

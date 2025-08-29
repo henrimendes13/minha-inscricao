@@ -143,10 +143,10 @@ public class EventoEntity {
         return this.organizador != null && this.organizador.getVerificado();
     }
 
-    public InscricaoEntity buscarInscricaoPorAtleta(UsuarioEntity usuario) {
+    public InscricaoEntity buscarInscricaoPorAtleta(AtletaEntity atleta) {
         return this.inscricoes != null 
                ? this.inscricoes.stream()
-                   .filter(inscricao -> inscricao.contemAtleta(usuario))
+                   .filter(inscricao -> inscricao.contemAtleta(atleta))
                    .findFirst()
                    .orElse(null)
                : null;
@@ -201,7 +201,7 @@ public class EventoEntity {
                : 0;
     }
 
-    public List<UsuarioEntity> getAtletasInscritos() {
+    public List<AtletaEntity> getAtletasInscritos() {
         return this.inscricoes != null 
                ? this.inscricoes.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
@@ -270,13 +270,13 @@ public class EventoEntity {
         return getAtletasInscritos().size();
     }
 
-    public List<UsuarioEntity> getAtletasAtivos() {
+    public List<AtletaEntity> getAtletasAtivos() {
         return this.inscricoes != null 
                ? this.inscricoes.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
                    .filter(inscricao -> inscricao.getAtleta() != null)
                    .map(InscricaoEntity::getAtleta)
-                   .filter(UsuarioEntity::podeParticipar)
+                   .filter(AtletaEntity::podeParticipar)
                    .sorted((a1, a2) -> a1.getNomeCompleto().compareTo(a2.getNomeCompleto()))
                    .toList()
                : new ArrayList<>();
@@ -286,11 +286,11 @@ public class EventoEntity {
         return getAtletasAtivos().size();
     }
 
-    public boolean contemAtleta(UsuarioEntity usuario) {
+    public boolean contemAtleta(AtletaEntity atleta) {
         return this.inscricoes != null && 
                this.inscricoes.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
-                   .anyMatch(inscricao -> inscricao.contemAtleta(usuario));
+                   .anyMatch(inscricao -> inscricao.contemAtleta(atleta));
     }
 
     public boolean contemAtletaPorId(Long usuarioId) {
@@ -300,12 +300,12 @@ public class EventoEntity {
                    .anyMatch(inscricao -> inscricao.contemAtletaPorId(usuarioId));
     }
 
-    public UsuarioEntity buscarAtletaPorId(Long usuarioId) {
+    public AtletaEntity buscarAtletaPorId(Long atletaId) {
         return this.inscricoes != null 
                ? this.inscricoes.stream()
                    .filter(inscricao -> inscricao.getStatus().isAtiva())
                    .map(InscricaoEntity::getAtleta)
-                   .filter(usuario -> usuario != null && usuario.getId().equals(usuarioId))
+                   .filter(atleta -> atleta != null && atleta.getId().equals(atletaId))
                    .findFirst()
                    .orElse(null)
                : null;
@@ -313,7 +313,7 @@ public class EventoEntity {
 
     public List<String> getNomesAtletas() {
         return getAtletasInscritos().stream()
-               .map(UsuarioEntity::getNomeCompleto)
+               .map(AtletaEntity::getNomeCompleto)
                .sorted()
                .toList();
     }

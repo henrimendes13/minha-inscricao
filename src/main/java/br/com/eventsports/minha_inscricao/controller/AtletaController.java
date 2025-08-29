@@ -51,8 +51,10 @@ public class AtletaController {
 
     @PostMapping("/evento/{eventoId}/inscricao/atletas")
     public ResponseEntity<AtletaResponseDTO> createAtletaForInscricao(@PathVariable Long eventoId,
-            @Valid @RequestBody AtletaInscricaoDTO atletaInscricaoDTO) {
-        AtletaResponseDTO createdAtleta = atletaService.criarAtletaParaInscricao(eventoId, atletaInscricaoDTO);
+            @Valid @RequestBody AtletaInscricaoDTO atletaInscricaoDTO,
+            @RequestParam(required = false, defaultValue = "1") Long usuarioInscricaoId) {
+        // TODO: Implementar autenticação real. Por enquanto, usa usuário por parâmetro
+        AtletaResponseDTO createdAtleta = atletaService.criarAtletaParaInscricaoComUsuario(eventoId, atletaInscricaoDTO, usuarioInscricaoId);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAtleta);
     }
 
