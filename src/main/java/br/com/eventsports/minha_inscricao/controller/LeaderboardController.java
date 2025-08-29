@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardRankingDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
 import br.com.eventsports.minha_inscricao.service.PontuacaoService;
@@ -45,6 +47,17 @@ public class LeaderboardController {
     public ResponseEntity<List<LeaderboardSummaryDTO>> getLeaderboardAtleta(@PathVariable Long atletaId) {
         List<LeaderboardSummaryDTO> resultados = leaderboardService.getLeaderboardAtleta(atletaId);
         return ResponseEntity.ok(resultados);
+    }
+
+    /**
+     * Busca ranking completo de uma categoria em um evento
+     */
+    @GetMapping("/evento/{eventoId}/categoria/{categoriaId}/ranking")
+    public ResponseEntity<List<LeaderboardRankingDTO>> getRankingCategoria(
+            @PathVariable Long eventoId,
+            @PathVariable Long categoriaId) {
+        List<LeaderboardRankingDTO> ranking = leaderboardService.getRankingCategoria(eventoId, categoriaId);
+        return ResponseEntity.ok(ranking);
     }
 
     @PostMapping("/categoria/{categoriaId}/recalcular-pontuacoes")

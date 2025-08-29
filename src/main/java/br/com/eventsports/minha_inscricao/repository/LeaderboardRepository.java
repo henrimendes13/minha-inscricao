@@ -173,7 +173,29 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
      */
     
     /**
-     * Busca top N equipes de uma categoria por pontuação
+     * Busca ranking completo de equipes de uma categoria por pontuação
+     */
+    @Query(value = """
+        SELECT e.* FROM equipes e 
+        WHERE e.categoria_id = :categoriaId 
+        AND e.pontuacao_total IS NOT NULL
+        ORDER BY e.pontuacao_total ASC
+        """, nativeQuery = true)
+    List<EquipeEntity> findEquipesRankingByCategoria(@Param("categoriaId") Long categoriaId);
+
+    /**
+     * Busca ranking completo de atletas de uma categoria por pontuação
+     */
+    @Query(value = """
+        SELECT a.* FROM atletas a 
+        WHERE a.categoria_id = :categoriaId 
+        AND a.pontuacao_total IS NOT NULL
+        ORDER BY a.pontuacao_total ASC
+        """, nativeQuery = true)
+    List<AtletaEntity> findAtletasRankingByCategoria(@Param("categoriaId") Long categoriaId);
+
+    /**
+     * Busca top N equipes de uma categoria por pontuação (mantido para compatibilidade)
      */
     @Query(value = """
         SELECT e.* FROM equipes e 
@@ -185,7 +207,7 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
     List<EquipeEntity> findTopEquipesByCategoria(@Param("categoriaId") Long categoriaId, @Param("limit") int limit);
 
     /**
-     * Busca top N atletas de uma categoria por pontuação
+     * Busca top N atletas de uma categoria por pontuação (mantido para compatibilidade)
      */
     @Query(value = """
         SELECT a.* FROM atletas a 

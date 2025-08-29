@@ -1,5 +1,6 @@
 package br.com.eventsports.minha_inscricao.service.Interfaces;
 
+import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardRankingDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoLoteDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardResultadoUpdateDTO;
@@ -54,4 +55,9 @@ public interface ILeaderboardService {
      * Deleta um resultado do leaderboard
      */
     void deletarLeaderboardResultado(Long id);
+    
+    /**
+     * Busca ranking completo de uma categoria em um evento
+     */
+    List<LeaderboardRankingDTO> getRankingCategoria(Long eventoId, Long categoriaId);
 }

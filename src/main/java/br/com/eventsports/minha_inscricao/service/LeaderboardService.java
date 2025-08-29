@@ -7,6 +7,7 @@ import br.com.eventsports.minha_inscricao.entity.*;
 import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
 import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
+import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.repository.LeaderboardRepository;
 import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
@@ -32,6 +33,7 @@ public class LeaderboardService implements ILeaderboardService {
     private final WorkoutRepository workoutRepository;
     private final AtletaRepository atletaRepository;
     private final EquipeRepository equipeRepository;
+    private final EventoRepository eventoRepository;
     private final IPontuacaoService pontuacaoService;
 
 
@@ -521,6 +523,76 @@ public class LeaderboardService implements ILeaderboardService {
         }
         
         throw new IllegalArgumentException("Formato de tempo inválido. Use mm:ss ou hh:mm:ss");
+    }
+
+    /**
+     * Busca ranking completo de uma categoria (evento)
+     */
+    public List<LeaderboardRankingDTO> getRankingCategoria(Long eventoId, Long categoriaId) {
+        // Validar evento
+        EventoEntity evento = eventoRepository.findById(eventoId)
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + eventoId));
+
+        // Validar categoria
+        CategoriaEntity categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
+
+        // Verificar se categoria pertence ao evento
+        if (!categoria.getEvento().getId().equals(eventoId)) {
+            throw new RuntimeException("Categoria não pertence ao evento especificado");
+        }
+
+        List<LeaderboardRankingDTO> ranking = new ArrayList<>();
+
+        if (categoria.isEquipe()) {
+            // Buscar ranking de equipes
+            List<EquipeEntity> equipes = leaderboardRepository.findEquipesRankingByCategoria(categoriaId);
+            
+            for (int i = 0; i < equipes.size(); i++) {
+                EquipeEntity equipe = equipes.get(i);
+                
+                // Contar workouts completados pela equipe
+                long workoutsCompletados = leaderboardRepository
+                        .countWorkoutsFinalizadosByEquipe(categoriaId, equipe.getId());
+                
+                LeaderboardRankingDTO item = LeaderboardRankingDTO.builder()
+                        .posicao(i + 1)
+                        .nomeParticipante(equipe.getNome())
+                        .pontuacaoTotal(equipe.getPontuacaoTotal())
+                        .isEquipe(true)
+                        .participanteId(equipe.getId())
+                        .nomeCategoria(categoria.getNome())
+                        .workoutsCompletados(workoutsCompletados)
+                        .build();
+                
+                ranking.add(item);
+            }
+        } else {
+            // Buscar ranking de atletas
+            List<AtletaEntity> atletas = leaderboardRepository.findAtletasRankingByCategoria(categoriaId);
+            
+            for (int i = 0; i < atletas.size(); i++) {
+                AtletaEntity atleta = atletas.get(i);
+                
+                // Contar workouts completados pelo atleta
+                long workoutsCompletados = leaderboardRepository
+                        .countWorkoutsFinalizadosByAtleta(categoriaId, atleta.getId());
+                
+                LeaderboardRankingDTO item = LeaderboardRankingDTO.builder()
+                        .posicao(i + 1)
+                        .nomeParticipante(atleta.getNome())
+                        .pontuacaoTotal(atleta.getPontuacaoTotal())
+                        .isEquipe(false)
+                        .participanteId(atleta.getId())
+                        .nomeCategoria(categoria.getNome())
+                        .workoutsCompletados(workoutsCompletados)
+                        .build();
+                
+                ranking.add(item);
+            }
+        }
+
+        return ranking;
     }
 
 }
