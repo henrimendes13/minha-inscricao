@@ -533,7 +533,7 @@ public class LeaderboardService implements ILeaderboardService {
     }
 
     /**
-     * Busca ranking completo de uma categoria (evento)
+     * Busca ranking completo de uma categoria (evento) com critérios de desempate
      */
     public List<LeaderboardRankingDTO> getRankingCategoria(Long eventoId, Long categoriaId) {
         // Validar evento
@@ -549,15 +549,17 @@ public class LeaderboardService implements ILeaderboardService {
             throw new RuntimeException("Categoria não pertence ao evento especificado");
         }
 
+        // Identificar último workout para critério de desempate
+        Long ultimoWorkoutId = obterUltimoWorkoutId(categoriaId);
+
         List<LeaderboardRankingDTO> ranking = new ArrayList<>();
 
         if (categoria.isEquipe()) {
-            // Buscar ranking de equipes
-            List<EquipeEntity> equipes = leaderboardRepository.findEquipesRankingByCategoria(categoriaId);
+            // Buscar equipes SEM ordenação
+            List<EquipeEntity> equipes = leaderboardRepository.findEquipesByCategoriaSemOrdenacao(categoriaId);
             
-            for (int i = 0; i < equipes.size(); i++) {
-                EquipeEntity equipe = equipes.get(i);
-                
+            // Construir lista de DTOs com dados completos
+            for (EquipeEntity equipe : equipes) {
                 // Contar workouts completados pela equipe
                 long workoutsCompletados = leaderboardRepository
                         .countWorkoutsFinalizadosByEquipe(categoriaId, equipe.getId());
@@ -566,7 +568,6 @@ public class LeaderboardService implements ILeaderboardService {
                 List<WorkoutPosicaoDTO> posicoesWorkouts = buscarPosicoesPorWorkout(categoriaId, equipe.getId());
                 
                 LeaderboardRankingDTO item = LeaderboardRankingDTO.builder()
-                        .posicao(i + 1)
                         .nomeParticipante(equipe.getNome())
                         .pontuacaoTotal(equipe.getPontuacaoTotal())
                         .isEquipe(true)
@@ -579,12 +580,11 @@ public class LeaderboardService implements ILeaderboardService {
                 ranking.add(item);
             }
         } else {
-            // Buscar ranking de atletas
-            List<AtletaEntity> atletas = leaderboardRepository.findAtletasRankingByCategoria(categoriaId);
+            // Buscar atletas SEM ordenação
+            List<AtletaEntity> atletas = leaderboardRepository.findAtletasByCategoriaSemOrdenacao(categoriaId);
             
-            for (int i = 0; i < atletas.size(); i++) {
-                AtletaEntity atleta = atletas.get(i);
-                
+            // Construir lista de DTOs com dados completos
+            for (AtletaEntity atleta : atletas) {
                 // Contar workouts completados pelo atleta
                 long workoutsCompletados = leaderboardRepository
                         .countWorkoutsFinalizadosByAtleta(categoriaId, atleta.getId());
@@ -593,7 +593,6 @@ public class LeaderboardService implements ILeaderboardService {
                 List<WorkoutPosicaoDTO> posicoesWorkouts = buscarPosicoesPorWorkout(categoriaId, atleta.getId());
                 
                 LeaderboardRankingDTO item = LeaderboardRankingDTO.builder()
-                        .posicao(i + 1)
                         .nomeParticipante(atleta.getNome())
                         .pontuacaoTotal(atleta.getPontuacaoTotal())
                         .isEquipe(false)
@@ -606,6 +605,12 @@ public class LeaderboardService implements ILeaderboardService {
                 ranking.add(item);
             }
         }
+
+        // Aplicar ordenação customizada com critérios de desempate
+        ranking.sort((a, b) -> compararParaDesempate(a, b, ultimoWorkoutId));
+
+        // Aplicar posições finais sequenciais
+        aplicarPosicoesFinals(ranking);
 
         return ranking;
     }
@@ -660,6 +665,83 @@ public class LeaderboardService implements ILeaderboardService {
                 
             default:
                 return false;
+        }
+    }
+
+    /**
+     * Conta quantas vezes um participante obteve uma posição específica
+     */
+    private long contarPosicaoEspecifica(List<WorkoutPosicaoDTO> posicoes, int posicaoAlvo) {
+        return posicoes.stream()
+                .filter(p -> p.getPosicaoWorkout() != null)
+                .mapToInt(WorkoutPosicaoDTO::getPosicaoWorkout)
+                .filter(pos -> pos == posicaoAlvo)
+                .count();
+    }
+
+    /**
+     * Identifica o último workout (com maior ID) de uma categoria
+     */
+    private Long obterUltimoWorkoutId(Long categoriaId) {
+        List<WorkoutEntity> workouts = workoutRepository.findByCategoriaIdAndAtivoTrue(categoriaId);
+        return workouts.stream()
+                .mapToLong(WorkoutEntity::getId)
+                .max()
+                .orElse(0L);
+    }
+
+    /**
+     * Obtém a posição de um participante no último workout
+     */
+    private int obterPosicaoUltimoWorkout(List<WorkoutPosicaoDTO> posicoes, Long ultimoWorkoutId) {
+        return posicoes.stream()
+                .filter(p -> p.getWorkoutId().equals(ultimoWorkoutId))
+                .mapToInt(p -> p.getPosicaoWorkout() != null ? p.getPosicaoWorkout() : Integer.MAX_VALUE)
+                .findFirst()
+                .orElse(Integer.MAX_VALUE); // Se não participou do último workout, fica em último
+    }
+
+    /**
+     * Comparador para critérios de desempate no ranking geral
+     */
+    private int compararParaDesempate(LeaderboardRankingDTO a, LeaderboardRankingDTO b, Long ultimoWorkoutId) {
+        // 1º critério: Pontuação total (menor = melhor)
+        int comparePontuacao = Integer.compare(a.getPontuacaoTotal(), b.getPontuacaoTotal());
+        if (comparePontuacao != 0) {
+            return comparePontuacao;
+        }
+
+        // Se pontuações iguais, aplicar critérios de desempate
+        List<WorkoutPosicaoDTO> posicoesA = a.getPosicoesWorkouts();
+        List<WorkoutPosicaoDTO> posicoesB = b.getPosicoesWorkouts();
+
+        // 2º-Nº critério: Mais colocações melhores (1º lugares, 2º lugares, etc.)
+        // Vamos verificar até a posição 10 (suficiente para a maioria dos casos)
+        for (int posicao = 1; posicao <= 10; posicao++) {
+            long countA = contarPosicaoEspecifica(posicoesA, posicao);
+            long countB = contarPosicaoEspecifica(posicoesB, posicao);
+            
+            int compareColocacoes = Long.compare(countB, countA); // Mais colocações = melhor (ordem inversa)
+            if (compareColocacoes != 0) {
+                return compareColocacoes;
+            }
+        }
+
+        // Último critério: Melhor posição no último workout
+        int posicaoUltimaA = obterPosicaoUltimoWorkout(posicoesA, ultimoWorkoutId);
+        int posicaoUltimaB = obterPosicaoUltimoWorkout(posicoesB, ultimoWorkoutId);
+        
+        return Integer.compare(posicaoUltimaA, posicaoUltimaB); // Menor posição = melhor
+    }
+
+    /**
+     * Aplica posições finais no ranking (sempre sequenciais, pois empates são impossíveis)
+     */
+    private void aplicarPosicoesFinals(List<LeaderboardRankingDTO> ranking) {
+        // Como empates são impossíveis no ranking final (sempre há critério que desempata),
+        // aplicamos posições sequenciais simples: 1, 2, 3, 4...
+        for (int i = 0; i < ranking.size(); i++) {
+            ranking.get(i).setPosicao(i + 1);
         }
     }
 

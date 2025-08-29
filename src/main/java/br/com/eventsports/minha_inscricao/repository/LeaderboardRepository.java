@@ -235,4 +235,24 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
      */
     @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND (l.atleta.id = :participanteId OR l.equipe.id = :participanteId) ORDER BY l.workout.nome ASC")
     List<LeaderboardEntity> findPosicoesByParticipanteAndCategoria(@Param("categoriaId") Long categoriaId, @Param("participanteId") Long participanteId);
+
+    /**
+     * Busca equipes de uma categoria SEM ordenação (para aplicar critérios de desempate customizados)
+     */
+    @Query(value = """
+        SELECT e.* FROM equipes e 
+        WHERE e.categoria_id = :categoriaId 
+        AND e.pontuacao_total IS NOT NULL
+        """, nativeQuery = true)
+    List<EquipeEntity> findEquipesByCategoriaSemOrdenacao(@Param("categoriaId") Long categoriaId);
+
+    /**
+     * Busca atletas de uma categoria SEM ordenação (para aplicar critérios de desempate customizados)
+     */
+    @Query(value = """
+        SELECT a.* FROM atletas a 
+        WHERE a.categoria_id = :categoriaId 
+        AND a.pontuacao_total IS NOT NULL
+        """, nativeQuery = true)
+    List<AtletaEntity> findAtletasByCategoriaSemOrdenacao(@Param("categoriaId") Long categoriaId);
 }
