@@ -208,3 +208,6 @@ build/
 generated/
 target/generated-sources/
 target/generated-test-sources/
+
+# Windows batch script temp files
+nul

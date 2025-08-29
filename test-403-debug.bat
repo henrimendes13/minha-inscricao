@@ -13,7 +13,7 @@ echo ========================================
 echo.
 
 REM Check if curl is available
-curl --version >nul 2>&1
+curl --version >NUL 2>&1
 if %errorlevel% neq 0 (
     echo ❌ curl is not available. Please install curl or use Git Bash.
     echo    You can download curl from: https://curl.se/windows/
@@ -23,9 +23,9 @@ if %errorlevel% neq 0 (
 
 REM Check if server is running
 echo 🏁 Checking if application is running...
-curl -s -o nul -w "%%{http_code}" "%BASE_URL%/actuator/health" > temp_health.txt 2>nul
+curl -s -o NUL -w "%%{http_code}" "%BASE_URL%/actuator/health" > temp_health.txt 2>NUL
 set /p HEALTH_CODE=<temp_health.txt
-del temp_health.txt 2>nul
+del temp_health.txt 2>NUL
 
 if not "%HEALTH_CODE%"=="200" (
     echo ❌ Application is not running at %BASE_URL%
