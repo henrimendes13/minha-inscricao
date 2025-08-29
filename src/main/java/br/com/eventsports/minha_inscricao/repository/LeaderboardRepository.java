@@ -229,4 +229,10 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
      */
     @Query("SELECT COALESCE(SUM(l.posicaoWorkout), 0) FROM LeaderboardEntity l WHERE l.equipe.id = :equipeId AND l.posicaoWorkout IS NOT NULL")
     Integer calcularPontuacaoEquipe(@Param("equipeId") Long equipeId);
+
+    /**
+     * Busca todas as posições de um participante (atleta ou equipe) em uma categoria
+     */
+    @Query("SELECT l FROM LeaderboardEntity l WHERE l.categoria.id = :categoriaId AND (l.atleta.id = :participanteId OR l.equipe.id = :participanteId) ORDER BY l.workout.nome ASC")
+    List<LeaderboardEntity> findPosicoesByParticipanteAndCategoria(@Param("categoriaId") Long categoriaId, @Param("participanteId") Long participanteId);
 }

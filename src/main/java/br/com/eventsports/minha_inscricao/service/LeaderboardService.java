@@ -2,6 +2,7 @@ package br.com.eventsports.minha_inscricao.service;
 
 import br.com.eventsports.minha_inscricao.dto.atleta.AtletaSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.leaderboard.*;
+import br.com.eventsports.minha_inscricao.dto.leaderboard.WorkoutPosicaoDTO;
 import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
 import br.com.eventsports.minha_inscricao.entity.*;
 import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
@@ -555,6 +556,9 @@ public class LeaderboardService implements ILeaderboardService {
                 long workoutsCompletados = leaderboardRepository
                         .countWorkoutsFinalizadosByEquipe(categoriaId, equipe.getId());
                 
+                // Buscar posições detalhadas da equipe em cada workout
+                List<WorkoutPosicaoDTO> posicoesWorkouts = buscarPosicoesPorWorkout(categoriaId, equipe.getId());
+                
                 LeaderboardRankingDTO item = LeaderboardRankingDTO.builder()
                         .posicao(i + 1)
                         .nomeParticipante(equipe.getNome())
@@ -563,6 +567,7 @@ public class LeaderboardService implements ILeaderboardService {
                         .participanteId(equipe.getId())
                         .nomeCategoria(categoria.getNome())
                         .workoutsCompletados(workoutsCompletados)
+                        .posicoesWorkouts(posicoesWorkouts)
                         .build();
                 
                 ranking.add(item);
@@ -578,6 +583,9 @@ public class LeaderboardService implements ILeaderboardService {
                 long workoutsCompletados = leaderboardRepository
                         .countWorkoutsFinalizadosByAtleta(categoriaId, atleta.getId());
                 
+                // Buscar posições detalhadas do atleta em cada workout
+                List<WorkoutPosicaoDTO> posicoesWorkouts = buscarPosicoesPorWorkout(categoriaId, atleta.getId());
+                
                 LeaderboardRankingDTO item = LeaderboardRankingDTO.builder()
                         .posicao(i + 1)
                         .nomeParticipante(atleta.getNome())
@@ -586,6 +594,7 @@ public class LeaderboardService implements ILeaderboardService {
                         .participanteId(atleta.getId())
                         .nomeCategoria(categoria.getNome())
                         .workoutsCompletados(workoutsCompletados)
+                        .posicoesWorkouts(posicoesWorkouts)
                         .build();
                 
                 ranking.add(item);
@@ -593,6 +602,30 @@ public class LeaderboardService implements ILeaderboardService {
         }
 
         return ranking;
+    }
+
+    /**
+     * Busca as posições de um participante em todos os workouts de uma categoria
+     */
+    private List<WorkoutPosicaoDTO> buscarPosicoesPorWorkout(Long categoriaId, Long participanteId) {
+        List<LeaderboardEntity> posicoes = leaderboardRepository
+                .findPosicoesByParticipanteAndCategoria(categoriaId, participanteId);
+        
+        return posicoes.stream()
+                .map(this::convertToWorkoutPosicaoDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Converte LeaderboardEntity para WorkoutPosicaoDTO
+     */
+    private WorkoutPosicaoDTO convertToWorkoutPosicaoDTO(LeaderboardEntity leaderboard) {
+        return WorkoutPosicaoDTO.builder()
+                .workoutId(leaderboard.getWorkout().getId())
+                .nomeWorkout(leaderboard.getWorkout().getNome())
+                .posicaoWorkout(leaderboard.getPosicaoWorkout())
+                .resultadoFormatado(leaderboard.getResultadoFormatado())
+                .build();
     }
 
 }

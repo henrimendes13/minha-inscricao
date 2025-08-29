@@ -3,6 +3,8 @@ package br.com.eventsports.minha_inscricao.dto.leaderboard;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -36,6 +38,9 @@ public class LeaderboardRankingDTO {
 
     @Schema(description = "Tipo de medalha se estiver no pódio", example = "OURO")
     private String medalha;
+
+    @Schema(description = "Lista com as posições do participante em cada workout do evento")
+    private List<WorkoutPosicaoDTO> posicoesWorkouts;
 
     public Boolean isPodio() {
         return this.posicao != null && this.posicao <= 3;
