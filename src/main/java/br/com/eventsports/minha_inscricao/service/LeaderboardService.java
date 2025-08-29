@@ -323,7 +323,7 @@ public class LeaderboardService implements ILeaderboardService {
     }
 
     /**
-     * Calcula ranking de um workout (atribui posições)
+     * Calcula ranking de um workout (atribui posições com critério de empate)
      */
     @Transactional
     public List<LeaderboardSummaryDTO> calcularRankingWorkout(Long categoriaId, Long workoutId) {
@@ -338,12 +338,18 @@ public class LeaderboardService implements ILeaderboardService {
         WorkoutEntity workout = resultados.get(0).getWorkout();
         resultados.sort((a, b) -> compareByPerformance(a, b, workout.getTipo()));
 
-        // Atribuir posições
-        AtomicInteger posicao = new AtomicInteger(1);
-        resultados.forEach(resultado -> {
-            resultado.setPosicaoWorkout(posicao.getAndIncrement());
+        // Atribuir posições com critério de empate
+        int posicaoAtual = 1;
+        for (int i = 0; i < resultados.size(); i++) {
+            // Se não é o primeiro resultado e não é igual ao anterior, ajustar posição
+            if (i > 0 && !resultadosIguais(resultados.get(i-1), resultados.get(i), workout.getTipo())) {
+                posicaoAtual = i + 1; // Nova posição baseada no índice atual (pula empates anteriores)
+            }
+            
+            LeaderboardEntity resultado = resultados.get(i);
+            resultado.setPosicaoWorkout(posicaoAtual);
             leaderboardRepository.save(resultado);
-        });
+        }
 
         return resultados.stream()
                 .map(this::convertToSummaryDTO)
@@ -626,6 +632,35 @@ public class LeaderboardService implements ILeaderboardService {
                 .posicaoWorkout(leaderboard.getPosicaoWorkout())
                 .resultadoFormatado(leaderboard.getResultadoFormatado())
                 .build();
+    }
+
+    /**
+     * Verifica se dois resultados são iguais baseado no tipo do workout
+     */
+    private boolean resultadosIguais(LeaderboardEntity a, LeaderboardEntity b, br.com.eventsports.minha_inscricao.enums.TipoWorkout tipo) {
+        if (a == null || b == null) {
+            return false;
+        }
+        
+        switch (tipo) {
+            case REPS:
+                Integer repsA = a.getResultadoReps();
+                Integer repsB = b.getResultadoReps();
+                return repsA != null && repsB != null && repsA.equals(repsB);
+                
+            case PESO:
+                Double pesoA = a.getResultadoPeso();
+                Double pesoB = b.getResultadoPeso();
+                return pesoA != null && pesoB != null && Double.compare(pesoA, pesoB) == 0;
+                
+            case TEMPO:
+                Integer tempoA = a.getResultadoTempoSegundos();
+                Integer tempoB = b.getResultadoTempoSegundos();
+                return tempoA != null && tempoB != null && tempoA.equals(tempoB);
+                
+            default:
+                return false;
+        }
     }
 
 }
