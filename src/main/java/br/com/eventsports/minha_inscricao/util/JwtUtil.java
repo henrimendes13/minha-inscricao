@@ -30,22 +30,35 @@ public class JwtUtil {
     }
 
     /**
-     * Gera token JWT apenas para usuários ADMIN
+     * Gera token JWT para o usuário admin especial (admin@admin.com)
      */
-    public String generateToken(UsuarioEntity usuario) {
-        if (!TipoUsuario.ADMIN.equals(usuario.getTipoUsuario())) {
-            throw new SecurityException("Token JWT apenas pode ser gerado para usuários ADMIN");
+    public String generateAdminToken(UsuarioEntity usuario) {
+        if (!"admin@admin.com".equals(usuario.getEmail())) {
+            throw new SecurityException("Token ADMIN JWT apenas pode ser gerado para admin@admin.com");
         }
 
         return Jwts.builder()
                 .setSubject(usuario.getEmail())
                 .claim("userId", usuario.getId())
                 .claim("nome", usuario.getNome())
-                .claim("tipoUsuario", usuario.getTipoUsuario().name())
+                .claim("tipoUsuario", "ADMIN")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignKey())
                 .compact();
+    }
+
+    /**
+     * Gera token JWT para usuários normais (ORGANIZADOR/ATLETA)
+     * Este método será usado futuramente para outros tipos de usuário
+     */
+    public String generateToken(UsuarioEntity usuario) {
+        // Por enquanto, apenas admin@admin.com pode gerar tokens
+        if ("admin@admin.com".equals(usuario.getEmail())) {
+            return generateAdminToken(usuario);
+        }
+        
+        throw new SecurityException("Geração de token ainda não implementada para este tipo de usuário");
     }
 
     /**

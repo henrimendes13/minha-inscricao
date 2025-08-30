@@ -34,6 +34,12 @@ public class UsuarioService implements IUsuarioService {
     public UsuarioResponseDTO criar(UsuarioCreateDTO dto) {
         log.info("Criando novo usuário com email: {}", dto.getEmail());
         
+        // Bloquear criação do usuário admin via API
+        if ("admin@admin.com".equals(dto.getEmail())) {
+            log.warn("Tentativa de criar usuário admin via API bloqueada para email: {}", dto.getEmail());
+            throw new IllegalArgumentException("Não é possível criar usuário com este email via sistema");
+        }
+        
         // Validar se email já existe
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email já está em uso: " + dto.getEmail());
@@ -61,6 +67,12 @@ public class UsuarioService implements IUsuarioService {
     @CacheEvict(value = {"usuarios", "organizadores"}, allEntries = true)
     public UsuarioComOrganizadorResponseDTO criarComOrganizador(UsuarioComOrganizadorCreateDTO dto) {
         log.info("Criando usuário organizador completo com email: {}", dto.getUsuario().getEmail());
+        
+        // Bloquear criação do usuário admin via API
+        if ("admin@admin.com".equals(dto.getUsuario().getEmail())) {
+            log.warn("Tentativa de criar usuário admin via API bloqueada para email: {}", dto.getUsuario().getEmail());
+            throw new IllegalArgumentException("Não é possível criar usuário com este email via sistema");
+        }
         
         // Validar que dados do organizador foram fornecidos
         if (dto.getOrganizador() == null) {
