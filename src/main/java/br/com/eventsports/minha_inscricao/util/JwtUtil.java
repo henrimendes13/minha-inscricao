@@ -49,16 +49,32 @@ public class JwtUtil {
     }
 
     /**
-     * Gera token JWT para usuários normais (ORGANIZADOR/ATLETA)
-     * Este método será usado futuramente para outros tipos de usuário
+     * Gera token JWT para qualquer tipo de usuário baseado em seu tipo real
      */
     public String generateToken(UsuarioEntity usuario) {
-        // Por enquanto, apenas admin@admin.com pode gerar tokens
+        if (usuario == null || usuario.getEmail() == null) {
+            throw new SecurityException("Usuário inválido para geração de token");
+        }
+        
+        // Caso especial: admin@admin.com sempre é ADMIN
         if ("admin@admin.com".equals(usuario.getEmail())) {
             return generateAdminToken(usuario);
         }
         
-        throw new SecurityException("Geração de token ainda não implementada para este tipo de usuário");
+        // Para outros usuários, usar o tipo determinado pelo sistema
+        TipoUsuario tipoUsuario = usuario.getTipoUsuario();
+        String role = "ROLE_" + tipoUsuario.name();
+        
+        return Jwts.builder()
+                .setSubject(usuario.getEmail())
+                .claim("userId", usuario.getId())
+                .claim("nome", usuario.getNome())
+                .claim("tipoUsuario", tipoUsuario.name())
+                .claim("role", role)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSignKey())
+                .compact();
     }
 
     /**
@@ -120,6 +136,32 @@ public class JwtUtil {
         } catch (Exception e) {
             log.warn("Erro ao verificar se token é de ADMIN: {}", e.getMessage());
             return false;
+        }
+    }
+    
+    /**
+     * Extrai o tipo de usuário do token
+     */
+    public String getTipoUsuarioFromToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            return claims.get("tipoUsuario", String.class);
+        } catch (Exception e) {
+            log.warn("Erro ao extrair tipo de usuário do token: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Extrai a role do token
+     */
+    public String getRoleFromToken(String token) {
+        try {
+            Claims claims = getClaims(token);
+            return claims.get("role", String.class);
+        } catch (Exception e) {
+            log.warn("Erro ao extrair role do token: {}", e.getMessage());
+            return null;
         }
     }
 

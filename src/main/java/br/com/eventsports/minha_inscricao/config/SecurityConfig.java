@@ -1,6 +1,10 @@
 package br.com.eventsports.minha_inscricao.config;
 
-import lombok.RequiredArgsConstructor;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -12,6 +16,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -30,30 +36,50 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .rememberMe(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                
+
                 // Configuração stateless para JWT
-                .sessionManagement(session -> 
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 // Configuração de autorização
                 .authorizeHttpRequests(auth -> auth
-                    // Endpoint de login público
-                    .requestMatchers("/api/auth/admin/login").permitAll()
-                    
-                    // Endpoints que exigem autenticação ADMIN
-                    .requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
-                    
-                    // Swagger/OpenAPI (público para desenvolvimento)
-                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                    
-                    // Todos os outros endpoints ficam públicos por enquanto
-                    // (ATLETA e ORGANIZADOR ainda sem autenticação)
-                    .anyRequest().permitAll()
-                )
-                
+                        // Endpoints de login públicos
+                        .requestMatchers("/api/auth/admin/login").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()
+                        .requestMatchers(POST, "/api/usuarios").permitAll()
+
+                        // Endpoints que exigem autenticação ADMIN
+                        .requestMatchers("/api/auth/admin/**").hasAuthority("ADMIN")
+
+                        // Endpoints de Eventos - Permissões básicas por ROLE
+                        .requestMatchers(POST, "/api/eventos").hasAnyAuthority("ADMIN", "ORGANIZADOR", "ATLETA")
+                        .requestMatchers(PUT, "/api/eventos/**").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+                        .requestMatchers(DELETE, "/api/eventos/**").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+
+                        // Endpoints de Categorias vinculadas a eventos
+                        .requestMatchers(POST, "/api/categorias").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+                        .requestMatchers(PUT, "/api/categorias/**").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+                        .requestMatchers(DELETE, "/api/categorias/**").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+
+                        // Endpoints de Workouts vinculados a eventos
+                        .requestMatchers(POST, "/api/workouts").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+                        .requestMatchers(PUT, "/api/workouts/**").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+                        .requestMatchers(DELETE, "/api/workouts/**").hasAnyAuthority("ADMIN", "ORGANIZADOR")
+
+                        // Swagger/OpenAPI (público para desenvolvimento)
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+
+                        // Endpoints públicos de leitura
+                        .requestMatchers(GET, "/api/eventos/**").permitAll()
+                        .requestMatchers(GET, "/api/categorias/**").permitAll()
+                        .requestMatchers(GET, "/api/usuarios/**").hasAuthority("ADMIN")
+
+                        // Todos os outros endpoints ficam públicos por enquanto
+                        // (Outros tipos de autenticação ainda não implementados)
+                        .anyRequest().permitAll())
+
                 // Adiciona filtro JWT antes do filtro padrão de autenticação
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                
+
                 .build();
     }
 

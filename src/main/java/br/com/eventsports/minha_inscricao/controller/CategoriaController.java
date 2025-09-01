@@ -24,13 +24,20 @@ import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaUpdateDTO;
 import br.com.eventsports.minha_inscricao.enums.TipoParticipacao;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ICategoriaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/categorias")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+@Tag(name = "Categorias", description = "Endpoints para gerenciamento de categorias de eventos")
 public class CategoriaController {
 
     private final ICategoriaService categoriaService;
@@ -47,6 +54,20 @@ public class CategoriaController {
         return ResponseEntity.ok(categoria);
     }
 
+    @Operation(
+        summary = "Criar categoria para evento", 
+        description = "Cria uma nova categoria para um evento específico. " +
+                     "ADMIN pode criar para qualquer evento. ORGANIZADOR só para eventos próprios."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Categoria criada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode criar categoria para este evento"),
+        @ApiResponse(responseCode = "404", description = "Evento não encontrado")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("@categoriaSecurityService.canCreateCategoriaForEvento(#eventoId, authentication.name, authentication.authorities)")
     @PostMapping("/evento/{eventoId}")
     public ResponseEntity<CategoriaResponseDTO> createCategoria(@PathVariable Long eventoId,
             @Valid @RequestBody CategoriaCreateDTO categoriaCreateDTO) {
@@ -54,6 +75,20 @@ public class CategoriaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdCategoria);
     }
 
+    @Operation(
+        summary = "Atualizar categoria", 
+        description = "Atualiza uma categoria existente. " +
+                     "ADMIN pode atualizar qualquer categoria. ORGANIZADOR só categorias de eventos próprios."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoria atualizada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode atualizar esta categoria"),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("@categoriaSecurityService.canManageCategoria(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}")
     public ResponseEntity<CategoriaResponseDTO> updateCategoria(@PathVariable Long id,
             @Valid @RequestBody CategoriaUpdateDTO categoriaUpdateDTO) {
@@ -61,6 +96,19 @@ public class CategoriaController {
         return ResponseEntity.ok(updatedCategoria);
     }
 
+    @Operation(
+        summary = "Deletar categoria", 
+        description = "Deleta uma categoria existente. " +
+                     "ADMIN pode deletar qualquer categoria. ORGANIZADOR só categorias de eventos próprios."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Categoria deletada com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode deletar esta categoria"),
+        @ApiResponse(responseCode = "404", description = "Categoria não encontrada")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("@categoriaSecurityService.canManageCategoria(#id, authentication.name, authentication.authorities)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteCategoria(@PathVariable Long id) {
         categoriaService.deleteById(id);

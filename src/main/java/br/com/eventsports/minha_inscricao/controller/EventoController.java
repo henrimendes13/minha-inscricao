@@ -29,13 +29,20 @@ import br.com.eventsports.minha_inscricao.dto.evento.StatusChangeDTO;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/eventos")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
+@Tag(name = "Eventos", description = "Endpoints para gerenciamento de eventos esportivos")
 public class EventoController {
 
     private final IEventoService eventoService;
@@ -52,12 +59,38 @@ public class EventoController {
         return ResponseEntity.ok(evento);
     }
 
+    @Operation(
+        summary = "Criar novo evento", 
+        description = "Cria um novo evento esportivo. Requer autenticação como ADMIN ou ORGANIZADOR."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Evento criado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não é ADMIN ou ORGANIZADOR")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
     @PostMapping
     public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO) {
         EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdEvento);
     }
 
+    @Operation(
+        summary = "Atualizar evento", 
+        description = "Atualiza um evento existente. ADMIN pode atualizar qualquer evento. " +
+                     "ORGANIZADOR só pode atualizar eventos que criou."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Evento atualizado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode atualizar este evento"),
+        @ApiResponse(responseCode = "404", description = "Evento não encontrado")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}")
     public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id,
             @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO) {
@@ -65,6 +98,19 @@ public class EventoController {
         return ResponseEntity.ok(updatedEvento);
     }
 
+    @Operation(
+        summary = "Deletar evento", 
+        description = "Deleta um evento existente. ADMIN pode deletar qualquer evento. " +
+                     "ORGANIZADOR só pode deletar eventos que criou."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Evento deletado com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode deletar este evento"),
+        @ApiResponse(responseCode = "404", description = "Evento não encontrado")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id) {
         eventoService.deleteById(id);

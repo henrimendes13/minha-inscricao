@@ -6,6 +6,7 @@ import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.enums.TipoUsuario;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
+import br.com.eventsports.minha_inscricao.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class UsuarioService implements IUsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PasswordUtil passwordUtil;
 
     /**
      * Cria um novo usuário
@@ -48,7 +50,7 @@ public class UsuarioService implements IUsuarioService {
         // Criar entidade
         UsuarioEntity usuario = UsuarioEntity.builder()
                 .email(dto.getEmail())
-                .senha(dto.getSenha())
+                .senha(passwordUtil.encode(dto.getSenha())) // Codificar senha com BCrypt
                 .nome(dto.getNome())
                 .aceitaTermos(dto.getAceitaTermos() != null ? dto.getAceitaTermos() : true)
                 .ativo(true)
@@ -219,7 +221,7 @@ public class UsuarioService implements IUsuarioService {
         }
         
         if (dto.getSenha() != null) {
-            usuario.setSenha(dto.getSenha());
+            usuario.setSenha(passwordUtil.encode(dto.getSenha())); // Codificar senha com BCrypt
         }
         
         if (dto.getAtivo() != null) {
@@ -286,7 +288,7 @@ public class UsuarioService implements IUsuarioService {
         log.debug("Validando credenciais para email: {}", email);
         
         return usuarioRepository.findByEmail(email)
-                .map(usuario -> usuario.getAtivo() && senha.equals(usuario.getSenha()))
+                .map(usuario -> usuario.getAtivo() && passwordUtil.matches(senha, usuario.getSenha()))
                 .orElse(false);
     }
 
