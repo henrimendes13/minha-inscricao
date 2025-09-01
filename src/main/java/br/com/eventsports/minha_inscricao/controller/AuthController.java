@@ -9,6 +9,11 @@ import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IUsuarioService;
 import br.com.eventsports.minha_inscricao.util.JwtUtil;
 import br.com.eventsports.minha_inscricao.util.PasswordUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Autenticação Admin", description = "Endpoints para autenticação e gerenciamento de sessão de usuários administradores")
 public class AuthController {
 
     private final IUsuarioService usuarioService;
@@ -37,6 +43,17 @@ public class AuthController {
      * Endpoint de login exclusivo para usuários ADMIN
      * Apenas o email admin@admin.com é considerado ADMIN
      */
+    @Operation(
+        summary = "Login de Administrador", 
+        description = "Realiza autenticação de usuário administrador e retorna token JWT. " +
+                     "Apenas o email admin@admin.com é aceito como administrador."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Login realizado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
+        @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
+        @ApiResponse(responseCode = "403", description = "Email não autorizado para admin")
+    })
     @PostMapping("/admin/login")
     public ResponseEntity<AdminLoginResponseDTO> loginAdmin(@Valid @RequestBody LoginRequestDTO request) {
         log.info("Tentativa de login ADMIN para email: {}", request.getEmail());
@@ -105,6 +122,16 @@ public class AuthController {
     /**
      * Endpoint para obter informações do admin logado
      */
+    @Operation(
+        summary = "Obter dados do admin logado", 
+        description = "Retorna informações do usuário administrador atualmente autenticado"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Dados do admin retornados com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não é admin")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/admin/me")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UsuarioResponseDTO> getCurrentAdmin(Authentication authentication) {
@@ -123,6 +150,16 @@ public class AuthController {
     /**
      * Endpoint para verificar se a autenticação está funcionando
      */
+    @Operation(
+        summary = "Status da autenticação admin", 
+        description = "Verifica se a autenticação JWT está funcionando corretamente"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Autenticação funcionando corretamente"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não é admin")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/admin/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> adminStatus(Authentication authentication) {
@@ -137,6 +174,17 @@ public class AuthController {
     /**
      * Endpoint para logout (apenas limpa o contexto)
      */
+    @Operation(
+        summary = "Logout de administrador", 
+        description = "Realiza logout do usuário administrador. " +
+                     "Como JWT é stateless, apenas registra o logout - o token ainda será válido até expirar."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Logout registrado com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não é admin")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/admin/logout")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> logoutAdmin(Authentication authentication) {

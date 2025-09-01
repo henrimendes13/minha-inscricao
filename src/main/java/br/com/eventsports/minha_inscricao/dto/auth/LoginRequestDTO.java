@@ -20,6 +20,6 @@ public class LoginRequestDTO {
     private String email;
 
     @NotBlank(message = "Senha é obrigatória")
-    @Size(min = 6, max = 100, message = "Senha deve ter entre 6 e 100 caracteres")
+    @Size(min = 5, max = 100, message = "Senha deve ter entre 5 e 100 caracteres")
     private String senha;
 }
