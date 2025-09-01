@@ -61,7 +61,7 @@ public class EventoController {
 
     @Operation(
         summary = "Criar novo evento", 
-        description = "Cria um novo evento esportivo. Requer autenticação como ADMIN ou ORGANIZADOR."
+        description = "Cria um novo evento esportivo. Requer autenticação"
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Evento criado com sucesso"),
@@ -70,7 +70,7 @@ public class EventoController {
         @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não é ADMIN ou ORGANIZADOR")
     })
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public ResponseEntity<EventoResponseDTO> createEvento(@Valid @RequestBody EventoCreateDTO eventoCreateDTO) {
         EventoResponseDTO createdEvento = eventoService.save(eventoCreateDTO);
@@ -79,18 +79,16 @@ public class EventoController {
 
     @Operation(
         summary = "Atualizar evento", 
-        description = "Atualiza um evento existente. ADMIN pode atualizar qualquer evento. " +
-                     "ORGANIZADOR só pode atualizar eventos que criou."
+        description = "Atualiza um evento existente. Requer autenticação."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Evento atualizado com sucesso"),
         @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos"),
         @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
-        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode atualizar este evento"),
         @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
+    @PreAuthorize("isAuthenticated()")
     @PutMapping("/{id}")
     public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id,
             @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO) {
@@ -100,17 +98,15 @@ public class EventoController {
 
     @Operation(
         summary = "Deletar evento", 
-        description = "Deleta um evento existente. ADMIN pode deletar qualquer evento. " +
-                     "ORGANIZADOR só pode deletar eventos que criou."
+        description = "Deleta um evento existente. Requer autenticação."
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Evento deletado com sucesso"),
         @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido"),
-        @ApiResponse(responseCode = "403", description = "Acesso negado - usuário não pode deletar este evento"),
         @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id) {
         eventoService.deleteById(id);

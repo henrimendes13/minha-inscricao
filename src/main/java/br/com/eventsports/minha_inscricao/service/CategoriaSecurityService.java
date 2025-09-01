@@ -32,12 +32,9 @@ public class CategoriaSecurityService {
         }
 
         try {
-            // Verificar se é ADMIN (pode gerenciar qualquer categoria)
-            boolean isAdmin = authorities.stream()
-                    .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()));
-
-            if (isAdmin) {
-                log.debug("Usuário {} é ADMIN - pode gerenciar categoria {}", userEmail, categoriaId);
+            // Verificar se é o admin especial (pode gerenciar qualquer categoria)
+            if ("admin@admin.com".equals(userEmail)) {
+                log.debug("Usuário {} é admin especial - pode gerenciar categoria {}", userEmail, categoriaId);
                 return true;
             }
 

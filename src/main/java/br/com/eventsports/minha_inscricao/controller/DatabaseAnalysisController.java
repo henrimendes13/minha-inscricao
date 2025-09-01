@@ -169,10 +169,7 @@ public class DatabaseAnalysisController {
             // Inserir usuários de exemplo
             String usuariosSql = """
                 INSERT INTO usuarios (id, nome, email, senha, tipo, ativo, created_at, updated_at) VALUES
-                (1, 'Admin Sistema', 'admin@admin.com', '$2a$10$N.WphQbp6rspAZN4Fq1qhO5M5LDm7LjLLFJf7nKnhZ.ckJ3LqPKem', 'ADMIN', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-                (2, 'Organizador Teste', 'organizador@test.com', '$2a$10$N.WphQbp6rspAZN4Fq1qhO5M5LDm7LjLLFJf7nKnhZ.ckJ3LqPKem', 'ORGANIZADOR', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-                (3, 'João Silva', 'joao@example.com', '$2a$10$N.WphQbp6rspAZN4Fq1qhO5M5LDm7LjLLFJf7nKnhZ.ckJ3LqPKem', 'ATLETA', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-                (4, 'Maria Santos', 'maria@example.com', '$2a$10$N.WphQbp6rspAZN4Fq1qhO5M5LDm7LjLLFJf7nKnhZ.ckJ3LqPKem', 'ATLETA', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                (1, 'Admin Sistema', 'admin@admin.com', '$2a$10$N.WphQbp6rspAZN4Fq1qhO5M5LDm7LjLLFJf7nKnhZ.ckJ3LqPKem', 'ADMIN', true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                 """;
             
             jdbcTemplate.execute(usuariosSql);

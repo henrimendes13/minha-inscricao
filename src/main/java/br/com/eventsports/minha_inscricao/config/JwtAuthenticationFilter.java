@@ -1,12 +1,7 @@
 package br.com.eventsports.minha_inscricao.config;
 
-import br.com.eventsports.minha_inscricao.util.JwtUtil;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,7 +9,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import br.com.eventsports.minha_inscricao.util.JwtUtil;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
@@ -25,22 +26,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
-                                  @NonNull HttpServletResponse response,
-                                  @NonNull FilterChain filterChain) throws ServletException, IOException {
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         try {
             String token = getTokenFromRequest(request);
-            
+
             if (token != null && jwtUtil.validateToken(token)) {
-                // Verifica se é token de ADMIN antes de autenticar
-                if (jwtUtil.isAdminToken(token)) {
-                    Authentication authentication = jwtUtil.getAuthenticationFromToken(token);
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                    
-                    log.debug("Usuário ADMIN autenticado: {}", authentication.getName());
-                } else {
-                    log.warn("Tentativa de uso de token não-ADMIN em endpoint protegido");
-                }
+                // Autentica qualquer usuário com token válido
+                Authentication authentication = jwtUtil.getAuthenticationFromToken(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                log.debug("Usuário autenticado: {}", authentication.getName());
             }
         } catch (Exception e) {
             log.error("Erro ao processar token JWT: {}", e.getMessage());
@@ -56,11 +53,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private String getTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        
+
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        
+
         return null;
     }
 
@@ -70,17 +67,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
-        
+
+        String method = request.getMethod();
+
         // Não aplica filtro em rotas públicas (para performance)
         return path.startsWith("/api/auth/admin/login") ||
-               path.startsWith("/api/eventos") ||
-               path.startsWith("/api/categorias") ||
-               path.startsWith("/api/atletas") ||
-               path.startsWith("/api/equipes") ||
-               path.startsWith("/api/inscricoes") ||
-               path.startsWith("/api/usuarios") ||
-               path.startsWith("/swagger-ui") ||
-               path.startsWith("/v3/api-docs") ||
-               path.equals("/favicon.ico");
+                (path.startsWith("/api/eventos") && "GET".equals(method)) ||
+                (path.startsWith("/api/categorias") && "GET".equals(method)) ||
+                path.startsWith("/api/atletas") ||
+                path.startsWith("/api/equipes") ||
+                path.startsWith("/api/inscricoes") ||
+                (path.startsWith("/api/usuarios") && "POST".equals(method)) ||
+                path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.equals("/favicon.ico");
     }
 }

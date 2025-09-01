@@ -126,15 +126,14 @@ public class JwtUtil {
     }
 
     /**
-     * Verifica se o token é de um usuário ADMIN
+     * Verifica se o token é do usuário admin especial (admin@admin.com)
      */
     public boolean isAdminToken(String token) {
         try {
-            Claims claims = getClaims(token);
-            String tipoUsuario = claims.get("tipoUsuario", String.class);
-            return TipoUsuario.ADMIN.name().equals(tipoUsuario);
+            String email = getEmailFromToken(token);
+            return "admin@admin.com".equals(email);
         } catch (Exception e) {
-            log.warn("Erro ao verificar se token é de ADMIN: {}", e.getMessage());
+            log.warn("Erro ao verificar se token é de admin: {}", e.getMessage());
             return false;
         }
     }
@@ -169,15 +168,18 @@ public class JwtUtil {
      * Cria objeto Authentication para o Spring Security
      */
     public Authentication getAuthenticationFromToken(String token) {
-        if (!isAdminToken(token)) {
-            throw new SecurityException("Token não é de usuário ADMIN");
-        }
-
         String email = getEmailFromToken(token);
+        String role = getRoleFromToken(token);
+        
+        // Define role padrão se não encontrada
+        if (role == null) {
+            role = "admin@admin.com".equals(email) ? "ROLE_ADMIN" : "ROLE_USER";
+        }
+        
         return new UsernamePasswordAuthenticationToken(
                 email, 
                 null, 
-                Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                Arrays.asList(new SimpleGrantedAuthority(role))
         );
     }
 

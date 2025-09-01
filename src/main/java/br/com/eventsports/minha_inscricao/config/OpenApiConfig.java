@@ -58,10 +58,7 @@ public class OpenApiConfig {
                 .servers(List.of(
                         new Server()
                                 .url("http://localhost:" + serverPort)
-                                .description("Servidor de Desenvolvimento"),
-                        new Server()
-                                .url("https://api.eventsports.com.br")
-                                .description("Servidor de Produção (exemplo)")
+                                .description("Servidor de Desenvolvimento")
                 ));
     }
 }

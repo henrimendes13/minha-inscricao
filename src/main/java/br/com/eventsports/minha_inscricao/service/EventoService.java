@@ -22,7 +22,10 @@ import br.com.eventsports.minha_inscricao.enums.StatusEvento;
 import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.exception.InvalidDateRangeException;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
+import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IEventoService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class EventoService implements IEventoService {
 
     private final EventoRepository eventoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Cacheable(value = "eventos", key = "#id")
     @Transactional(readOnly = true)
@@ -163,12 +167,10 @@ public class EventoService implements IEventoService {
                 .dataFimDoEvento(fimDateTime)
                 .descricao(dto.getDescricao());
 
-        // TODO: Implementar lógica para obter o organizador do usuário autenticado
-        // Por enquanto, usa o usuário organizador padrão (ID = 2) até implementar
-        // autenticação
-        UsuarioEntity organizadorPadrao = getUsuarioOrganizadorPadrao();
-        if (organizadorPadrao != null) {
-            builder.organizador(organizadorPadrao);
+        // Obter o organizador do usuário autenticado
+        UsuarioEntity organizador = getUsuarioAutenticado();
+        if (organizador != null) {
+            builder.organizador(organizador);
         }
 
         return builder.build();
@@ -224,21 +226,20 @@ public class EventoService implements IEventoService {
     }
 
     /**
-     * Método temporário para obter um organizador padrão.
-     * TODO: Substituir pela lógica de autenticação quando implementada.
-     * Deve retornar o organizador baseado no usuário logado.
+     * Obtém o usuário autenticado do contexto de segurança
      */
-    private UsuarioEntity getUsuarioOrganizadorPadrao() {
+    private UsuarioEntity getUsuarioAutenticado() {
         try {
-            // Por enquanto, retorna um usuário organizador com ID = 2 (se existir)
-            // Em produção, isso deve ser obtido do contexto de segurança
-            UsuarioEntity usuario = new UsuarioEntity();
-            usuario.setId(2L); // ID padrão do usuário organizador
-            return usuario;
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || authentication.getName() == null) {
+                throw new SecurityException("Nenhum usuário autenticado encontrado");
+            }
+            
+            String email = authentication.getName();
+            return usuarioRepository.findByEmail(email)
+                    .orElseThrow(() -> new SecurityException("Usuário autenticado não encontrado: " + email));
         } catch (Exception e) {
-            // Se não conseguir obter o organizador, retorna null
-            // O evento será criado sem organizador definido
-            return null;
+            throw new SecurityException("Erro ao obter usuário autenticado: " + e.getMessage());
         }
     }
 

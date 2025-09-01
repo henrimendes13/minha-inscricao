@@ -1,15 +1,16 @@
 package br.com.eventsports.minha_inscricao.config;
 
+import java.time.LocalDateTime;
+
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
 import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.util.PasswordUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -48,7 +49,7 @@ public class AdminUserSetup {
                     .build();
 
             usuarioRepository.save(admin);
-            
+
             log.info("========================================");
             log.info("✅ USUÁRIO ADMIN CRIADO COM SUCESSO!");
             log.info("📧 Email: {}", ADMIN_EMAIL);

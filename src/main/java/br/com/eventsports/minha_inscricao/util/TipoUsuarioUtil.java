@@ -48,9 +48,8 @@ public class TipoUsuarioUtil {
             return false;
         }
         
-        TipoUsuario tipo = determinarTipo(usuario);
-        return (tipo == TipoUsuario.ORGANIZADOR || tipo == TipoUsuario.ADMIN) 
-               && usuario.getVerificado();
+        // Qualquer usuário ativo e verificado pode organizar eventos
+        return usuario.getVerificado();
     }
 
     /**
@@ -92,14 +91,9 @@ public class TipoUsuarioUtil {
             return false;
         }
         
-        // Estratégia temporária: considerar emails de desenvolvedor como ADMIN
-        // Em produção, isso deveria ser um campo específico na entidade
+        // Apenas admin@admin.com é considerado admin especial
         String email = usuario.getEmail();
-        return email != null && (
-            email.contains("@eventsports.com.br") || 
-            email.contains("@developer") ||
-            email.equals("admin@sistema.com")
-        );
+        return "admin@admin.com".equals(email);
     }
 
     /**

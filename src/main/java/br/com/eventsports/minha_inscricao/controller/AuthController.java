@@ -207,7 +207,7 @@ public class AuthController {
     })
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/admin/me")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("authentication.name == 'admin@admin.com'")
     public ResponseEntity<UsuarioResponseDTO> getCurrentAdmin(Authentication authentication) {
         try {
             String email = authentication.getName();
@@ -235,7 +235,7 @@ public class AuthController {
     })
     @SecurityRequirement(name = "Bearer Authentication")
     @GetMapping("/admin/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("authentication.name == 'admin@admin.com'")
     public ResponseEntity<Object> adminStatus(Authentication authentication) {
         return ResponseEntity.ok(java.util.Map.of(
                 "message", "Acesso admin funcionando",
@@ -260,7 +260,7 @@ public class AuthController {
     })
     @SecurityRequirement(name = "Bearer Authentication")
     @PostMapping("/admin/logout")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("authentication.name == 'admin@admin.com'")
     public ResponseEntity<Object> logoutAdmin(Authentication authentication) {
         log.info("Logout do admin: {}", authentication.getName());
         return ResponseEntity.ok(java.util.Map.of(

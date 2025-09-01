@@ -70,12 +70,9 @@ public class EventoSecurityService {
         }
 
         try {
-            // Verificar se é ADMIN (pode gerenciar qualquer evento)
-            boolean isAdmin = authorities.stream()
-                    .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()));
-
-            if (isAdmin) {
-                log.debug("Usuário {} é ADMIN - pode gerenciar evento {}", userEmail, eventoId);
+            // Verificar se é o admin especial (pode gerenciar qualquer evento)
+            if ("admin@admin.com".equals(userEmail)) {
+                log.debug("Usuário {} é admin especial - pode gerenciar evento {}", userEmail, eventoId);
                 return true;
             }
 
@@ -95,19 +92,14 @@ public class EventoSecurityService {
     }
 
     /**
-     * Verifica se o usuário pode criar eventos (ADMIN ou ORGANIZADOR)
+     * Verifica se o usuário pode criar eventos (qualquer usuário autenticado)
      * 
-     * @param authorities Autoridades/roles do usuário
+     * @param userEmail Email do usuário autenticado
      * @return true se o usuário pode criar eventos
      */
-    public boolean canCreateEvento(Collection<? extends GrantedAuthority> authorities) {
-        if (authorities == null) {
-            return false;
-        }
-
-        return authorities.stream()
-                .anyMatch(auth -> "ROLE_ADMIN".equals(auth.getAuthority()) || 
-                                "ROLE_ORGANIZADOR".equals(auth.getAuthority()));
+    public boolean canCreateEvento(String userEmail) {
+        // Qualquer usuário autenticado pode criar eventos
+        return userEmail != null && !userEmail.trim().isEmpty();
     }
 
     /**
