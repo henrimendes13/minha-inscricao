@@ -24,6 +24,7 @@ import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IInscricaoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/inscricoes")
@@ -46,6 +47,7 @@ public class InscricaoController {
     }
 
 
+    @PreAuthorize("@inscricaoSecurityService.canManageInscricao(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}")
     public ResponseEntity<InscricaoResponseDTO> updateInscricao(@PathVariable Long id,
             @Valid @RequestBody InscricaoUpdateDTO inscricaoUpdateDTO) {
@@ -53,6 +55,7 @@ public class InscricaoController {
         return ResponseEntity.ok(updatedInscricao);
     }
 
+    @PreAuthorize("@inscricaoSecurityService.canManageInscricao(#id, authentication.name, authentication.authorities)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInscricao(@PathVariable Long id) {
         inscricaoService.deleteById(id);
@@ -101,12 +104,14 @@ public class InscricaoController {
         return ResponseEntity.ok(inscricoes);
     }
 
+    @PreAuthorize("@inscricaoSecurityService.canManageInscricao(#id, authentication.name, authentication.authorities)")
     @PatchMapping("/{id}/confirmar")
     public ResponseEntity<InscricaoResponseDTO> confirmarInscricao(@PathVariable Long id) {
         InscricaoResponseDTO inscricao = inscricaoService.confirmar(id);
         return ResponseEntity.ok(inscricao);
     }
 
+    @PreAuthorize("@inscricaoSecurityService.canManageInscricao(#id, authentication.name, authentication.authorities)")
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<InscricaoResponseDTO> cancelarInscricao(@PathVariable Long id,
             @RequestBody Map<String, String> request) {
@@ -115,6 +120,7 @@ public class InscricaoController {
         return ResponseEntity.ok(inscricao);
     }
 
+    @PreAuthorize("@inscricaoSecurityService.canManageInscricao(#id, authentication.name, authentication.authorities)")
     @PatchMapping("/{id}/lista-espera")
     public ResponseEntity<InscricaoResponseDTO> colocarEmListaEspera(@PathVariable Long id) {
         InscricaoResponseDTO inscricao = inscricaoService.colocarEmListaEspera(id);

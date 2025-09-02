@@ -88,7 +88,7 @@ public class EventoController {
         @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}")
     public ResponseEntity<EventoResponseDTO> updateEvento(@PathVariable Long id,
             @Valid @RequestBody EventoUpdateDTO eventoUpdateDTO) {
@@ -106,7 +106,7 @@ public class EventoController {
         @ApiResponse(responseCode = "404", description = "Evento não encontrado")
     })
     @SecurityRequirement(name = "Bearer Authentication")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteEvento(@PathVariable Long id) {
         eventoService.deleteById(id);
@@ -143,6 +143,7 @@ public class EventoController {
         return ResponseEntity.ok(eventos);
     }
 
+    @PreAuthorize("@eventoSecurityService.canManageEvento(#id, authentication.name, authentication.authorities)")
     @PatchMapping("/{id}/status")
     public ResponseEntity<EventoResponseDTO> changeEventoStatus(@PathVariable Long id, 
             @Valid @RequestBody StatusChangeDTO statusChangeDTO) {

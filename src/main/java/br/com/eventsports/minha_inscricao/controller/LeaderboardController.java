@@ -19,6 +19,7 @@ import br.com.eventsports.minha_inscricao.dto.leaderboard.LeaderboardSummaryDTO;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
 import br.com.eventsports.minha_inscricao.service.PontuacaoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/leaderboards")
@@ -60,6 +61,7 @@ public class LeaderboardController {
         return ResponseEntity.ok(ranking);
     }
 
+    @PreAuthorize("@leaderboardSecurityService.canManageLeaderboardsForCategoria(#categoriaId, authentication.name, authentication.authorities)")
     @PostMapping("/categoria/{categoriaId}/recalcular-pontuacoes")
     public ResponseEntity<Map<String, String>> recalcularPontuacoesCategoria(@PathVariable Long categoriaId) {
         try {

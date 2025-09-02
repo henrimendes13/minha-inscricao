@@ -25,6 +25,7 @@ import br.com.eventsports.minha_inscricao.service.Interfaces.IWorkoutService;
 import br.com.eventsports.minha_inscricao.service.WorkoutResultService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/workouts")
@@ -47,12 +48,14 @@ public class WorkoutController {
         return ResponseEntity.ok(workout);
     }
 
+    @PreAuthorize("@workoutSecurityService.canCreateWorkoutForEvento(#workoutCreateDTO.eventoId, authentication.name, authentication.authorities)")
     @PostMapping
     public ResponseEntity<WorkoutResponseDTO> createWorkout(@Valid @RequestBody WorkoutCreateDTO workoutCreateDTO) {
         WorkoutResponseDTO createdWorkout = workoutService.save(workoutCreateDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdWorkout);
     }
 
+    @PreAuthorize("@workoutSecurityService.canManageWorkout(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}")
     public ResponseEntity<WorkoutResponseDTO> updateWorkout(@PathVariable Long id,
             @Valid @RequestBody WorkoutUpdateDTO workoutUpdateDTO) {
@@ -60,6 +63,7 @@ public class WorkoutController {
         return ResponseEntity.ok(updatedWorkout);
     }
 
+    @PreAuthorize("@workoutSecurityService.canManageWorkout(#id, authentication.name, authentication.authorities)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteWorkout(@PathVariable Long id) {
         workoutService.delete(id);
@@ -85,12 +89,14 @@ public class WorkoutController {
         return ResponseEntity.ok(workouts);
     }
 
+    @PreAuthorize("@workoutSecurityService.canManageWorkout(#id, authentication.name, authentication.authorities)")
     @PatchMapping("/{id}/ativar")
     public ResponseEntity<WorkoutResponseDTO> ativarWorkout(@PathVariable Long id) {
         WorkoutResponseDTO workout = workoutService.ativar(id);
         return ResponseEntity.ok(workout);
     }
 
+    @PreAuthorize("@workoutSecurityService.canManageWorkout(#id, authentication.name, authentication.authorities)")
     @PatchMapping("/{id}/desativar")
     public ResponseEntity<WorkoutResponseDTO> desativarWorkout(@PathVariable Long id) {
         WorkoutResponseDTO workout = workoutService.desativar(id);

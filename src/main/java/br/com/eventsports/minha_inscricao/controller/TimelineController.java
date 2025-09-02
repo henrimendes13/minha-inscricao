@@ -22,6 +22,7 @@ import br.com.eventsports.minha_inscricao.exception.EventoNotFoundException;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ITimelineService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/eventos/{eventoId}/timeline")
@@ -37,6 +38,7 @@ public class TimelineController {
         return ResponseEntity.ok(timeline);
     }
 
+    @PreAuthorize("@timelineSecurityService.canCreateTimelineForEvento(#eventoId, authentication.name, authentication.authorities)")
     @PostMapping
     public ResponseEntity<TimelineResponseDTO> createTimeline(@PathVariable Long eventoId,
             @Valid @RequestBody TimelineCreateDTO timelineCreateDTO) {
@@ -44,6 +46,7 @@ public class TimelineController {
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTimeline);
     }
 
+    @PreAuthorize("@timelineSecurityService.canManageTimelineForEvento(#eventoId, authentication.name, authentication.authorities)")
     @PutMapping
     public ResponseEntity<TimelineResponseDTO> updateTimeline(@PathVariable Long eventoId,
             @Valid @RequestBody TimelineUpdateDTO timelineUpdateDTO) {
@@ -51,6 +54,7 @@ public class TimelineController {
         return ResponseEntity.ok(updatedTimeline);
     }
 
+    @PreAuthorize("@timelineSecurityService.canManageTimelineForEvento(#eventoId, authentication.name, authentication.authorities)")
     @DeleteMapping
     public ResponseEntity<Void> deleteTimeline(@PathVariable Long eventoId) {
         timelineService.deleteByEventoId(eventoId);

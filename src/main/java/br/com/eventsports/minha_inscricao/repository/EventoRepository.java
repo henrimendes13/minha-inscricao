@@ -1,9 +1,6 @@
 package br.com.eventsports.minha_inscricao.repository;
 
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,41 +14,31 @@ import java.util.Optional;
 public interface EventoRepository extends JpaRepository<EventoEntity, Long> {
 
     @Override
-    @Cacheable(value = "eventos", key = "#id")
     Optional<EventoEntity> findById(Long id);
 
     @Override
-    @Cacheable(value = "eventos")
     List<EventoEntity> findAll();
 
     @Override
-    @CachePut(value = "eventos", key = "#result.id")
     <S extends EventoEntity> S save(S entity);
 
     @Override
-    @CacheEvict(value = "eventos", key = "#id")
     void deleteById(Long id);
 
-    @Cacheable(value = "eventos", key = "'byNome:' + #nome")
     List<EventoEntity> findByNomeContainingIgnoreCase(String nome);
 
-    @Cacheable(value = "eventos", key = "'byDataBetween:' + #inicio + ':' + #fim")
     @Query("SELECT e FROM EventoEntity e WHERE e.dataInicioDoEvento BETWEEN :inicio AND :fim ORDER BY e.dataInicioDoEvento ASC")
     List<EventoEntity> findEventosByDataBetween(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 
-    @Cacheable(value = "eventos", key = "'upcoming'")
     @Query("SELECT e FROM EventoEntity e WHERE e.dataInicioDoEvento > CURRENT_TIMESTAMP ORDER BY e.dataInicioDoEvento ASC")
     List<EventoEntity> findEventosUpcoming();
 
-    @Cacheable(value = "eventos", key = "'past'")
     @Query("SELECT e FROM EventoEntity e WHERE e.dataFimDoEvento < CURRENT_TIMESTAMP ORDER BY e.dataFimDoEvento DESC")
     List<EventoEntity> findEventosPast();
 
     @Query("SELECT e FROM EventoEntity e WHERE e.dataInicioDoEvento > :data ORDER BY e.dataInicioDoEvento ASC")
-    @Cacheable(value = "eventos", key = "'byDataAfter:' + #data")
     List<EventoEntity> findByDataInicioDoEventoAfterOrderByDataInicioDoEventoAsc(@Param("data") LocalDateTime data);
 
     @Query("SELECT e FROM EventoEntity e WHERE e.dataFimDoEvento < :data ORDER BY e.dataFimDoEvento DESC")
-    @Cacheable(value = "eventos", key = "'byDataBefore:' + #data")
     List<EventoEntity> findByDataFimDoEventoBeforeOrderByDataFimDoEventoDesc(@Param("data") LocalDateTime data);
 }

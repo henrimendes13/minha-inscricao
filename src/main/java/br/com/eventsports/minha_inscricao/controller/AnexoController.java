@@ -37,6 +37,7 @@ import br.com.eventsports.minha_inscricao.service.AnexoService.EstatisticasAnexo
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAnexoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/anexos")
@@ -47,6 +48,7 @@ public class AnexoController {
     
     private final IAnexoService anexoService;
     
+    @PreAuthorize("@anexoSecurityService.canCreateAnexoForEvento(#eventoId, authentication.name, authentication.authorities)")
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AnexoResponseDTO> uploadAnexo(
             @RequestPart("arquivo") 
@@ -99,6 +101,7 @@ public class AnexoController {
         }
     }
     
+    @PreAuthorize("@anexoSecurityService.canManageAnexo(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}/descricao")
     public ResponseEntity<AnexoResponseDTO> atualizarDescricao(@PathVariable Long id, @RequestBody String novaDescricao) {
         AnexoEntity anexo = anexoService.atualizarDescricao(id, novaDescricao);
@@ -106,6 +109,7 @@ public class AnexoController {
         return ResponseEntity.ok(responseDTO);
     }
     
+    @PreAuthorize("@anexoSecurityService.canManageAnexo(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}/status")
     public ResponseEntity<AnexoResponseDTO> alterarStatus(@PathVariable Long id, @RequestParam boolean ativo) {
         AnexoEntity anexo = anexoService.alterarStatus(id, ativo);
@@ -113,6 +117,7 @@ public class AnexoController {
         return ResponseEntity.ok(responseDTO);
     }
     
+    @PreAuthorize("@anexoSecurityService.canManageAnexo(#id, authentication.name, authentication.authorities)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> removerAnexo(@PathVariable Long id) {
         anexoService.removerAnexo(id);

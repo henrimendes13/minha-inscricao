@@ -36,7 +36,7 @@ public class EventoService implements IEventoService {
     private final EventoRepository eventoRepository;
     private final UsuarioRepository usuarioRepository;
 
-    @Cacheable(value = "eventos", key = "#id")
+    @Cacheable(value = "eventos-dto", key = "#id")
     @Transactional(readOnly = true)
     public EventoResponseDTO findById(Long id) {
         EventoEntity evento = eventoRepository.findById(id)
@@ -44,7 +44,7 @@ public class EventoService implements IEventoService {
         return convertToResponseDTO(evento);
     }
 
-    @Cacheable(value = "eventos", key = "'all'")
+    @Cacheable(value = "eventos-dto", key = "'all'")
     @Transactional(readOnly = true)
     public List<EventoSummaryDTO> findAll() {
         List<EventoEntity> eventos = eventoRepository.findAll();
@@ -53,8 +53,8 @@ public class EventoService implements IEventoService {
                 .collect(Collectors.toList());
     }
 
-    @CachePut(value = "eventos", key = "#result.id")
-    @CacheEvict(value = "eventos", key = "'all'")
+    @CachePut(value = "eventos-dto", key = "#result.id")
+    @CacheEvict(value = "eventos-dto", key = "'all'")
     public EventoResponseDTO save(EventoCreateDTO eventoCreateDTO) {
         validateDateRange(eventoCreateDTO.getDataInicioDoEvento(), eventoCreateDTO.getDataFimDoEvento());
         EventoEntity evento = convertCreateDTOToEntity(eventoCreateDTO);
@@ -62,8 +62,8 @@ public class EventoService implements IEventoService {
         return convertToResponseDTO(savedEvento);
     }
 
-    @CachePut(value = "eventos", key = "#id")
-    @CacheEvict(value = "eventos", key = "'all'")
+    @CachePut(value = "eventos-dto", key = "#id")
+    @CacheEvict(value = "eventos-dto", key = "'all'")
     public EventoResponseDTO update(Long id, EventoUpdateDTO eventoUpdateDTO) {
         validateDateRange(eventoUpdateDTO.getDataInicioDoEvento(), eventoUpdateDTO.getDataFimDoEvento());
         EventoEntity existingEvento = eventoRepository.findById(id)
@@ -74,7 +74,7 @@ public class EventoService implements IEventoService {
         return convertToResponseDTO(updatedEvento);
     }
 
-    @CacheEvict(value = "eventos", allEntries = true)
+    @CacheEvict(value = "eventos-dto", allEntries = true)
     public void deleteById(Long id) {
         if (!eventoRepository.existsById(id)) {
             throw new EventoNotFoundException("Evento não encontrado com ID: " + id);
@@ -82,7 +82,7 @@ public class EventoService implements IEventoService {
         eventoRepository.deleteById(id);
     }
 
-    @Cacheable(value = "eventos", key = "'search:' + #nome")
+    @Cacheable(value = "eventos-dto", key = "'search:' + #nome")
     @Transactional(readOnly = true)
     public List<EventoSummaryDTO> findByNome(String nome) {
         List<EventoEntity> eventos = eventoRepository.findByNomeContainingIgnoreCase(nome);
@@ -91,7 +91,7 @@ public class EventoService implements IEventoService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "eventos", key = "'upcoming'")
+    @Cacheable(value = "eventos-dto", key = "'upcoming'")
     @Transactional(readOnly = true)
     public List<EventoSummaryDTO> findEventosUpcoming() {
         List<EventoEntity> eventos = eventoRepository.findEventosUpcoming();
@@ -100,7 +100,7 @@ public class EventoService implements IEventoService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "eventos", key = "'past'")
+    @Cacheable(value = "eventos-dto", key = "'past'")
     @Transactional(readOnly = true)
     public List<EventoSummaryDTO> findEventosPast() {
         List<EventoEntity> eventos = eventoRepository.findEventosPast();
@@ -109,7 +109,7 @@ public class EventoService implements IEventoService {
                 .collect(Collectors.toList());
     }
 
-    @Cacheable(value = "eventos", key = "'between:' + #inicio + ':' + #fim")
+    @Cacheable(value = "eventos-dto", key = "'between:' + #inicio + ':' + #fim")
     @Transactional(readOnly = true)
     public List<EventoSummaryDTO> findEventosByDataBetween(LocalDateTime inicio, LocalDateTime fim) {
         List<EventoEntity> eventos = eventoRepository.findEventosByDataBetween(inicio, fim);
@@ -276,7 +276,7 @@ public class EventoService implements IEventoService {
     }
 
     @Override
-    @CachePut(value = "eventos", key = "#eventoId")
+    @CachePut(value = "eventos-dto", key = "#eventoId")
     public EventoResponseDTO changeStatus(Long eventoId, StatusChangeDTO statusChangeDTO) {
         EventoEntity evento = eventoRepository.findById(eventoId)
                 .orElseThrow(() -> new EventoNotFoundException("Evento não encontrado com ID: " + eventoId));
