@@ -45,13 +45,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers(POST, "/api/usuarios").permitAll()
                         // Endpoints públicos de documentação Swagger/OpenAPI
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", 
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                 "/v3/api-docs/**", "/api-docs/**", "/v3/api-docs/swagger-config")
                         .permitAll()
 
                         // Endpoints públicos de leitura
                         .requestMatchers(GET, "/api/eventos/**").permitAll()
                         .requestMatchers(GET, "/api/categorias/**").permitAll()
+
+                        // TEMPORÁRIO: Permitir endpoint de inscrição para debug
+                        .requestMatchers(POST, "/api/atletas/evento/*/inscricao/atletas").authenticated()
 
                         // Todas as outras requisições exigem autenticação
                         .anyRequest().authenticated())

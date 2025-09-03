@@ -29,22 +29,39 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
+        log.info("🔍 JWT Filter - Processing request: {} {}", method, requestURI);
+
         try {
             String token = getTokenFromRequest(request);
+            log.info("🔑 JWT Filter - Token present: {}", token != null);
 
-            if (token != null && jwtUtil.validateToken(token)) {
-                // Autentica qualquer usuário com token válido
-                Authentication authentication = jwtUtil.getAuthenticationFromToken(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (token != null) {
+                boolean isTokenValid = jwtUtil.validateToken(token);
+                log.info("✅ JWT Filter - Token valid: {}", isTokenValid);
+                
+                if (isTokenValid) {
+                    // Autentica qualquer usuário com token válido
+                    Authentication authentication = jwtUtil.getAuthenticationFromToken(token);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.debug("Usuário autenticado: {}", authentication.getName());
+                    log.info("👤 JWT Filter - User authenticated: {} with authorities: {}", 
+                            authentication.getName(), authentication.getAuthorities());
+                } else {
+                    log.warn("❌ JWT Filter - Invalid token, clearing context");
+                    SecurityContextHolder.clearContext();
+                }
+            } else {
+                log.info("🔒 JWT Filter - No token provided for {}", requestURI);
             }
         } catch (Exception e) {
-            log.error("Erro ao processar token JWT: {}", e.getMessage());
+            log.error("💥 JWT Filter - Error processing JWT token: {}", e.getMessage(), e);
             // Limpa o contexto de segurança em caso de erro
             SecurityContextHolder.clearContext();
         }
 
+        log.info("⏭️  JWT Filter - Continuing filter chain");
         filterChain.doFilter(request, response);
     }
 
