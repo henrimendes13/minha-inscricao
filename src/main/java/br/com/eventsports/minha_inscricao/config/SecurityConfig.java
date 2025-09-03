@@ -53,9 +53,6 @@ public class SecurityConfig {
                         .requestMatchers(GET, "/api/eventos/**").permitAll()
                         .requestMatchers(GET, "/api/categorias/**").permitAll()
 
-                        // TEMPORÁRIO: Permitir endpoint de inscrição para debug
-                        .requestMatchers(POST, "/api/atletas/evento/*/inscricao/atletas").authenticated()
-
                         // Todas as outras requisições exigem autenticação
                         .anyRequest().authenticated())
 

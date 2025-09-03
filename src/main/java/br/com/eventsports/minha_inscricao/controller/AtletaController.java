@@ -28,6 +28,10 @@ import br.com.eventsports.minha_inscricao.enums.Genero;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import br.com.eventsports.minha_inscricao.util.JwtUtil;
+import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
+import br.com.eventsports.minha_inscricao.entity.UsuarioEntity;
 
 @RestController
 @RequestMapping("/api/atletas")
@@ -36,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class AtletaController {
 
     private final IAtletaService atletaService;
+    private final UsuarioRepository usuarioRepository;
 
     @GetMapping
     public ResponseEntity<List<AtletaSummaryDTO>> getAllAtletas() {
@@ -52,10 +57,34 @@ public class AtletaController {
     @PostMapping("/evento/{eventoId}/inscricao/atletas")
     public ResponseEntity<AtletaResponseDTO> createAtletaForInscricao(@PathVariable Long eventoId,
             @Valid @RequestBody AtletaInscricaoDTO atletaInscricaoDTO,
-            @RequestParam(required = false, defaultValue = "1") Long usuarioInscricaoId) {
-        // TODO: Implementar autenticação real. Por enquanto, usa usuário por parâmetro
-        AtletaResponseDTO createdAtleta = atletaService.criarAtletaParaInscricaoComUsuario(eventoId, atletaInscricaoDTO, usuarioInscricaoId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdAtleta);
+            Authentication authentication) {
+        
+        try {
+            // Obter email do usuário autenticado
+            String email = authentication.getName();
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .build();
+            }
+            
+            // Buscar usuário pelo email
+            UsuarioEntity usuario = usuarioRepository.findByEmail(email)
+                    .orElse(null);
+            
+            if (usuario == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .build();
+            }
+            
+            // Criar atleta usando o ID do usuário autenticado
+            AtletaResponseDTO createdAtleta = atletaService.criarAtletaParaInscricaoComUsuario(
+                eventoId, atletaInscricaoDTO, usuario.getId());
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdAtleta);
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        }
     }
 
     @PutMapping("/{id}")
