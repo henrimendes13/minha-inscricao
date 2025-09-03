@@ -119,6 +119,7 @@ public class WorkoutController {
     /**
      * Registra resultado individual para um participante específico
      */
+    @PreAuthorize("@workoutSecurityService.canManageWorkoutResults(#workoutId, authentication.name, authentication.authorities)")
     @PostMapping("/{workoutId}/resultados")
     public ResponseEntity<LeaderboardResponseDTO> registrarResultado(
             @PathVariable Long workoutId,
@@ -132,6 +133,7 @@ public class WorkoutController {
     /**
      * Atualiza resultado de uma equipe específica
      */
+    @PreAuthorize("@workoutSecurityService.canManageWorkoutResults(#workoutId, authentication.name, authentication.authorities)")
     @PutMapping("/{workoutId}/resultados/equipe/{equipeId}")
     public ResponseEntity<LeaderboardResponseDTO> atualizarResultadoEquipe(
             @PathVariable Long workoutId,
@@ -145,6 +147,7 @@ public class WorkoutController {
     /**
      * Atualiza resultado de um atleta específico
      */
+    @PreAuthorize("@workoutSecurityService.canManageWorkoutResults(#workoutId, authentication.name, authentication.authorities)")
     @PutMapping("/{workoutId}/resultados/atleta/{atletaId}")
     public ResponseEntity<LeaderboardResponseDTO> atualizarResultadoAtleta(
             @PathVariable Long workoutId,
@@ -201,6 +204,7 @@ public class WorkoutController {
     /**
      * Remove resultado de um participante
      */
+    @PreAuthorize("@workoutSecurityService.canManageWorkoutResults(#workoutId, authentication.name, authentication.authorities)")
     @DeleteMapping("/{workoutId}/resultados/equipe/{equipeId}")
     public ResponseEntity<Void> removerResultadoEquipe(
             @PathVariable Long workoutId,
@@ -212,6 +216,7 @@ public class WorkoutController {
     /**
      * Remove resultado de um atleta
      */
+    @PreAuthorize("@workoutSecurityService.canManageWorkoutResults(#workoutId, authentication.name, authentication.authorities)")
     @DeleteMapping("/{workoutId}/resultados/atleta/{atletaId}")
     public ResponseEntity<Void> removerResultadoAtleta(
             @PathVariable Long workoutId,

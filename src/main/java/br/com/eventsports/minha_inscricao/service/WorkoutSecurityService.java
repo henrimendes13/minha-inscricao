@@ -113,6 +113,38 @@ public class WorkoutSecurityService {
     }
 
     /**
+     * Verifica se o usuário pode gerenciar resultados de um workout específico
+     * (mesmo critério que gerenciar o workout - apenas criador do evento ou admin)
+     * 
+     * @param workoutId ID do workout
+     * @param userEmail Email do usuário autenticado
+     * @param authorities Autoridades/roles do usuário
+     * @return true se o usuário pode gerenciar os resultados do workout
+     */
+    public boolean canManageWorkoutResults(Long workoutId, String userEmail, Collection<? extends GrantedAuthority> authorities) {
+        if (workoutId == null || userEmail == null) {
+            log.warn("Parâmetros inválidos para canManageWorkoutResults - workoutId: {}, userEmail: {}", workoutId, userEmail);
+            return false;
+        }
+
+        try {
+            // Reutilizar a mesma lógica de canManageWorkout
+            // Se pode gerenciar o workout, pode gerenciar seus resultados
+            boolean canManage = canManageWorkout(workoutId, userEmail, authorities);
+            
+            log.debug("Usuário {} {} gerenciar resultados do workout {} (permissão: {})", 
+                     userEmail, canManage ? "PODE" : "NÃO PODE", workoutId, canManage);
+            
+            return canManage;
+
+        } catch (Exception e) {
+            log.error("Erro ao verificar permissão de gerenciamento de resultados do workout {} para usuário {}: {}", 
+                     workoutId, userEmail, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Busca o ID do evento ao qual o workout pertence
      * 
      * @param workoutId ID do workout
