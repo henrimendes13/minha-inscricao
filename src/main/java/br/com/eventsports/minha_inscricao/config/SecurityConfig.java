@@ -52,6 +52,7 @@ public class SecurityConfig {
                         // Endpoints públicos de leitura
                         .requestMatchers(GET, "/api/eventos/**").permitAll()
                         .requestMatchers(GET, "/api/categorias/**").permitAll()
+                        .requestMatchers(GET, "/api/leaderboards/**").permitAll()
 
                         // Todas as outras requisições exigem autenticação
                         .anyRequest().authenticated())
