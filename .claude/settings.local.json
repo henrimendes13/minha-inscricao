@@ -54,7 +54,13 @@
       "Bash(wmic process where processid=27572 delete:*)",
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_console_messages",
-      "mcp__playwright__browser_install"
+      "mcp__playwright__browser_install",
+      "WebFetch(domain:www.brasilgamesscoreboard.com.br)",
+      "Bash(npm run build:*)",
+      "Bash(wmic process where processid=1284 delete:*)",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_click",
+      "Bash(wmic process where processid=24940 delete:*)"
     ],
     "deny": [],
     "ask": []

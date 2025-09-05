@@ -1,4 +1,72 @@
-/* You can add global styles to this file, and also import other style files */
+// Importar fontes
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+// Importar Angular Material dark theme
+@import '@angular/material/prebuilt-themes/deeppurple-amber.css';
+
+// Variáveis CSS customizadas
+:root {
+  --bg-primary: #0f1419;
+  --bg-secondary: #1a1f29;
+  --bg-tertiary: #252b36;
+  --bg-card: #1e242e;
+  --bg-elevated: #2a303c;
+  --text-primary: #ffffff;
+  --text-secondary: #b8bcc8;
+  --text-tertiary: #8b919d;
+  --accent-primary: #00bcd4;
+  --accent-hover: #00acc1;
+  --border-color: #3a4047;
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+// Estilos globais
+* {
+  box-sizing: border-box;
+}
+
+html, body { 
+  height: 100%; 
+  margin: 0;
+  padding: 0;
+}
+
+body { 
+  font-family: 'Inter', 'Roboto', "Helvetica Neue", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Scrollbar personalizada para dark theme
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
+
+// Classe utilitária para backgrounds
+.bg-primary { background: var(--bg-primary) !important; }
+.bg-secondary { background: var(--bg-secondary) !important; }
+.bg-tertiary { background: var(--bg-tertiary) !important; }
+.bg-card { background: var(--bg-card) !important; }
+
+// Classes utilitárias para texto
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary { color: var(--text-tertiary) !important; }

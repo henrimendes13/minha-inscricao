@@ -12,6 +12,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/eventos/eventos-list/eventos-list.component').then(c => c.EventosListComponent)
   },
   {
+    path: 'eventos/:id',
+    loadComponent: () => import('./features/eventos/evento-detalhes/evento-detalhes.component').then(c => c.EventoDetalhesComponent)
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(c => c.LoginComponent)
   },

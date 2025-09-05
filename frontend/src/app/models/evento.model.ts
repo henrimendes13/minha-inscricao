@@ -63,3 +63,18 @@ export enum StatusEvento {
   FINALIZADO = 'FINALIZADO',
   CANCELADO = 'CANCELADO'
 }
+
+// Interface para a resposta da API real
+export interface EventoApiResponse {
+  id: number;
+  nome: string;
+  dataInicioDoEvento: string;
+  dataFimDoEvento: string;
+  status: string;
+  descricaoStatus: string;
+  nomeOrganizador: string;
+  totalCategorias: number;
+  inscricoesAtivas: number;
+  podeReceberInscricoes: boolean;
+  createdAt: string;
+}

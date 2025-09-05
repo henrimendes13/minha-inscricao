@@ -1,0 +1,72 @@
+@use '@angular/material' as mat;
+@use 'sass:map';
+
+// Importar fontes
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+// Definir paleta customizada para dark mode
+$dark-primary: mat.define-palette(mat.$blue-grey-palette, 400, 200, 600);
+$dark-accent: mat.define-palette(mat.$cyan-palette, 400, 200, 600);
+$dark-warn: mat.define-palette(mat.$red-palette, 400, 200, 600);
+
+// Criar tema dark
+$dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $dark-primary,
+    accent: $dark-accent,
+    warn: $dark-warn,
+  ),
+  typography: mat.define-typography-config(
+    $font-family: 'Inter, sans-serif',
+    $headline-1: mat.define-typography-level(32px, 40px, 700),
+    $headline-2: mat.define-typography-level(28px, 36px, 600),
+    $headline-3: mat.define-typography-level(24px, 32px, 600),
+    $headline-4: mat.define-typography-level(20px, 28px, 500),
+    $headline-5: mat.define-typography-level(18px, 24px, 500),
+    $headline-6: mat.define-typography-level(16px, 22px, 500),
+    $body-1: mat.define-typography-level(16px, 24px, 400),
+    $body-2: mat.define-typography-level(14px, 20px, 400),
+  ),
+  density: 0,
+));
+
+// Variáveis CSS customizadas para o dark theme
+:root {
+  // Cores de background
+  --bg-primary: #0f1419;
+  --bg-secondary: #1a1f29;
+  --bg-tertiary: #252b36;
+  --bg-card: #1e242e;
+  --bg-elevated: #2a303c;
+
+  // Cores de texto
+  --text-primary: #ffffff;
+  --text-secondary: #b8bcc8;
+  --text-tertiary: #8b919d;
+  --text-disabled: #5a6169;
+
+  // Cores de acento
+  --accent-primary: #00bcd4;
+  --accent-secondary: #26c6da;
+  --accent-hover: #00acc1;
+
+  // Cores de status
+  --status-success: #4caf50;
+  --status-warning: #ff9800;
+  --status-error: #f44336;
+  --status-info: #2196f3;
+
+  // Bordas e divisores
+  --border-color: #3a4047;
+  --divider-color: #2a303c;
+
+  // Sombras
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+  // Gradientes
+  --gradient-primary: linear-gradient(135deg, #0f1419 0%, #1a1f29 100%);
+  --gradient-card: linear-gradient(135deg, #1e242e 0%, #252b36 100%);
+}
