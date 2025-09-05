@@ -44,7 +44,17 @@
       "Bash(wmic process where processid=22224 delete:*)",
       "Bash(wmic process where processid=14636 delete:*)",
       "Bash(wmic process where processid=8560 delete:*)",
-      "Bash(wmic process where processid=18400 delete:*)"
+      "Bash(wmic process where processid=18400 delete:*)",
+      "Bash(ng version)",
+      "Bash(ng new:*)",
+      "Bash(ng add:*)",
+      "Bash(npm install:*)",
+      "Bash(ng build)",
+      "Bash(npm start)",
+      "Bash(wmic process where processid=27572 delete:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_install"
     ],
     "deny": [],
     "ask": []
