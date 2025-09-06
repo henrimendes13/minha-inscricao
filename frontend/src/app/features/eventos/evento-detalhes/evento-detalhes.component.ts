@@ -20,7 +20,7 @@ import { WorkoutService } from '../../../core/services/workout.service';
 import { AnexoResponse } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
 import { Categoria, LeaderboardResponse } from '../../../models/leaderboard.model';
-import { TimelineResponse } from '../../../models/timeline.model';
+import { Timeline } from '../../../models/timeline.model';
 import { WorkoutResponse } from '../../../models/workout.model';
 
 @Component({
@@ -218,29 +218,63 @@ import { WorkoutResponse } from '../../../models/workout.model';
                 <span>Timeline</span>
               </ng-template>
               <div class="tab-content">
-                <div *ngIf="timelineLoading" class="tab-loading">
+                <!-- Loading State -->
+                <div *ngIf="timelineLoading" class="loading-state small">
                   <mat-spinner diameter="40"></mat-spinner>
                   <p>Carregando timeline...</p>
                 </div>
-                <div *ngIf="timelineError && !timelineLoading" class="tab-error">
+                
+                <!-- Error State -->
+                <div *ngIf="timelineError && !timelineLoading" class="error-state small">
                   <mat-icon>error_outline</mat-icon>
-                  <p>Erro ao carregar timeline</p>
+                  <h3>Erro ao carregar timeline</h3>
+                  <p>Não foi possível carregar a programação do evento.</p>
                 </div>
-                <div *ngIf="timelineData && !timelineLoading && !timelineError" class="timeline-content">
-                  <div *ngIf="timelineData.items.length === 0" class="empty-state">
-                    <mat-icon>timeline</mat-icon>
-                    <p>Nenhum item na timeline ainda</p>
-                  </div>
-                  <div *ngFor="let item of timelineData.items" class="timeline-item">
-                    <div class="timeline-marker">
-                      <mat-icon>{{ getTimelineIcon(item.tipo) }}</mat-icon>
-                    </div>
-                    <div class="timeline-content-item">
-                      <h4>{{ item.titulo }}</h4>
-                      <p>{{ item.descricao }}</p>
-                      <small>{{ formatarData(item.dataHora) }}</small>
-                    </div>
-                  </div>
+                
+                <!-- Empty State -->
+                <div *ngIf="timelineData?.vazia && !timelineLoading && !timelineError" class="empty-state small">
+                  <mat-icon>info_outline</mat-icon>
+                  <h3>Timeline não disponível</h3>
+                  <p>A timeline detalhada para este evento ainda não foi publicada.</p>
+                </div>
+
+                <!-- Timeline Content -->
+                <div *ngIf="timelineData && !timelineData.vazia && !timelineLoading && !timelineError" class="details-grid">
+                  <mat-card class="timeline-card" *ngIf="timelineData.temDescricaoDiaUm">
+                    <mat-card-header>
+                      <mat-card-title>Dia 1</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>{{ timelineData.descricaoDiaUm }}</p>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card class="timeline-card" *ngIf="timelineData.temDescricaoDiaDois">
+                    <mat-card-header>
+                      <mat-card-title>Dia 2</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>{{ timelineData.descricaoDiaDois }}</p>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card class="timeline-card" *ngIf="timelineData.temDescricaoDiaTres">
+                    <mat-card-header>
+                      <mat-card-title>Dia 3</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>{{ timelineData.descricaoDiaTres }}</p>
+                    </mat-card-content>
+                  </mat-card>
+
+                  <mat-card class="timeline-card" *ngIf="timelineData.temDescricaoDiaQuatro">
+                    <mat-card-header>
+                      <mat-card-title>Dia 4</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <p>{{ timelineData.descricaoDiaQuatro }}</p>
+                    </mat-card-content>
+                  </mat-card>
                 </div>
               </div>
             </mat-tab>
@@ -368,7 +402,7 @@ export class EventoDetalhesComponent implements OnInit {
   selectedTabIndex = 0;
 
   // Timeline
-  timelineData: TimelineResponse | null = null;
+  timelineData: Timeline | null = null;
   timelineLoading = false;
   timelineError = false;
 
@@ -675,23 +709,6 @@ export class EventoDetalhesComponent implements OnInit {
         return 'cancel';
       default:
         return 'help';
-    }
-  }
-
-  getTimelineIcon(tipo: string): string {
-    switch (tipo) {
-      case 'INSCRICOES_ABERTAS':
-        return 'how_to_reg';
-      case 'INSCRICOES_FECHADAS':
-        return 'person_off';
-      case 'INICIO_EVENTO':
-        return 'play_arrow';
-      case 'FIM_EVENTO':
-        return 'stop';
-      case 'DIVULGACAO_RESULTADO':
-        return 'emoji_events';
-      default:
-        return 'event';
     }
   }
 

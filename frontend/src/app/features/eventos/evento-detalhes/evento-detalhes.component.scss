@@ -593,3 +593,9 @@
     }
   }
 }
+
+// Estilos específicos para Timeline (agora usando classes universais)
+// Todos os estilos da timeline foram movidos para arquivos universais:
+// - Cards: src/styles/components/_cards.scss (.timeline-card)
+// - Grids: src/styles/components/_grids.scss (.details-grid) 
+// - States: src/styles/components/_states.scss (.loading-state, .error-state, .empty-state)

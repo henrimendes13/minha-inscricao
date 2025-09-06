@@ -1,0 +1,197 @@
+// ============================================
+// CARDS UNIVERSAIS
+// ============================================
+// Estilos reutilizáveis para cards em todo o projeto
+// Usado em: timeline, eventos, leaderboard, workouts, etc.
+
+// Card base com estilo padrão do projeto
+.detail-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 12px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 188, 212, 0.15);
+  }
+  
+  // Header do card com background diferenciado
+  .card-header,
+  mat-card-header {
+    background: var(--bg-tertiary);
+    margin: -16px -16px 16px -16px;
+    padding: 16px;
+    border-radius: 12px 12px 0 0;
+    
+    .card-title,
+    mat-card-title {
+      color: var(--accent-primary) !important;
+      font-weight: 600 !important;
+      font-size: 1.2rem !important;
+      margin: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+    }
+    
+    .card-subtitle,
+    mat-card-subtitle {
+      color: var(--text-secondary) !important;
+      font-size: 0.9rem !important;
+      margin-top: 4px !important;
+    }
+  }
+  
+  // Conteúdo do card
+  .card-content,
+  mat-card-content {
+    padding: 16px !important;
+    
+    p {
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0 0 12px 0;
+      white-space: pre-wrap;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    // Listas dentro do card
+    ul, ol {
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin: 0 0 12px 0;
+      padding-left: 20px;
+    }
+  }
+  
+  // Actions do card (botões, links)
+  .card-actions,
+  mat-card-actions {
+    padding: 12px 16px !important;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+}
+
+// Variação do card para timeline (com emoji no título)
+.timeline-card {
+  @extend .detail-card;
+  
+  .card-header mat-card-title,
+  mat-card-header mat-card-title {
+    &::before {
+      content: "📅";
+      font-size: 1.1rem;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Variação do card para eventos
+.event-card {
+  @extend .detail-card;
+  
+  .card-header mat-card-title,
+  mat-card-header mat-card-title {
+    &::before {
+      content: "🏆";
+      font-size: 1.1rem;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Variação do card para workouts
+.workout-card {
+  @extend .detail-card;
+  
+  .card-header mat-card-title,
+  mat-card-header mat-card-title {
+    &::before {
+      content: "💪";
+      font-size: 1.1rem;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Variação do card para leaderboard
+.leaderboard-card {
+  @extend .detail-card;
+  
+  .card-header mat-card-title,
+  mat-card-header mat-card-title {
+    &::before {
+      content: "🥇";
+      font-size: 1.1rem;
+      margin-right: 4px;
+    }
+  }
+}
+
+// Card pequeno para resumos ou previews
+.summary-card {
+  @extend .detail-card;
+  
+  .card-header,
+  mat-card-header {
+    padding: 12px;
+    
+    .card-title,
+    mat-card-title {
+      font-size: 1.1rem !important;
+    }
+  }
+  
+  .card-content,
+  mat-card-content {
+    padding: 12px !important;
+    
+    p {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Responsividade para cards
+@media (max-width: 768px) {
+  .detail-card,
+  .timeline-card,
+  .event-card,
+  .workout-card,
+  .leaderboard-card {
+    .card-header,
+    mat-card-header {
+      padding: 12px;
+      
+      .card-title,
+      mat-card-title {
+        font-size: 1.1rem !important;
+      }
+    }
+    
+    .card-content,
+    mat-card-content {
+      padding: 12px !important;
+      
+      p {
+        font-size: 0.9rem;
+      }
+    }
+    
+    .card-actions,
+    mat-card-actions {
+      padding: 8px 12px !important;
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
+}

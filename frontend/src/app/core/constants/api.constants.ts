@@ -50,7 +50,7 @@ export const API_CONFIG = {
     timeline: {
       base: '/timeline',
       byId: (id: number) => `/timeline/${id}`,
-      byEvento: (eventoId: number) => `/timeline/evento/${eventoId}`
+      byEvento: (eventoId: number) => `/eventos/${eventoId}/timeline`
     },
     anexos: {
       base: '/anexos',

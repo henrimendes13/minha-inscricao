@@ -1,0 +1,361 @@
+// ============================================
+// STATES UNIVERSAIS
+// ============================================
+// Estados de loading, erro, vazio, etc. reutilizáveis
+// Usado em: timeline, eventos, dashboard, todos os componentes
+
+// Estado de loading genérico
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  min-height: 200px;
+  
+  mat-spinner {
+    --mdc-circular-progress-active-indicator-color: var(--accent-primary);
+  }
+  
+  p, .loading-text {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin: 0;
+    font-weight: 500;
+  }
+  
+  // Loading pequeno para tabs e seções
+  &.small {
+    padding: 20px;
+    min-height: 120px;
+    gap: 12px;
+    
+    mat-spinner {
+      transform: scale(0.8);
+    }
+    
+    p, .loading-text {
+      font-size: 1rem;
+    }
+  }
+  
+  // Loading inline (horizontal)
+  &.inline {
+    flex-direction: row;
+    padding: 16px;
+    min-height: auto;
+    gap: 12px;
+    justify-content: flex-start;
+    
+    mat-spinner {
+      transform: scale(0.7);
+    }
+  }
+}
+
+// Estado de erro genérico
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border: 1px solid rgba(244, 67, 54, 0.2);
+  max-width: 500px;
+  margin: 20px auto;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #f44336;
+    margin-bottom: 8px;
+  }
+  
+  h3, .error-title {
+    color: var(--text-primary);
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  
+  p, .error-message {
+    color: var(--text-secondary);
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+    font-size: 1rem;
+  }
+  
+  .error-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    
+    button {
+      min-width: 120px;
+    }
+  }
+  
+  // Erro pequeno para tabs e seções
+  &.small {
+    padding: 24px 16px;
+    max-width: 400px;
+    gap: 12px;
+    
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+    
+    h3, .error-title {
+      font-size: 1.1rem;
+    }
+    
+    p, .error-message {
+      font-size: 0.95rem;
+    }
+  }
+  
+  // Erro inline (menos proeminente)
+  &.inline {
+    background: transparent;
+    border: none;
+    padding: 16px;
+    margin: 0;
+    max-width: none;
+    
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: #ff9800;
+    }
+  }
+}
+
+// Estado vazio genérico
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+  }
+  
+  h3, .empty-title {
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  
+  p, .empty-message {
+    font-size: 1.1rem;
+    margin: 0 0 16px 0;
+    line-height: 1.5;
+  }
+  
+  .empty-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    
+    button {
+      min-width: 120px;
+    }
+  }
+  
+  // Estado vazio pequeno
+  &.small {
+    padding: 24px 16px;
+    gap: 12px;
+    
+    mat-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+    }
+    
+    h3, .empty-title {
+      font-size: 1.1rem;
+    }
+    
+    p, .empty-message {
+      font-size: 1rem;
+    }
+  }
+  
+  // Estado vazio inline
+  &.inline {
+    background: transparent;
+    border: none;
+    padding: 20px;
+    
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+  }
+}
+
+// Estado de sucesso
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #4caf50;
+    margin-bottom: 8px;
+  }
+  
+  h3, .success-title {
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  
+  p, .success-message {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// Estado de aviso
+.warning-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 152, 0, 0.2);
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #ff9800;
+    margin-bottom: 8px;
+  }
+  
+  h3, .warning-title {
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+  }
+  
+  p, .warning-message {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+// Classes de estado para tabs (usadas nos componentes de abas)
+.tab-loading {
+  @extend .loading-state;
+  @extend .loading-state.small;
+}
+
+.tab-error {
+  @extend .error-state;
+  @extend .error-state.small;
+}
+
+.tab-empty {
+  @extend .empty-state;
+  @extend .empty-state.small;
+}
+
+// Responsividade
+@media (max-width: 768px) {
+  .loading-state,
+  .error-state,
+  .empty-state,
+  .success-state,
+  .warning-state {
+    padding: 24px 16px;
+    gap: 12px;
+    
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
+    
+    h3, .error-title, .empty-title, .success-title, .warning-title {
+      font-size: 1.2rem;
+    }
+    
+    p {
+      font-size: 1rem;
+    }
+  }
+  
+  .error-actions,
+  .empty-actions {
+    flex-direction: column;
+    width: 100%;
+    
+    button {
+      width: 100%;
+      min-width: auto;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-state,
+  .error-state,
+  .empty-state,
+  .success-state,
+  .warning-state {
+    padding: 20px 12px;
+    
+    &.small {
+      padding: 16px 12px;
+    }
+  }
+}

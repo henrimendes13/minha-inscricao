@@ -70,3 +70,12 @@ body {
 .text-primary { color: var(--text-primary) !important; }
 .text-secondary { color: var(--text-secondary) !important; }
 .text-tertiary { color: var(--text-tertiary) !important; }
+
+// ============================================
+// IMPORTAÇÃO DE COMPONENTES UNIVERSAIS
+// ============================================
+
+// Components reutilizáveis
+@import './styles/components/cards';
+@import './styles/components/grids';  
+@import './styles/components/states';

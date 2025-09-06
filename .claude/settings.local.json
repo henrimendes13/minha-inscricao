@@ -62,7 +62,9 @@
       "mcp__playwright__browser_click",
       "Bash(wmic process where processid=24940 delete:*)",
       "mcp__playwright__browser_take_screenshot",
-      "mcp__playwright__browser_snapshot"
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_network_requests",
+      "Read(//c/Users/Henrique/Pictures/Screenshots/**)"
     ],
     "deny": [],
     "ask": []

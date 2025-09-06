@@ -1,8 +1,21 @@
 package br.com.eventsports.minha_inscricao.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import br.com.eventsports.minha_inscricao.dto.categoria.CategoriaSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.evento.EventoSummaryDTO;
-import br.com.eventsports.minha_inscricao.dto.workout.*;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutResponseDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutSummaryDTO;
+import br.com.eventsports.minha_inscricao.dto.workout.WorkoutUpdateDTO;
 import br.com.eventsports.minha_inscricao.entity.CategoriaEntity;
 import br.com.eventsports.minha_inscricao.entity.EventoEntity;
 import br.com.eventsports.minha_inscricao.entity.WorkoutEntity;
@@ -11,15 +24,6 @@ import br.com.eventsports.minha_inscricao.repository.EventoRepository;
 import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IWorkoutService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -85,9 +89,9 @@ public class WorkoutService implements IWorkoutService {
 
     @Transactional(readOnly = true)
     public List<WorkoutSummaryDTO> findByEventoIdAndAtivo(Long eventoId, boolean ativo) {
-        List<WorkoutEntity> workouts = ativo 
-            ? workoutRepository.findByEventoIdAndAtivoTrue(eventoId)
-            : workoutRepository.findByEventoIdOrderByNomeAsc(eventoId);
+        List<WorkoutEntity> workouts = ativo
+                ? workoutRepository.findByEventoIdAndAtivoTrue(eventoId)
+                : workoutRepository.findByEventoIdOrderByNomeAsc(eventoId);
         return workouts.stream()
                 .map(this::convertToSummaryDTO)
                 .collect(Collectors.toList());
@@ -127,12 +131,11 @@ public class WorkoutService implements IWorkoutService {
         return convertToResponseDTO(updatedWorkout);
     }
 
-
     @CacheEvict(value = "workouts", allEntries = true)
     public WorkoutResponseDTO removerCategoria(Long workoutId, Long categoriaId) {
         WorkoutEntity workout = workoutRepository.findById(workoutId)
                 .orElseThrow(() -> new RuntimeException("Workout não encontrado com ID: " + workoutId));
-        
+
         CategoriaEntity categoria = categoriaRepository.findById(categoriaId)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
 
@@ -146,17 +149,13 @@ public class WorkoutService implements IWorkoutService {
     private void validateWorkoutData(WorkoutCreateDTO workoutCreateDTO) {
         // Verificar se o evento existe
         eventoRepository.findById(workoutCreateDTO.getEventoId())
-                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + workoutCreateDTO.getEventoId()));
-
-        // Verificar se já existe workout com mesmo nome no evento
-        if (workoutRepository.existsByNomeAndEventoId(workoutCreateDTO.getNome(), workoutCreateDTO.getEventoId())) {
-            throw new RuntimeException("Já existe um workout com o nome '" + workoutCreateDTO.getNome() + "' neste evento");
-        }
+                .orElseThrow(
+                        () -> new RuntimeException("Evento não encontrado com ID: " + workoutCreateDTO.getEventoId()));
 
         // Validar categorias se fornecidas
         if (workoutCreateDTO.getCategoriasIds() != null && !workoutCreateDTO.getCategoriasIds().isEmpty()) {
             List<CategoriaEntity> categorias = categoriaRepository.findAllById(workoutCreateDTO.getCategoriasIds());
-            
+
             if (categorias.size() != workoutCreateDTO.getCategoriasIds().size()) {
                 throw new RuntimeException("Uma ou mais categorias não foram encontradas");
             }
@@ -164,7 +163,7 @@ public class WorkoutService implements IWorkoutService {
             // Verificar se todas as categorias pertencem ao mesmo evento
             boolean todasDoMesmoEvento = categorias.stream()
                     .allMatch(categoria -> categoria.getEvento().getId().equals(workoutCreateDTO.getEventoId()));
-            
+
             if (!todasDoMesmoEvento) {
                 throw new RuntimeException("Todas as categorias devem pertencer ao mesmo evento do workout");
             }
@@ -175,12 +174,13 @@ public class WorkoutService implements IWorkoutService {
         // Verificar nome duplicado se fornecido
         if (workoutUpdateDTO.getNome() != null && !workoutUpdateDTO.getNome().trim().isEmpty()) {
             WorkoutEntity existingWorkout = workoutRepository.findById(workoutId).orElseThrow();
-            
+
             if (workoutRepository.existsByNomeAndEventoIdAndIdNot(
-                    workoutUpdateDTO.getNome(), 
-                    existingWorkout.getEvento().getId(), 
+                    workoutUpdateDTO.getNome(),
+                    existingWorkout.getEvento().getId(),
                     workoutId)) {
-                throw new RuntimeException("Já existe outro workout com o nome '" + workoutUpdateDTO.getNome() + "' neste evento");
+                throw new RuntimeException(
+                        "Já existe outro workout com o nome '" + workoutUpdateDTO.getNome() + "' neste evento");
             }
         }
 
@@ -188,7 +188,7 @@ public class WorkoutService implements IWorkoutService {
         if (workoutUpdateDTO.getCategoriasIds() != null) {
             if (!workoutUpdateDTO.getCategoriasIds().isEmpty()) {
                 List<CategoriaEntity> categorias = categoriaRepository.findAllById(workoutUpdateDTO.getCategoriasIds());
-                
+
                 if (categorias.size() != workoutUpdateDTO.getCategoriasIds().size()) {
                     throw new RuntimeException("Uma ou mais categorias não foram encontradas");
                 }
@@ -196,8 +196,9 @@ public class WorkoutService implements IWorkoutService {
                 // Verificar se todas as categorias pertencem ao mesmo evento
                 WorkoutEntity existingWorkout = workoutRepository.findById(workoutId).orElseThrow();
                 boolean todasDoMesmoEvento = categorias.stream()
-                        .allMatch(categoria -> categoria.getEvento().getId().equals(existingWorkout.getEvento().getId()));
-                
+                        .allMatch(
+                                categoria -> categoria.getEvento().getId().equals(existingWorkout.getEvento().getId()));
+
                 if (!todasDoMesmoEvento) {
                     throw new RuntimeException("Todas as categorias devem pertencer ao mesmo evento do workout");
                 }
@@ -216,7 +217,6 @@ public class WorkoutService implements IWorkoutService {
                 .ativo(workoutCreateDTO.getAtivo() != null ? workoutCreateDTO.getAtivo() : true)
                 .categorias(new ArrayList<>())
                 .build();
-
 
         // Adicionar categorias se fornecidas
         if (workoutCreateDTO.getCategoriasIds() != null && !workoutCreateDTO.getCategoriasIds().isEmpty()) {
@@ -244,14 +244,14 @@ public class WorkoutService implements IWorkoutService {
             workout.setAtivo(workoutUpdateDTO.getAtivo());
         }
 
-
         // Atualizar categorias se fornecidas
         if (workoutUpdateDTO.getCategoriasIds() != null) {
             // Limpar categorias existentes
             workout.getCategorias().clear();
-            
+
             if (!workoutUpdateDTO.getCategoriasIds().isEmpty()) {
-                List<CategoriaEntity> novasCategorias = categoriaRepository.findAllById(workoutUpdateDTO.getCategoriasIds());
+                List<CategoriaEntity> novasCategorias = categoriaRepository
+                        .findAllById(workoutUpdateDTO.getCategoriasIds());
                 workout.setCategorias(novasCategorias);
             }
         }
