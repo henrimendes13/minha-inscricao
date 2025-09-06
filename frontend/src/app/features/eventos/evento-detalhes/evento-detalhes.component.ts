@@ -21,7 +21,7 @@ import { AnexoResponse } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
 import { Categoria, LeaderboardResponse } from '../../../models/leaderboard.model';
 import { Timeline } from '../../../models/timeline.model';
-import { WorkoutResponse } from '../../../models/workout.model';
+import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
 
 @Component({
   selector: 'app-evento-detalhes',
@@ -295,7 +295,7 @@ import { WorkoutResponse } from '../../../models/workout.model';
                   <p>Erro ao carregar leaderboard</p>
                 </div>
                 <div *ngIf="leaderboardData && !leaderboardLoading && !leaderboardError" class="leaderboard-content">
-                  <div *ngIf="leaderboardData.entries.length === 0" class="empty-state">
+                  <div *ngIf="leaderboardData && leaderboardData.entries && leaderboardData.entries?.length === 0" class="empty-state">
                     <mat-icon>leaderboard</mat-icon>
                     <p>Nenhuma classificação disponível ainda</p>
                   </div>
@@ -316,38 +316,51 @@ import { WorkoutResponse } from '../../../models/workout.model';
                 <span>Workouts</span>
               </ng-template>
               <div class="tab-content">
-                <div *ngIf="workoutLoading" class="tab-loading">
+                <!-- Loading State -->
+                <div *ngIf="workoutLoading" class="loading-state small">
                   <mat-spinner diameter="40"></mat-spinner>
                   <p>Carregando workouts...</p>
                 </div>
-                <div *ngIf="workoutError && !workoutLoading" class="tab-error">
+                
+                <!-- Error State -->
+                <div *ngIf="workoutError && !workoutLoading" class="error-state small">
                   <mat-icon>error_outline</mat-icon>
-                  <p>Erro ao carregar workouts</p>
+                  <h3>Erro ao carregar workouts</h3>
+                  <p>Não foi possível carregar os exercícios do evento.</p>
                 </div>
-                <div *ngIf="workoutData && !workoutLoading && !workoutError" class="workout-content">
-                  <div *ngIf="workoutData.workouts.length === 0" class="empty-state">
-                    <mat-icon>fitness_center</mat-icon>
-                    <p>Nenhum workout cadastrado ainda</p>
+                
+                <!-- Empty State -->
+                <div *ngIf="!workoutLoading && !workoutError && (!workoutsByCategory || workoutsByCategory.length === 0)" class="empty-state small">
+                  <mat-icon>fitness_center</mat-icon>
+                  <h3>Workouts ainda não divulgados</h3>
+                  <p>Os exercícios para este evento ainda não foram publicados.</p>
+                </div>
+
+                <!-- Content State -->
+                <div *ngIf="!workoutLoading && !workoutError && workoutsByCategory && workoutsByCategory.length > 0" class="workouts-content">
+                  <div *ngFor="let group of workoutsByCategory" class="category-group">
+                    <h3 class="category-title">{{ group.categoria.nome }}</h3>
+                    <div class="workouts-grid">
+                      <mat-card *ngFor="let workout of group.workouts" class="workout-card">
+                        <mat-card-header>
+                          <mat-card-title>{{ workout.nome }}</mat-card-title>
+                          <mat-card-subtitle>{{ getWorkoutTypeLabel(workout.tipo) }}</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                          <div class="workout-details">
+                            <div class="detail-item">
+                              <mat-icon>tag</mat-icon>
+                              <span>{{ workout.id }}</span>
+                            </div>
+                            <div class="detail-item">
+                              <mat-icon>straighten</mat-icon>
+                              <span>{{ workout.unidadeMedida }}</span>
+                            </div>
+                          </div>
+                        </mat-card-content>
+                      </mat-card>
+                    </div>
                   </div>
-                  <mat-card *ngFor="let workout of workoutData.workouts" class="workout-card">
-                    <mat-card-header>
-                      <mat-card-title>{{ workout.nome }}</mat-card-title>
-                      <mat-card-subtitle>{{ workout.tipo }}</mat-card-subtitle>
-                    </mat-card-header>
-                    <mat-card-content>
-                      <p *ngIf="workout.descricao">{{ workout.descricao }}</p>
-                      <div *ngIf="workout.instrucoes" class="workout-instructions">
-                        <strong>Instruções:</strong>
-                        <p>{{ workout.instrucoes }}</p>
-                      </div>
-                      <div *ngIf="workout.equipamentos?.length" class="workout-equipment">
-                        <strong>Equipamentos:</strong>
-                        <mat-chip-listbox>
-                          <mat-chip *ngFor="let equip of workout.equipamentos">{{ equip }}</mat-chip>
-                        </mat-chip-listbox>
-                      </div>
-                    </mat-card-content>
-                  </mat-card>
                 </div>
               </div>
             </mat-tab>
@@ -368,7 +381,7 @@ import { WorkoutResponse } from '../../../models/workout.model';
                   <p>Erro ao carregar documentos</p>
                 </div>
                 <div *ngIf="anexoData && !anexoLoading && !anexoError" class="anexo-content">
-                  <div *ngIf="anexoData.anexos.length === 0" class="empty-state">
+                  <div *ngIf="anexoData && anexoData.anexos && anexoData.anexos?.length === 0" class="empty-state">
                     <mat-icon>folder</mat-icon>
                     <p>Nenhum documento disponível</p>
                   </div>
@@ -413,7 +426,8 @@ export class EventoDetalhesComponent implements OnInit {
   categorias: Categoria[] = [];
 
   // Workouts
-  workoutData: WorkoutResponse | null = null;
+  workoutData: Workout[] = [];
+  workoutsByCategory: WorkoutsByCategory[] = [];
   workoutLoading = false;
   workoutError = false;
 
@@ -535,22 +549,101 @@ export class EventoDetalhesComponent implements OnInit {
   }
 
   carregarWorkouts(): void {
-    if (this.workoutData) return; // Cache
+    if (this.workoutData && this.workoutData.length > 0) return; // Cache
 
+    console.log('🏋️ Iniciando carregamento de workouts para evento:', this.eventoId);
     this.workoutLoading = true;
     this.workoutError = false;
 
+    // Garantir que os arrays estão inicializados
+    this.workoutData = [];
+    this.workoutsByCategory = [];
+
     this.workoutService.buscarWorkoutsPorEvento(this.eventoId).subscribe({
       next: (data) => {
-        this.workoutData = data;
+        console.log('🏋️ Dados de workout recebidos:', data);
+        console.log('🏋️ Tipo dos dados:', typeof data, Array.isArray(data));
+
+        // Garantir que data é um array válido
+        if (data && Array.isArray(data)) {
+          this.workoutData = data;
+          this.workoutsByCategory = this.agruparWorkoutsPorCategoria(data);
+        } else {
+          console.log('🏋️ Dados inválidos recebidos, inicializando arrays vazios');
+          this.workoutData = [];
+          this.workoutsByCategory = [];
+        }
+
+        console.log('🏋️ Workouts agrupados por categoria:', this.workoutsByCategory);
         this.workoutLoading = false;
       },
       error: (error) => {
+        console.error('🏋️ Erro ao carregar workouts:', error);
         this.workoutLoading = false;
         this.workoutError = true;
-        console.error('Erro ao carregar workouts:', error);
+        // Garantir que arrays estão inicializados mesmo em erro
+        this.workoutData = [];
+        this.workoutsByCategory = [];
       }
     });
+  }
+
+  private agruparWorkoutsPorCategoria(workouts: Workout[]): WorkoutsByCategory[] {
+    console.log('🏋️ agruparWorkoutsPorCategoria recebido:', workouts);
+
+    if (!workouts || !Array.isArray(workouts) || workouts.length === 0) {
+      console.log('🏋️ Retornando array vazio - dados inválidos');
+      return [];
+    }
+
+    const categoriasMap = new Map<string, WorkoutsByCategory>();
+
+    workouts.forEach(workout => {
+      if (!workout) return; // Pula workouts inválidos
+
+      // Se o workout não tem categorias, criar uma categoria "Sem categoria"
+      if (!workout.nomesCategorias || workout.quantidadeCategorias === 0) {
+        const semCategoriaKey = 'sem-categoria';
+        if (!categoriasMap.has(semCategoriaKey)) {
+          categoriasMap.set(semCategoriaKey, {
+            categoria: { id: 0, nome: 'Sem categoria específica', ativa: true },
+            workouts: []
+          });
+        }
+        const categoria = categoriasMap.get(semCategoriaKey);
+        if (categoria) {
+          categoria.workouts.push(workout);
+        }
+      } else {
+        // Separar por vírgula se há múltiplas categorias
+        const nomesCategorias = workout.nomesCategorias.split(', ');
+
+        nomesCategorias.forEach((nomeCategoria, index) => {
+          const categoriaKey = nomeCategoria.trim();
+          if (!categoriasMap.has(categoriaKey)) {
+            categoriasMap.set(categoriaKey, {
+              categoria: {
+                id: index + 1, // ID temporário para categorias múltiplas
+                nome: nomeCategoria.trim(),
+                ativa: true
+              },
+              workouts: []
+            });
+          }
+          const categoria = categoriasMap.get(categoriaKey);
+          if (categoria) {
+            categoria.workouts.push(workout);
+          }
+        });
+      }
+    });
+
+    // Converter Map para Array e ordenar por nome da categoria
+    const resultado = Array.from(categoriasMap.values())
+      .sort((a, b) => a.categoria.nome.localeCompare(b.categoria.nome));
+
+    console.log('🏋️ Resultado final do agrupamento:', resultado);
+    return resultado;
   }
 
   carregarAnexos(): void {
@@ -730,6 +823,19 @@ export class EventoDetalhesComponent implements OnInit {
         return 'insert_drive_file';
       default:
         return 'attachment';
+    }
+  }
+
+  getWorkoutTypeLabel(tipo: string): string {
+    switch (tipo) {
+      case 'REPS':
+        return 'Repetições';
+      case 'TEMPO':
+        return 'Tempo';
+      case 'PESO':
+        return 'Peso';
+      default:
+        return tipo;
     }
   }
 }

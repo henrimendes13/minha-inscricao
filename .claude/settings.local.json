@@ -64,7 +64,9 @@
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_network_requests",
-      "Read(//c/Users/Henrique/Pictures/Screenshots/**)"
+      "Read(//c/Users/Henrique/Pictures/Screenshots/**)",
+      "Bash(wmic process:*)",
+      "Bash(ng serve:*)"
     ],
     "deny": [],
     "ask": []

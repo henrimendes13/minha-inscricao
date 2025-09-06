@@ -296,17 +296,58 @@
 // Classes de estado para tabs (usadas nos componentes de abas)
 .tab-loading {
   @extend .loading-state;
-  @extend .loading-state.small;
+  padding: 20px;
+  min-height: 120px;
+  gap: 12px;
+  
+  mat-spinner {
+    transform: scale(0.8);
+  }
+  
+  p, .loading-text {
+    font-size: 1rem;
+  }
 }
 
 .tab-error {
   @extend .error-state;
-  @extend .error-state.small;
+  padding: 24px 16px;
+  max-width: 400px;
+  gap: 12px;
+  
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  h3, .error-title {
+    font-size: 1.1rem;
+  }
+  
+  p, .error-message {
+    font-size: 0.95rem;
+  }
 }
 
 .tab-empty {
   @extend .empty-state;
-  @extend .empty-state.small;
+  padding: 24px 16px;
+  gap: 12px;
+  
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  h3, .empty-title {
+    font-size: 1.1rem;
+  }
+  
+  p, .empty-message {
+    font-size: 1rem;
+  }
 }
 
 // Responsividade
