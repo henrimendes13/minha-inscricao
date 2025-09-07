@@ -688,3 +688,285 @@
   transform: translateY(-4px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
+
+/* Leaderboard Styles - CrossFit Games Style */
+.leaderboard-tab {
+  background: #1e1e1e;
+  color: #ffffff;
+  min-height: 600px;
+}
+
+.leaderboard-filters {
+  background: #2d2d2d;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #444;
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    label {
+      font-weight: 600;
+      color: #ffffff;
+      font-size: 14px;
+      min-width: 80px;
+    }
+
+    .categoria-select {
+      background: #1e1e1e;
+      color: #ffffff;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 14px;
+      min-width: 200px;
+      cursor: pointer;
+
+      &:focus {
+        outline: none;
+        border-color: #00bcd4;
+        box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2);
+      }
+
+      option {
+        background: #1e1e1e;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+.leaderboard-table-container {
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #444;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1e1e1e;
+  color: #ffffff;
+
+  thead {
+    background: #2d2d2d;
+    border-bottom: 2px solid #444;
+
+    th {
+      padding: 16px 12px;
+      text-align: left;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: #ffffff;
+      border-right: 1px solid #444;
+
+      &:last-child {
+        border-right: none;
+      }
+
+      &.rank-col {
+        width: 80px;
+        text-align: center;
+      }
+
+      &.name-col {
+        min-width: 200px;
+      }
+
+      &.points-col {
+        width: 100px;
+        text-align: center;
+      }
+
+      &.workout-col {
+        width: 120px;
+        text-align: center;
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid #333;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background: #252525;
+      }
+
+      &.podium-row {
+        background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+        
+        &.gold {
+          background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
+          border-left: 3px solid #ffd700;
+        }
+
+        &.silver {
+          background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), transparent);
+          border-left: 3px solid #c0c0c0;
+        }
+
+        &.bronze {
+          background: linear-gradient(90deg, rgba(205, 127, 50, 0.15), transparent);
+          border-left: 3px solid #cd7f32;
+        }
+      }
+
+      td {
+        padding: 16px 12px;
+        border-right: 1px solid #333;
+        vertical-align: middle;
+
+        &:last-child {
+          border-right: none;
+        }
+
+        &.rank-cell {
+          text-align: center;
+          font-weight: 700;
+          
+          .rank-number {
+            font-size: 16px;
+            color: #ffffff;
+          }
+
+          .medal-icon {
+            color: #ffd700;
+            font-size: 18px;
+            margin-left: 6px;
+            vertical-align: middle;
+          }
+        }
+
+        &.name-cell {
+          .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .participant-name {
+              font-weight: 600;
+              color: #ffffff;
+              font-size: 15px;
+            }
+
+            .team-icon {
+              color: #00bcd4;
+              font-size: 18px;
+            }
+          }
+        }
+
+        &.points-cell {
+          text-align: center;
+          
+          .points-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: #00bcd4;
+          }
+        }
+
+        &.workout-cell {
+          text-align: center;
+          
+          .workout-result {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+
+            .position {
+              font-weight: 600;
+              color: #ffffff;
+              font-size: 14px;
+            }
+
+            .result {
+              font-size: 12px;
+              color: #ccc;
+            }
+          }
+
+          .no-result {
+            color: #666;
+            font-size: 14px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .leaderboard-table-container {
+    overflow-x: auto;
+  }
+
+  .leaderboard-table {
+    min-width: 800px;
+    
+    thead th {
+      padding: 12px 8px;
+      font-size: 12px;
+    }
+
+    tbody td {
+      padding: 12px 8px;
+    }
+  }
+
+  .leaderboard-filters .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    .categoria-select {
+      min-width: 100%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .leaderboard-filters {
+    padding: 15px;
+  }
+
+  .leaderboard-table {
+    thead th {
+      padding: 10px 6px;
+      font-size: 11px;
+      
+      &.workout-col {
+        width: 100px;
+      }
+    }
+
+    tbody td {
+      padding: 10px 6px;
+      
+      &.name-cell .participant-info .participant-name {
+        font-size: 14px;
+      }
+
+      &.workout-cell .workout-result {
+        .position {
+          font-size: 13px;
+        }
+
+        .result {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+}

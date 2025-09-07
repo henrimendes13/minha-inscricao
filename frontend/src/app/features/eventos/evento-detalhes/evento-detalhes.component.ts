@@ -19,7 +19,7 @@ import { WorkoutService } from '../../../core/services/workout.service';
 
 import { AnexoResponse, Anexo } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
-import { Categoria, LeaderboardResponse } from '../../../models/leaderboard.model';
+import { Categoria, LeaderboardResponse, LeaderboardRanking, WorkoutPosicao } from '../../../models/leaderboard.model';
 import { Timeline } from '../../../models/timeline.model';
 import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
 
@@ -285,26 +285,92 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                 <mat-icon>leaderboard</mat-icon>
                 <span>Leaderboard</span>
               </ng-template>
-              <div class="tab-content">
+              <div class="tab-content leaderboard-tab">
+                <!-- Loading State -->
                 <div *ngIf="leaderboardLoading" class="tab-loading">
                   <mat-spinner diameter="40"></mat-spinner>
                   <p>Carregando leaderboard...</p>
                 </div>
+
+                <!-- Error State -->
                 <div *ngIf="leaderboardError && !leaderboardLoading" class="tab-error">
                   <mat-icon>error_outline</mat-icon>
                   <p>Erro ao carregar leaderboard</p>
                 </div>
-                <div *ngIf="leaderboardData && !leaderboardLoading && !leaderboardError" class="leaderboard-content">
-                  <div *ngIf="leaderboardData && leaderboardData.entries && leaderboardData.entries?.length === 0" class="empty-state">
+
+                <!-- Leaderboard Content -->
+                <div *ngIf="!leaderboardLoading && !leaderboardError" class="leaderboard-content">
+                  
+                  <!-- Filtros -->
+                  <div class="leaderboard-filters" *ngIf="categorias.length > 0">
+                    <div class="filter-group">
+                      <label for="categoria-select">Categoria:</label>
+                      <select 
+                        id="categoria-select" 
+                        [value]="selectedCategoriaId" 
+                        (change)="onCategoriaChange($event)"
+                        class="categoria-select">
+                        <option *ngFor="let categoria of categorias" [value]="categoria.id">
+                          {{ categoria.nome }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Empty State -->
+                  <div *ngIf="leaderboardRanking.length === 0" class="empty-state">
                     <mat-icon>leaderboard</mat-icon>
                     <p>Nenhuma classificação disponível ainda</p>
                   </div>
-                  <div *ngFor="let entry of leaderboardData.entries; let i = index" class="leaderboard-entry">
-                    <div class="position">{{ entry.posicao }}º</div>
-                    <div class="name">{{ entry.nome }}</div>
-                    <div class="score">{{ entry.pontuacao }} pts</div>
-                    <div *ngIf="entry.tempo" class="time">{{ entry.tempo }}</div>
+
+                  <!-- Leaderboard Table -->
+                  <div *ngIf="leaderboardRanking.length > 0" class="leaderboard-table-container">
+                    <table class="leaderboard-table">
+                      <thead>
+                        <tr>
+                          <th class="rank-col">RANK</th>
+                          <th class="name-col">NAME</th>
+                          <th class="points-col">POINTS</th>
+                          <th *ngFor="let workout of workoutColumns" class="workout-col">{{ workout }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let ranking of leaderboardRanking; let i = index" 
+                            [class.podium-row]="ranking.isPodio"
+                            [class.gold]="ranking.posicao === 1"
+                            [class.silver]="ranking.posicao === 2"
+                            [class.bronze]="ranking.posicao === 3">
+                          <td class="rank-cell">
+                            <span class="rank-number">{{ ranking.posicao }}</span>
+                            <mat-icon *ngIf="ranking.isPodio" class="medal-icon">
+                              {{ ranking.posicao === 1 ? 'emoji_events' : 'military_tech' }}
+                            </mat-icon>
+                          </td>
+                          <td class="name-cell">
+                            <div class="participant-info">
+                              <span class="participant-name">{{ ranking.nomeParticipante }}</span>
+                              <mat-icon *ngIf="ranking.isEquipe" class="team-icon">groups</mat-icon>
+                            </div>
+                          </td>
+                          <td class="points-cell">
+                            <span class="points-value">{{ ranking.pontuacaoTotal }}</span>
+                          </td>
+                          <td *ngFor="let workout of workoutColumns" class="workout-cell">
+                            <ng-container *ngIf="getWorkoutPosition(ranking, workout) as pos">
+                              <div class="workout-result">
+                                <span class="position">{{ pos.posicaoWorkout }}º</span>
+                                <span class="result">({{ pos.resultadoFormatado }})</span>
+                              </div>
+                            </ng-container>
+                            <ng-container *ngIf="!getWorkoutPosition(ranking, workout)">
+                              <span class="no-result">-</span>
+                            </ng-container>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
+
                 </div>
               </div>
             </mat-tab>
@@ -418,6 +484,11 @@ export class EventoDetalhesComponent implements OnInit {
   leaderboardLoading = false;
   leaderboardError = false;
   categorias: Categoria[] = [];
+  
+  // Novo leaderboard ranking
+  leaderboardRanking: LeaderboardRanking[] = [];
+  selectedCategoriaId: number | null = null;
+  workoutColumns: string[] = [];
 
   // Workouts
   workoutData: Workout[] = [];
@@ -508,9 +579,9 @@ export class EventoDetalhesComponent implements OnInit {
   }
 
   carregarLeaderboard(): void {
-    if (this.leaderboardData) return; // Cache
+    if (this.categorias.length > 0 && this.selectedCategoriaId) return; // Cache
 
-    // Primeiro carrega categorias, depois o leaderboard da primeira categoria
+    // Primeiro carrega categorias
     this.leaderboardLoading = true;
     this.leaderboardError = false;
 
@@ -518,20 +589,11 @@ export class EventoDetalhesComponent implements OnInit {
       next: (categorias) => {
         this.categorias = categorias;
         if (categorias.length > 0) {
-          this.leaderboardService.buscarLeaderboardPorEventoECategoria(this.eventoId, categorias[0].id).subscribe({
-            next: (data) => {
-              this.leaderboardData = data;
-              this.leaderboardLoading = false;
-            },
-            error: (error) => {
-              this.leaderboardLoading = false;
-              this.leaderboardError = true;
-              console.error('Erro ao carregar leaderboard:', error);
-            }
-          });
+          this.selectedCategoriaId = categorias[0].id;
+          this.carregarRankingCategoria(this.selectedCategoriaId);
         } else {
           this.leaderboardLoading = false;
-          this.leaderboardData = { entries: [], categoria: '', totalParticipantes: 0 };
+          this.leaderboardRanking = [];
         }
       },
       error: (error) => {
@@ -540,6 +602,43 @@ export class EventoDetalhesComponent implements OnInit {
         console.error('Erro ao carregar categorias:', error);
       }
     });
+  }
+
+  carregarRankingCategoria(categoriaId: number): void {
+    this.leaderboardLoading = true;
+    this.leaderboardError = false;
+
+    this.leaderboardService.getRankingCategoria(this.eventoId, categoriaId).subscribe({
+      next: (rankings) => {
+        this.leaderboardRanking = rankings;
+        this.extractWorkoutColumns();
+        this.leaderboardLoading = false;
+      },
+      error: (error) => {
+        this.leaderboardLoading = false;
+        this.leaderboardError = true;
+        console.error('Erro ao carregar ranking da categoria:', error);
+      }
+    });
+  }
+
+  onCategoriaChange(event: Event): void {
+    const target = event.target as HTMLSelectElement;
+    const categoriaId = +target.value;
+    this.selectedCategoriaId = categoriaId;
+    this.carregarRankingCategoria(categoriaId);
+  }
+
+  private extractWorkoutColumns(): void {
+    if (this.leaderboardRanking.length > 0) {
+      const workouts = this.leaderboardRanking[0].posicoesWorkouts || [];
+      this.workoutColumns = workouts.map(w => w.nomeWorkout);
+    }
+  }
+
+  getWorkoutPosition(ranking: LeaderboardRanking, workoutName: string): WorkoutPosicao | null {
+    if (!ranking.posicoesWorkouts) return null;
+    return ranking.posicoesWorkouts.find(p => p.nomeWorkout === workoutName) || null;
   }
 
   carregarWorkouts(): void {

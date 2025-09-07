@@ -67,7 +67,12 @@
       "Read(//c/Users/Henrique/Pictures/Screenshots/**)",
       "Bash(wmic process:*)",
       "Bash(ng serve:*)",
-      "mcp__playwright__browser_press_key"
+      "mcp__playwright__browser_press_key",
+      "WebFetch(domain:games.crossfit.com)",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_close",
+      "Bash(npx ng build:*)",
+      "mcp__playwright__browser_navigate_back"
     ],
     "deny": [],
     "ask": []

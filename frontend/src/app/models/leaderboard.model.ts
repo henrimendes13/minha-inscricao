@@ -25,3 +25,31 @@ export interface Categoria {
   descricao?: string;
   eventoId: number;
 }
+
+// Novas interfaces baseadas no backend
+export interface WorkoutPosicao {
+  workoutId: number;
+  nomeWorkout: string;
+  posicaoWorkout: number;
+  resultadoFormatado: string;
+}
+
+export interface LeaderboardRanking {
+  posicao: number;
+  nomeParticipante: string;
+  pontuacaoTotal: number;
+  isEquipe: boolean;
+  participanteId: number;
+  nomeCategoria: string;
+  workoutsCompletados: number;
+  isPodio: boolean;
+  medalha: string;
+  posicoesWorkouts: WorkoutPosicao[];
+}
+
+export interface LeaderboardRankingResponse {
+  rankings: LeaderboardRanking[];
+  categoria: string;
+  totalParticipantes: number;
+  workouts: string[];
+}
