@@ -149,6 +149,10 @@ public
 # Temporary folders
 tmp/
 temp/
+.playwright-mcp/
+
+# User uploads
+uploads/
 
 # Editor directories and files
 .vscode

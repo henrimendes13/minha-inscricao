@@ -17,7 +17,7 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { TimelineService } from '../../../core/services/timeline.service';
 import { WorkoutService } from '../../../core/services/workout.service';
 
-import { AnexoResponse } from '../../../models/anexo.model';
+import { AnexoResponse, Anexo } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
 import { Categoria, LeaderboardResponse } from '../../../models/leaderboard.model';
 import { Timeline } from '../../../models/timeline.model';
@@ -375,18 +375,18 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                   <p>Erro ao carregar documentos</p>
                 </div>
                 <div *ngIf="anexoData && !anexoLoading && !anexoError" class="anexo-content">
-                  <div *ngIf="anexoData && anexoData.anexos && anexoData.anexos?.length === 0" class="empty-state">
+                  <div *ngIf="anexoData && anexoData.length === 0" class="empty-state">
                     <mat-icon>folder</mat-icon>
                     <p>Nenhum documento disponível</p>
                   </div>
-                  <div *ngFor="let anexo of anexoData.anexos" class="anexo-item">
-                    <mat-icon>{{ getAnexoIcon(anexo.tipo) }}</mat-icon>
+                  <div *ngFor="let anexo of anexoData" class="anexo-item">
+                    <mat-icon>{{ getAnexoIcon(anexo.tipoMime) }}</mat-icon>
                     <div class="anexo-info">
-                      <h4>{{ anexo.nome }}</h4>
+                      <h4>{{ anexo.nomeArquivo }}</h4>
                       <p *ngIf="anexo.descricao">{{ anexo.descricao }}</p>
-                      <small>{{ formatarTamanho(anexo.tamanho) }} • {{ anexo.extensao.toUpperCase() }}</small>
+                      <small>{{ anexo.tamanhoFormatado }} • {{ anexo.extensao.toUpperCase() }}</small>
                     </div>
-                    <button mat-icon-button (click)="downloadAnexo(anexo.id)">
+                    <button mat-icon-button (click)="downloadAnexo(anexo)">
                       <mat-icon>download</mat-icon>
                     </button>
                   </div>
@@ -690,13 +690,13 @@ export class EventoDetalhesComponent implements OnInit {
     }
   }
 
-  downloadAnexo(anexoId: number): void {
-    this.anexoService.downloadAnexo(anexoId).subscribe({
+  downloadAnexo(anexo: Anexo): void {
+    this.anexoService.downloadAnexo(anexo.id).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'documento';
+        a.download = anexo.nomeArquivo;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -799,24 +799,23 @@ export class EventoDetalhesComponent implements OnInit {
     }
   }
 
-  getAnexoIcon(tipo: string): string {
-    switch (tipo) {
-      case 'REGULAMENTO':
-        return 'gavel';
-      case 'EDITAL':
-        return 'description';
-      case 'CRONOGRAMA':
-        return 'schedule';
-      case 'MAPA':
-        return 'map';
-      case 'FOTO':
-        return 'photo';
-      case 'VIDEO':
-        return 'videocam';
-      case 'DOCUMENTO':
-        return 'insert_drive_file';
-      default:
-        return 'attachment';
+  getAnexoIcon(tipoMime: string): string {
+    if (tipoMime.startsWith('image/')) {
+      return 'photo';
+    } else if (tipoMime.startsWith('video/')) {
+      return 'videocam';
+    } else if (tipoMime === 'application/pdf') {
+      return 'picture_as_pdf';
+    } else if (tipoMime.includes('word') || tipoMime.includes('document')) {
+      return 'description';
+    } else if (tipoMime.includes('sheet') || tipoMime.includes('excel')) {
+      return 'table_chart';
+    } else if (tipoMime.includes('presentation') || tipoMime.includes('powerpoint')) {
+      return 'slideshow';
+    } else if (tipoMime.startsWith('text/')) {
+      return 'article';
+    } else {
+      return 'insert_drive_file';
     }
   }
 

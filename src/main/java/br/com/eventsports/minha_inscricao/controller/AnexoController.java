@@ -84,15 +84,23 @@ public class AnexoController {
                 .orElse(null);
                 
             if (anexo == null) {
+                log.warn("Anexo não encontrado para download: {}", id);
                 return ResponseEntity.notFound().build();
             }
             
             Resource resource = anexoService.baixarArquivo(id);
             
+            log.info("Iniciando download do anexo: {} - {} - {} bytes", 
+                     anexo.getId(), anexo.getNomeArquivo(), anexo.getTamanhoBytes());
+            
             return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(anexo.getTipoMime()))
+                .contentLength(anexo.getTamanhoBytes())
                 .header(HttpHeaders.CONTENT_DISPOSITION, 
                        "attachment; filename=\"" + anexo.getNomeArquivo() + "\"")
+                .header(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate")
+                .header(HttpHeaders.PRAGMA, "no-cache")
+                .header(HttpHeaders.EXPIRES, "0")
                 .body(resource);
                 
         } catch (IOException e) {

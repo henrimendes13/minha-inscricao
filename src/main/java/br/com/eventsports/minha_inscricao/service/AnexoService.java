@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -55,8 +56,11 @@ public class AnexoService implements IAnexoService {
         String nomeUnico = gerarNomeUnico(arquivo.getOriginalFilename());
         Path caminhoCompleto = diretorio.resolve(nomeUnico);
 
-        // Calcular MD5 antes de salvar
-        String md5 = calcularMd5(arquivo.getBytes());
+        // CORREÇÃO: Ler bytes UMA única vez para evitar corrupção
+        byte[] arquivoBytes = arquivo.getBytes();
+        
+        // Calcular MD5 dos bytes lidos
+        String md5 = calcularMd5(arquivoBytes);
 
         // Verificar se já existe arquivo com mesmo MD5
         Optional<AnexoEntity> anexoExistente = anexoRepository.findByChecksumMd5(md5);
@@ -65,9 +69,9 @@ public class AnexoService implements IAnexoService {
             throw new IllegalArgumentException("Arquivo já existe no sistema");
         }
 
-        // Salvar arquivo no disco
-        Files.copy(arquivo.getInputStream(), caminhoCompleto, StandardCopyOption.REPLACE_EXISTING);
-        log.info("Arquivo salvo em: {}", caminhoCompleto);
+        // Salvar bytes diretamente no arquivo (não usar InputStream já consumido)
+        Files.write(caminhoCompleto, arquivoBytes, StandardOpenOption.CREATE);
+        log.info("Arquivo salvo em: {} ({} bytes)", caminhoCompleto, arquivoBytes.length);
 
         // Criar entidade
         AnexoEntity anexo = AnexoEntity.builder()

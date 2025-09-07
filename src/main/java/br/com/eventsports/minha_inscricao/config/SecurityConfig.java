@@ -62,6 +62,7 @@ public class SecurityConfig {
                         .requestMatchers(GET, "/api/categorias/**").permitAll()
                         .requestMatchers(GET, "/api/leaderboards/**").permitAll()
                         .requestMatchers(GET, "/api/workouts/**").permitAll()
+                        .requestMatchers(GET, "/api/anexos/**").permitAll()
 
                         // Todas as outras requisições exigem autenticação
                         .anyRequest().authenticated())
