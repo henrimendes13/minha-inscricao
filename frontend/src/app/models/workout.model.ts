@@ -8,6 +8,7 @@ export interface Workout {
   nomesCategorias: string;
   nomeEvento: string;
   unidadeMedida: string;
+  descricao: string;
 }
 
 // Interface baseada no WorkoutResponseDTO do backend (para detalhes)

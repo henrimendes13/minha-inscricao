@@ -17,6 +17,9 @@ public class WorkoutSummaryDTO {
     @Schema(description = "Nome do workout", example = "21-15-9 Thrusters/Pull-ups")
     private String nome;
 
+    @Schema(description = "Descrição do workout", example = "For time: 21-15-9 Thrusters 95/65 Pull-ups")
+    private String descricao;
+
     @Schema(description = "Tipo de resultado do workout", example = "REPS")
     private TipoWorkout tipo;
 

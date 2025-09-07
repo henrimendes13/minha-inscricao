@@ -280,6 +280,7 @@ public class WorkoutService implements IWorkoutService {
         return WorkoutSummaryDTO.builder()
                 .id(workout.getId())
                 .nome(workout.getNome())
+                .descricao(workout.getDescricao())
                 .tipo(workout.getTipo())
                 .ativo(workout.getAtivo())
                 .quantidadeCategorias(workout.getQuantidadeCategorias())

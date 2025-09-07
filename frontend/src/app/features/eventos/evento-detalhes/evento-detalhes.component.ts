@@ -344,17 +344,11 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                       <mat-card *ngFor="let workout of group.workouts" class="workout-card">
                         <mat-card-header>
                           <mat-card-title>{{ workout.nome }}</mat-card-title>
-                          <mat-card-subtitle>{{ getWorkoutTypeLabel(workout.tipo) }}</mat-card-subtitle>
                         </mat-card-header>
                         <mat-card-content>
                           <div class="workout-details">
                             <div class="detail-item">
-                              <mat-icon>tag</mat-icon>
-                              <span>{{ workout.id }}</span>
-                            </div>
-                            <div class="detail-item">
-                              <mat-icon>straighten</mat-icon>
-                              <span>{{ workout.unidadeMedida }}</span>
+                              <span>{{ workout.descricao }}</span>
                             </div>
                           </div>
                         </mat-card-content>
