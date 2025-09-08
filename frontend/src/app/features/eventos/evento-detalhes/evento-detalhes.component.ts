@@ -409,15 +409,15 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                       <div class="card-details" [class.expanded]="expandedAtletas[i]" *ngIf="expandedAtletas[i]">
                         <div class="workout-details">
                           <div *ngFor="let workout of workoutColumns" class="workout-item">
-                            <span class="workout-name">{{ workout }}</span>
                             <ng-container *ngIf="getWorkoutPosition(ranking, workout) as pos">
-                              <div class="workout-result-mobile">
-                                <span class="position">{{ pos.posicaoWorkout }}º</span>
-                                <span class="result">({{ pos.resultadoFormatado }})</span>
+                              <div class="workout-simple-result">
+                                <span class="workout-label">{{ workout }}:</span>
+                                <span class="position-result">{{ pos.posicaoWorkout }}º</span>
+                                <span class="time-reps">({{ pos.resultadoFormatado }})</span>
                               </div>
                             </ng-container>
                             <ng-container *ngIf="!getWorkoutPosition(ranking, workout)">
-                              <span class="no-result-mobile">-</span>
+                              <span class="no-result-mobile">{{ workout }}: -</span>
                             </ng-container>
                           </div>
                         </div>
