@@ -757,20 +757,22 @@
   border-collapse: collapse;
   background: #1e1e1e;
   color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
   thead {
     background: #2d2d2d;
     border-bottom: 2px solid #444;
 
     th {
-      padding: 16px 12px;
+      padding: 18px 16px;
       text-align: left;
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.5px;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 1px;
       text-transform: uppercase;
       color: #ffffff;
-      border-right: 1px solid #444;
+      border-right: 1px solid #3a3a3a;
+      background: #2d2d2d;
 
       &:last-child {
         border-right: none;
@@ -807,28 +809,30 @@
       }
 
       &.podium-row {
-        background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
-
         &.gold {
-          background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
-          border-left: 3px solid #ffd700;
+          background: linear-gradient(90deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.02) 30%, transparent 70%);
+          border-left: 4px solid #ffd700;
+          box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.2);
         }
 
         &.silver {
-          background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), transparent);
-          border-left: 3px solid #c0c0c0;
+          background: linear-gradient(90deg, rgba(192, 192, 192, 0.12), rgba(192, 192, 192, 0.02) 30%, transparent 70%);
+          border-left: 4px solid #c0c0c0;
+          box-shadow: inset 0 0 0 1px rgba(192, 192, 192, 0.2);
         }
 
         &.bronze {
-          background: linear-gradient(90deg, rgba(205, 127, 50, 0.15), transparent);
-          border-left: 3px solid #cd7f32;
+          background: linear-gradient(90deg, rgba(205, 127, 50, 0.12), rgba(205, 127, 50, 0.02) 30%, transparent 70%);
+          border-left: 4px solid #cd7f32;
+          box-shadow: inset 0 0 0 1px rgba(205, 127, 50, 0.2);
         }
       }
 
       td {
-        padding: 16px 12px;
-        border-right: 1px solid #333;
+        padding: 18px 16px;
+        border-right: 1px solid #3a3a3a;
         vertical-align: middle;
+        font-size: 14px;
 
         &:last-child {
           border-right: none;
@@ -836,17 +840,19 @@
 
         &.rank-cell {
           text-align: center;
-          font-weight: 700;
+          font-weight: 800;
+          width: 80px;
 
           .rank-number {
-            font-size: 16px;
+            font-size: 18px;
             color: #ffffff;
+            font-weight: 800;
           }
 
           .medal-icon {
             color: #ffd700;
-            font-size: 18px;
-            margin-left: 6px;
+            font-size: 20px;
+            margin-left: 8px;
             vertical-align: middle;
           }
         }
@@ -858,9 +864,10 @@
             gap: 8px;
 
             .participant-name {
-              font-weight: 600;
+              font-weight: 700;
               color: #ffffff;
-              font-size: 15px;
+              font-size: 16px;
+              letter-spacing: 0.3px;
             }
 
             .team-icon {
@@ -874,9 +881,12 @@
           text-align: center;
 
           .points-value {
-            font-weight: 700;
-            font-size: 16px;
-            color: #00bcd4;
+            font-weight: 800;
+            font-size: 18px;
+            color: #26c6da;
+            background: rgba(38, 198, 218, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
           }
         }
 
@@ -890,14 +900,20 @@
             gap: 2px;
 
             .position {
-              font-weight: 600;
-              color: #ffffff;
-              font-size: 14px;
+              font-weight: 700;
+              color: #26c6da;
+              font-size: 15px;
+              background: rgba(38, 198, 218, 0.15);
+              padding: 2px 6px;
+              border-radius: 3px;
+              border: 1px solid rgba(38, 198, 218, 0.3);
             }
 
             .result {
-              font-size: 12px;
-              color: #ccc;
+              font-size: 11px;
+              color: #aaa;
+              margin-top: 2px;
+              font-weight: 500;
             }
           }
 
@@ -912,7 +928,7 @@
 }
 
 // Responsive Design
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .leaderboard-table-container {
     overflow-x: auto;
   }
@@ -976,13 +992,17 @@
   }
 }
 
-// Mobile Cards Layout
-.mobile-cards {
-  display: none;
-}
 
-.desktop-table {
-  display: block;
+// Keyframes for animations
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 // Mobile Responsive Design
@@ -1016,7 +1036,9 @@
   }
 
   .mobile-cards {
-    display: block !important;
+    overflow: auto;
+    width: calc(100vw - 30px) !important;
+    height: calc(100vw - 30px) !important;
   }
 
   // Full-width filters
@@ -1048,12 +1070,15 @@
 
   .leaderboard-card {
     background: #2d2d2d;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid #3a3a3a;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0;
+    overflow: hidden;
 
     &:hover {
-      background: #333;
+      background: #353535;
+      transform: translateX(2px);
     }
 
     &:last-child {
@@ -1061,48 +1086,54 @@
     }
 
     // Podium styles
-    &.podium-card {
-      border-left: 4px solid #ffd700;
-    }
-
     &.gold-card {
-      border-left: 4px solid #ffd700;
-      background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, #2d2d2d 10%);
+      border-left: 5px solid #ffd700;
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 20%, #2d2d2d 40%);
+      box-shadow: inset 0 0 0 1px rgba(255, 215, 0, 0.1);
     }
 
     &.silver-card {
-      border-left: 4px solid #c0c0c0;
-      background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, #2d2d2d 10%);
+      border-left: 5px solid #c0c0c0;
+      background: linear-gradient(90deg, rgba(192, 192, 192, 0.15) 0%, rgba(192, 192, 192, 0.05) 20%, #2d2d2d 40%);
+      box-shadow: inset 0 0 0 1px rgba(192, 192, 192, 0.1);
     }
 
     &.bronze-card {
-      border-left: 4px solid #cd7f32;
-      background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, #2d2d2d 10%);
+      border-left: 5px solid #cd7f32;
+      background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 20%, #2d2d2d 40%);
+      box-shadow: inset 0 0 0 1px rgba(205, 127, 50, 0.1);
     }
 
     .card-header {
       display: flex;
       align-items: center;
-      padding: 16px 20px;
-      gap: 16px;
+      padding: 20px 24px;
+      gap: 20px;
+      border-bottom: 1px solid transparent;
+      transition: all 0.3s ease;
 
       .rank-section {
         display: flex;
         align-items: center;
-        gap: 8px;
-        min-width: 60px;
+        justify-content: center;
+        gap: 10px;
+        min-width: 70px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px 12px;
+        border-radius: 8px;
 
         .rank-number {
-          font-size: 24px;
-          font-weight: 700;
+          font-size: 28px;
+          font-weight: 800;
           color: #ffffff;
+          line-height: 1;
         }
 
         .medal-icon {
           color: #ffd700;
-          font-size: 20px;
-          width: 20px;
-          height: 20px;
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
         }
       }
 
@@ -1112,40 +1143,56 @@
         .athlete-name {
           display: flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 4px;
+          gap: 12px;
+          margin-bottom: 6px;
 
           span {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 20px;
+            font-weight: 700;
             color: #ffffff;
+            letter-spacing: 0.3px;
           }
 
           .team-icon {
             color: #26c6da;
-            font-size: 18px;
-            width: 18px;
-            height: 18px;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+            background: rgba(38, 198, 218, 0.2);
+            border-radius: 4px;
+            padding: 2px;
           }
         }
 
         .athlete-points {
-          font-size: 14px;
-          color: #888;
-          font-weight: 500;
+          font-size: 15px;
+          color: #26c6da;
+          font-weight: 600;
+          background: rgba(38, 198, 218, 0.1);
+          padding: 2px 8px;
+          border-radius: 4px;
+          display: inline-block;
         }
       }
 
       .expand-icon {
         display: flex;
         align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background: rgba(38, 198, 218, 0.2);
+        }
 
         mat-icon {
-          color: #888;
+          color: #aaa;
           font-size: 24px;
           width: 24px;
           height: 24px;
-          transition: transform 0.2s ease, color 0.2s ease;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
           &.expanded {
             transform: rotate(180deg);
@@ -1158,56 +1205,82 @@
     .card-details {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.3s ease;
-      background: #1e1e1e;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(180deg, #1a1a1a 0%, #1e1e1e 100%);
+      opacity: 0;
 
       &.expanded {
-        max-height: 500px;
-        border-top: 1px solid #444;
+        max-height: 600px;
+        border-top: 2px solid rgba(38, 198, 218, 0.3);
+        opacity: 1;
+        box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.3);
       }
 
       .workout-details {
-        padding: 16px 20px;
+        padding: 24px 24px;
+        animation: fadeInUp 0.4s ease-out;
 
         .workout-item {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 12px 0;
-          border-bottom: 1px solid #333;
+          padding: 16px 18px;
+          margin-bottom: 8px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(38, 198, 218, 0.2);
+            transform: translateX(4px);
+          }
 
           &:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
           }
 
           .workout-name {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             color: #ffffff;
             flex: 1;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
 
           .workout-result-mobile {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 2px;
+            gap: 4px;
 
             .position {
-              font-size: 16px;
-              font-weight: 700;
+              font-size: 18px;
+              font-weight: 800;
               color: #26c6da;
+              background: rgba(38, 198, 218, 0.15);
+              padding: 4px 10px;
+              border-radius: 6px;
+              border: 1px solid rgba(38, 198, 218, 0.3);
+              min-width: 50px;
+              text-align: center;
             }
 
             .result {
               font-size: 12px;
-              color: #888;
+              color: #bbb;
+              font-weight: 500;
+              text-align: right;
             }
           }
 
           .no-result-mobile {
             font-size: 16px;
-            color: #555;
+            color: #666;
+            font-weight: 500;
+            font-style: italic;
           }
         }
       }
@@ -1218,27 +1291,38 @@
 // Ultra small screens (phones)
 @media (max-width: 480px) {
   .leaderboard-card .card-header {
-    padding: 12px 16px;
-    gap: 12px;
+    padding: 16px 20px;
+    gap: 16px;
 
     .rank-section {
-      min-width: 50px;
+      min-width: 60px;
+      padding: 6px 10px;
 
       .rank-number {
-        font-size: 20px;
+        font-size: 24px;
       }
     }
 
     .athlete-info .athlete-name span {
-      font-size: 16px;
+      font-size: 18px;
     }
   }
 
   .leaderboard-card .card-details .workout-details {
-    padding: 12px 16px;
+    padding: 20px 20px;
 
     .workout-item {
-      padding: 10px 0;
+      padding: 14px 16px;
+      margin-bottom: 6px;
+
+      .workout-name {
+        font-size: 14px;
+      }
+
+      .workout-result-mobile .position {
+        font-size: 16px;
+        padding: 3px 8px;
+      }
     }
   }
 
