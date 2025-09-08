@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -28,6 +29,7 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatButtonModule,
     MatCardModule,
     MatIconModule,
@@ -307,8 +309,8 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                       <label for="categoria-select">Categoria:</label>
                       <select 
                         id="categoria-select" 
-                        [value]="selectedCategoriaId" 
-                        (change)="onCategoriaChange($event)"
+                        [(ngModel)]="selectedCategoriaId" 
+                        (ngModelChange)="onCategoriaChange($event)"
                         class="categoria-select">
                         <option *ngFor="let categoria of categorias" [value]="categoria.id">
                           {{ categoria.nome }}
@@ -323,8 +325,8 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                     <p>Nenhuma classificação disponível ainda</p>
                   </div>
 
-                  <!-- Leaderboard Table -->
-                  <div *ngIf="leaderboardRanking.length > 0" class="leaderboard-table-container">
+                  <!-- Leaderboard Table - Desktop -->
+                  <div *ngIf="leaderboardRanking.length > 0" class="leaderboard-table-container desktop-table">
                     <table class="leaderboard-table">
                       <thead>
                         <tr>
@@ -369,6 +371,58 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                         </tr>
                       </tbody>
                     </table>
+                  </div>
+
+                  <!-- Leaderboard Cards - Mobile -->
+                  <div *ngIf="leaderboardRanking.length > 0" class="leaderboard-cards-container mobile-cards">
+                    <div *ngFor="let ranking of leaderboardRanking; let i = index" 
+                         class="leaderboard-card" 
+                         [class.podium-card]="ranking.isPodio"
+                         [class.gold-card]="ranking.posicao === 1"
+                         [class.silver-card]="ranking.posicao === 2"
+                         [class.bronze-card]="ranking.posicao === 3"
+                         (click)="toggleAtletaDetails(i)">
+                      
+                      <div class="card-header">
+                        <div class="rank-section">
+                          <span class="rank-number">{{ ranking.posicao }}</span>
+                          <mat-icon *ngIf="ranking.isPodio" class="medal-icon">
+                            {{ ranking.posicao === 1 ? 'emoji_events' : 'military_tech' }}
+                          </mat-icon>
+                        </div>
+                        
+                        <div class="athlete-info">
+                          <div class="athlete-name">
+                            <span>{{ ranking.nomeParticipante }}</span>
+                            <mat-icon *ngIf="ranking.isEquipe" class="team-icon">groups</mat-icon>
+                          </div>
+                          <div class="athlete-points">{{ ranking.pontuacaoTotal }} points</div>
+                        </div>
+                        
+                        <div class="expand-icon">
+                          <mat-icon [class.expanded]="expandedAtletas[i]">
+                            {{ expandedAtletas[i] ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+                          </mat-icon>
+                        </div>
+                      </div>
+
+                      <div class="card-details" [class.expanded]="expandedAtletas[i]" *ngIf="expandedAtletas[i]">
+                        <div class="workout-details">
+                          <div *ngFor="let workout of workoutColumns" class="workout-item">
+                            <span class="workout-name">{{ workout }}</span>
+                            <ng-container *ngIf="getWorkoutPosition(ranking, workout) as pos">
+                              <div class="workout-result-mobile">
+                                <span class="position">{{ pos.posicaoWorkout }}º</span>
+                                <span class="result">({{ pos.resultadoFormatado }})</span>
+                              </div>
+                            </ng-container>
+                            <ng-container *ngIf="!getWorkoutPosition(ranking, workout)">
+                              <span class="no-result-mobile">-</span>
+                            </ng-container>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                 </div>
@@ -488,6 +542,7 @@ export class EventoDetalhesComponent implements OnInit {
   // Novo leaderboard ranking
   leaderboardRanking: LeaderboardRanking[] = [];
   selectedCategoriaId: number | null = null;
+  expandedAtletas: boolean[] = [];
   workoutColumns: string[] = [];
 
   // Workouts
@@ -622,10 +677,18 @@ export class EventoDetalhesComponent implements OnInit {
     });
   }
 
-  onCategoriaChange(event: Event): void {
-    const target = event.target as HTMLSelectElement;
-    const categoriaId = +target.value;
+  onCategoriaChange(categoriaId: number): void {
+    console.log('=== DEBUG CATEGORIA CHANGE ===');
+    console.log('Categoria alterada para:', categoriaId);
+    console.log('Categorias disponíveis:', this.categorias);
+    console.log('selectedCategoriaId ANTES:', this.selectedCategoriaId);
+    
     this.selectedCategoriaId = categoriaId;
+    
+    console.log('selectedCategoriaId DEPOIS:', this.selectedCategoriaId);
+    console.log('Categoria nome:', this.categorias.find(c => c.id === categoriaId)?.nome);
+    console.log('===============================');
+    
     this.carregarRankingCategoria(categoriaId);
   }
 
@@ -639,6 +702,15 @@ export class EventoDetalhesComponent implements OnInit {
   getWorkoutPosition(ranking: LeaderboardRanking, workoutName: string): WorkoutPosicao | null {
     if (!ranking.posicoesWorkouts) return null;
     return ranking.posicoesWorkouts.find(p => p.nomeWorkout === workoutName) || null;
+  }
+
+  toggleAtletaDetails(index: number): void {
+    // Inicializar array se necessário
+    if (this.expandedAtletas.length !== this.leaderboardRanking.length) {
+      this.expandedAtletas = new Array(this.leaderboardRanking.length).fill(false);
+    }
+    // Toggle do estado de expansão
+    this.expandedAtletas[index] = !this.expandedAtletas[index];
   }
 
   carregarWorkouts(): void {

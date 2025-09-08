@@ -4,7 +4,8 @@
   padding: 20px;
 }
 
-.loading-container, .error-container {
+.loading-container,
+.error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -75,7 +76,7 @@
   border-radius: 12px !important;
   width: 48px !important;
   height: 48px !important;
-  
+
   &:hover {
     background: var(--accent-primary) !important;
     color: white !important;
@@ -155,15 +156,17 @@
   border-radius: 20px !important;
 }
 
-.event-info-card, .action-card, .details-card {
+.event-info-card,
+.action-card,
+.details-card {
   background: var(--bg-card) !important;
   border: 1px solid var(--border-color) !important;
   border-radius: 16px !important;
   margin-bottom: 24px;
 }
 
-.event-info-card mat-card-header, 
-.action-card mat-card-header, 
+.event-info-card mat-card-header,
+.action-card mat-card-header,
 .details-card mat-card-header {
   background: var(--bg-tertiary);
   margin: -16px -16px 16px -16px;
@@ -324,12 +327,12 @@
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  
+
   &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 188, 212, 0.3);
   }
-  
+
   &:disabled {
     background: var(--bg-tertiary) !important;
     color: var(--text-tertiary) !important;
@@ -349,7 +352,7 @@
   justify-content: center !important;
   gap: 8px !important;
   transition: all 0.2s ease !important;
-  
+
   &:hover {
     background: var(--accent-primary) !important;
     color: white !important;
@@ -377,7 +380,7 @@
 .boolean-value {
   color: var(--text-tertiary);
   font-weight: 500;
-  
+
   &.active {
     color: var(--accent-primary);
   }
@@ -389,7 +392,7 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  
+
   .right-column {
     order: -1;
   }
@@ -399,20 +402,20 @@
   .evento-detalhes-container {
     padding: 16px;
   }
-  
+
   .header-section {
     padding: 16px;
     margin-bottom: 24px;
   }
-  
+
   .header-info h1 {
     font-size: 2rem;
   }
-  
+
   .content-grid {
     gap: 20px;
   }
-  
+
   .event-image {
     height: 220px;
   }
@@ -433,12 +436,12 @@
     border-radius: 16px 16px 0 0;
     border-bottom: 1px solid var(--border-color);
   }
-  
+
   .mat-mdc-tab-labels {
     gap: 4px;
     padding: 0 16px;
   }
-  
+
   .mat-mdc-tab {
     background: transparent;
     border-radius: 12px;
@@ -446,23 +449,23 @@
     opacity: 1;
     min-width: auto;
     padding: 0 16px;
-    
+
     &:hover {
       background: rgba(0, 188, 212, 0.1);
     }
-    
+
     &.mdc-tab--active {
       background: var(--accent-primary) !important;
-      
+
       .mdc-tab__content {
         color: white !important;
       }
-      
+
       .mat-icon {
         color: white !important;
       }
     }
-    
+
     .mdc-tab__content {
       color: var(--text-primary) !important;
       font-weight: 600;
@@ -473,7 +476,7 @@
       padding: 12px 16px;
       min-height: 48px;
     }
-    
+
     .mat-icon {
       color: var(--accent-primary);
       font-size: 20px;
@@ -481,7 +484,7 @@
       height: 20px;
     }
   }
-  
+
   .mat-mdc-tab-body-wrapper {
     background: var(--bg-card);
     border-radius: 0 0 16px 16px;
@@ -491,7 +494,7 @@
 
 // Estilos para o conteúdo das abas
 .tab-content {
-  min-height: 300px;
+  min-height: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -500,7 +503,8 @@
   gap: 16px;
 }
 
-.tab-loading, .tab-error {
+.tab-loading,
+.tab-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -565,27 +569,28 @@
     text-align: center;
     gap: 16px;
   }
-  
+
   .header-info h1 {
     font-size: 1.8rem;
   }
-  
+
   .action-buttons {
     gap: 10px;
   }
-  
-  .inscricao-button, .share-button {
+
+  .inscricao-button,
+  .share-button {
     padding: 12px 20px !important;
     font-size: 0.9rem !important;
   }
-  
+
   ::ng-deep .mat-mdc-tab-group {
     .mat-mdc-tab .mdc-tab__content {
       font-size: 0.8rem;
       padding: 10px 12px;
       gap: 6px;
     }
-    
+
     .mat-mdc-tab .mat-icon {
       font-size: 18px;
       width: 18px;
@@ -603,7 +608,7 @@
 // Estilos específicos para Workouts
 .categoria-section {
   margin-bottom: 32px;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -613,24 +618,24 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  
+
   .info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 4px 0;
     border-bottom: 1px solid var(--border-color);
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     strong {
       color: var(--text-primary);
       font-size: 0.9rem;
       min-width: 80px;
     }
-    
+
     span {
       color: var(--text-secondary);
       font-size: 0.9rem;
@@ -648,7 +653,7 @@
   background: rgba(244, 67, 54, 0.2);
   color: #f44336;
   border: 1px solid rgba(244, 67, 54, 0.3);
-  
+
   &.active {
     background: rgba(76, 175, 80, 0.2);
     color: #4caf50;
@@ -660,12 +665,12 @@
   .categoria-section {
     margin-bottom: 24px;
   }
-  
+
   .workout-info .info-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-    
+
     span {
       text-align: left;
     }
@@ -803,7 +808,7 @@
 
       &.podium-row {
         background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
-        
+
         &.gold {
           background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), transparent);
           border-left: 3px solid #ffd700;
@@ -832,7 +837,7 @@
         &.rank-cell {
           text-align: center;
           font-weight: 700;
-          
+
           .rank-number {
             font-size: 16px;
             color: #ffffff;
@@ -867,7 +872,7 @@
 
         &.points-cell {
           text-align: center;
-          
+
           .points-value {
             font-weight: 700;
             font-size: 16px;
@@ -877,7 +882,7 @@
 
         &.workout-cell {
           text-align: center;
-          
+
           .workout-result {
             display: flex;
             flex-direction: column;
@@ -914,7 +919,7 @@
 
   .leaderboard-table {
     min-width: 800px;
-    
+
     thead th {
       padding: 12px 8px;
       font-size: 12px;
@@ -945,7 +950,7 @@
     thead th {
       padding: 10px 6px;
       font-size: 11px;
-      
+
       &.workout-col {
         width: 100px;
       }
@@ -953,7 +958,7 @@
 
     tbody td {
       padding: 10px 6px;
-      
+
       &.name-cell .participant-info .participant-name {
         font-size: 14px;
       }
@@ -968,5 +973,290 @@
         }
       }
     }
+  }
+}
+
+// Mobile Cards Layout
+.mobile-cards {
+  display: none;
+}
+
+.desktop-table {
+  display: block;
+}
+
+// Mobile Responsive Design
+@media (max-width: 768px) {
+
+  // Remove padding/margins for full-screen leaderboard
+  .evento-detalhes-container {
+    padding: 0 !important;
+  }
+
+  .evento-content {
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  // Keep header with some padding but reduce it
+  .header-section {
+    margin: 0 16px 20px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  // Full-width tabs in mobile
+  .mat-tab-group {
+    .mat-tab-header {
+      margin: 0 !important;
+    }
+  }
+
+  .desktop-table {
+    display: none !important;
+  }
+
+  .mobile-cards {
+    display: block !important;
+  }
+
+  // Full-width filters
+  .leaderboard-filters {
+    border-radius: 0 !important;
+    margin: 0 0 0 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #444 !important;
+    padding: 16px !important;
+
+    .filter-group {
+      .categoria-select {
+        width: 100% !important;
+        min-width: unset !important;
+        font-size: 13px !important;
+        padding: 6px 8px !important;
+        max-width: 100% !important;
+      }
+    }
+  }
+
+  .leaderboard-cards-container {
+    background: #1e1e1e;
+    border-radius: 0 !important;
+    overflow: hidden;
+    border: none !important;
+    margin: 0 !important;
+  }
+
+  .leaderboard-card {
+    background: #2d2d2d;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #333;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    // Podium styles
+    &.podium-card {
+      border-left: 4px solid #ffd700;
+    }
+
+    &.gold-card {
+      border-left: 4px solid #ffd700;
+      background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, #2d2d2d 10%);
+    }
+
+    &.silver-card {
+      border-left: 4px solid #c0c0c0;
+      background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, #2d2d2d 10%);
+    }
+
+    &.bronze-card {
+      border-left: 4px solid #cd7f32;
+      background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, #2d2d2d 10%);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      gap: 16px;
+
+      .rank-section {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 60px;
+
+        .rank-number {
+          font-size: 24px;
+          font-weight: 700;
+          color: #ffffff;
+        }
+
+        .medal-icon {
+          color: #ffd700;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+      }
+
+      .athlete-info {
+        flex: 1;
+
+        .athlete-name {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 4px;
+
+          span {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+          }
+
+          .team-icon {
+            color: #26c6da;
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+
+        .athlete-points {
+          font-size: 14px;
+          color: #888;
+          font-weight: 500;
+        }
+      }
+
+      .expand-icon {
+        display: flex;
+        align-items: center;
+
+        mat-icon {
+          color: #888;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+          transition: transform 0.2s ease, color 0.2s ease;
+
+          &.expanded {
+            transform: rotate(180deg);
+            color: #26c6da;
+          }
+        }
+      }
+    }
+
+    .card-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: #1e1e1e;
+
+      &.expanded {
+        max-height: 500px;
+        border-top: 1px solid #444;
+      }
+
+      .workout-details {
+        padding: 16px 20px;
+
+        .workout-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 12px 0;
+          border-bottom: 1px solid #333;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .workout-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            flex: 1;
+          }
+
+          .workout-result-mobile {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+
+            .position {
+              font-size: 16px;
+              font-weight: 700;
+              color: #26c6da;
+            }
+
+            .result {
+              font-size: 12px;
+              color: #888;
+            }
+          }
+
+          .no-result-mobile {
+            font-size: 16px;
+            color: #555;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Ultra small screens (phones)
+@media (max-width: 480px) {
+  .leaderboard-card .card-header {
+    padding: 12px 16px;
+    gap: 12px;
+
+    .rank-section {
+      min-width: 50px;
+
+      .rank-number {
+        font-size: 20px;
+      }
+    }
+
+    .athlete-info .athlete-name span {
+      font-size: 16px;
+    }
+  }
+
+  .leaderboard-card .card-details .workout-details {
+    padding: 12px 16px;
+
+    .workout-item {
+      padding: 10px 0;
+    }
+  }
+
+  // Optimize mat-tab-body for mobile - remove default margins/padding
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  ::ng-deep .mat-mdc-tab-body-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  // Ensure leaderboard tab content spans full width
+  .leaderboard-tab {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }
