@@ -384,25 +384,30 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                          (click)="toggleAtletaDetails(i)">
                       
                       <div class="card-header">
-                        <div class="rank-section">
-                          <span class="rank-number">{{ ranking.posicao }}</span>
-                          <mat-icon *ngIf="ranking.isPodio" class="medal-icon">
-                            {{ ranking.posicao === 1 ? 'emoji_events' : 'military_tech' }}
-                          </mat-icon>
-                        </div>
-                        
-                        <div class="athlete-info">
-                          <div class="athlete-name">
-                            <span>{{ ranking.nomeParticipante }}</span>
-                            <mat-icon *ngIf="ranking.isEquipe" class="team-icon">groups</mat-icon>
+                        <div class="left-section">
+                          <div class="rank-section">
+                            <span class="rank-number">{{ ranking.posicao }}</span>
+                            <mat-icon *ngIf="ranking.isPodio" class="medal-icon">
+                              {{ ranking.posicao === 1 ? 'emoji_events' : 'military_tech' }}
+                            </mat-icon>
                           </div>
-                          <div class="athlete-points">{{ ranking.pontuacaoTotal }} points</div>
+                          
+                          <div class="athlete-info">
+                            <div class="athlete-name">
+                              <span>{{ ranking.nomeParticipante }}</span>
+                              <mat-icon *ngIf="ranking.isEquipe" class="team-icon">groups</mat-icon>
+                            </div>
+                          </div>
                         </div>
-                        
-                        <div class="expand-icon">
-                          <mat-icon [class.expanded]="expandedAtletas[i]">
-                            {{ expandedAtletas[i] ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-                          </mat-icon>
+
+                        <div class="right-section">
+                          <div class="athlete-points">{{ ranking.pontuacaoTotal }} pts</div>
+                          
+                          <div class="expand-icon">
+                            <mat-icon [class.expanded]="expandedAtletas[i]">
+                              {{ expandedAtletas[i] ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+                            </mat-icon>
+                          </div>
                         </div>
                       </div>
 

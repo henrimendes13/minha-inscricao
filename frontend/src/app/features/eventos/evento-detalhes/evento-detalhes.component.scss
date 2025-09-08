@@ -755,6 +755,7 @@
 .leaderboard-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed; // Use fixed layout for predictable column sizing
   background: #1e1e1e;
   color: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -785,6 +786,7 @@
 
       &.name-col {
         min-width: 200px;
+        // No width is set, so it will expand to fill remaining space
       }
 
       &.points-col {
@@ -1093,9 +1095,9 @@
   }
 
   .mobile-cards {
-    overflow: auto;
-    width: calc(100vw - 30px) !important;
-    height: calc(100vw - 30px) !important;
+    width: 100%;
+    padding: 0 15px;
+    box-sizing: border-box;
   }
 
   // Full-width filters
@@ -1406,5 +1408,29 @@
   .leaderboard-tab {
     margin: 0 !important;
     padding: 0 !important;
+  }
+}
+
+// Responsive tabs: Hide text on smaller screens to prevent scrolling
+@media (max-width: 845px) {
+  // Hide text by setting font-size to 0 on the container
+  ::ng-deep .mat-mdc-tab .mdc-tab__content {
+    font-size: 0 !important;
+    justify-content: center;
+    padding: 12px !important;
+    gap: 0;
+  }
+
+  // Restore font-size on the icon itself
+  ::ng-deep .mat-mdc-tab .mat-icon {
+    font-size: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    color: var(--accent-primary) !important;
+  }
+
+  // Restore color for the active icon
+  ::ng-deep .mat-mdc-tab.mdc-tab--active .mat-icon {
+    color: white !important;
   }
 }
