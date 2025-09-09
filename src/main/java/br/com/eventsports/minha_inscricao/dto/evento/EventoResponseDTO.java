@@ -66,6 +66,9 @@ public class EventoResponseDTO {
     @Schema(description = "Endereço completo do evento", example = "Rua das Flores, 123 - Centro")
     private String endereco;
 
+    @Schema(description = "URL da imagem do evento", example = "/uploads/eventos/imagens/evento123.jpg")
+    private String imagemUrl;
+
     @Schema(description = "Total de categorias do evento", example = "5")
     private Integer totalCategorias;
 

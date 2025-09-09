@@ -48,6 +48,9 @@ public class EventoEntity {
     @Column(name = "endereco", length = 300)
     private String endereco;
 
+    @Column(name = "imagem_url", length = 500)
+    private String imagemUrl;
+
     // Relacionamento direto com Usuario como organizador
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizador_id")
@@ -102,6 +105,20 @@ public class EventoEntity {
         this.cidade = cidade;
         this.estado = estado;
         this.endereco = endereco;
+        this.status = StatusEvento.RASCUNHO;
+    }
+
+    // Constructor customizado completo incluindo imagem
+    public EventoEntity(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao, 
+                       String cidade, String estado, String endereco, String imagemUrl) {
+        this.nome = nome;
+        this.dataInicioDoEvento = dataInicioDoEvento;
+        this.dataFimDoEvento = dataFimDoEvento;
+        this.descricao = descricao;
+        this.cidade = cidade;
+        this.estado = estado;
+        this.endereco = endereco;
+        this.imagemUrl = imagemUrl;
         this.status = StatusEvento.RASCUNHO;
     }
 

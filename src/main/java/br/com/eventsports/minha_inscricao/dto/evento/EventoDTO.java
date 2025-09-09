@@ -36,6 +36,9 @@ public class EventoDTO {
 
     @Schema(description = "Endereço completo do evento", example = "Rua das Flores, 123 - Centro")
     private String endereco;
+
+    @Schema(description = "URL da imagem do evento", example = "/uploads/eventos/imagens/evento123.jpg")
+    private String imagemUrl;
     
     @Schema(description = "Data de criação do evento", example = "2024-01-15T10:30:00", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
@@ -61,5 +64,18 @@ public class EventoDTO {
         this.cidade = cidade;
         this.estado = estado;
         this.endereco = endereco;
+    }
+
+    // Constructor customizado completo incluindo imagem
+    public EventoDTO(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao,
+                     String cidade, String estado, String endereco, String imagemUrl) {
+        this.nome = nome;
+        this.dataInicioDoEvento = dataInicioDoEvento;
+        this.dataFimDoEvento = dataFimDoEvento;
+        this.descricao = descricao;
+        this.cidade = cidade;
+        this.estado = estado;
+        this.endereco = endereco;
+        this.imagemUrl = imagemUrl;
     }
 }

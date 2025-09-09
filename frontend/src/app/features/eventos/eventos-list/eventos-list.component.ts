@@ -421,7 +421,16 @@ export class EventosListComponent implements OnInit {
   }
 
   getEventoImage(evento: EventoApiResponse): string {
-    // Por enquanto, usar imagens placeholder baseadas no nome do evento
+    // Se o evento tem uma imagem própria, usar ela
+    if (evento.imagemUrl && evento.imagemUrl.trim() !== '') {
+      // Se for uma URL relativa, adicionar o host da API
+      if (evento.imagemUrl.startsWith('/api/')) {
+        return `http://localhost:8080${evento.imagemUrl}`;
+      }
+      return evento.imagemUrl;
+    }
+
+    // Fallback: usar imagens placeholder baseadas no ID do evento
     const imageHashes = [
       'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&h=400&fit=crop&crop=center',
       'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800&h=400&fit=crop&crop=center',

@@ -80,4 +80,5 @@ export interface EventoApiResponse {
   endereco: string;
   cidade: string;
   estado: string;
+  imagemUrl?: string;
 }

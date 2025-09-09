@@ -132,6 +132,7 @@ public class EventoService implements IEventoService {
                 .cidade(evento.getCidade())
                 .estado(evento.getEstado())
                 .endereco(evento.getEndereco())
+                .imagemUrl(evento.getImagemUrl())
                 .totalCategorias(evento.getTotalCategorias())
                 .totalInscricoes(evento.getTotalInscricoes())
                 .inscricoesAtivas(evento.getInscricoesAtivas())
@@ -155,6 +156,7 @@ public class EventoService implements IEventoService {
                 .inscricoesAtivas(evento.getInscricoesAtivas())
                 .cidade(evento.getCidade())
                 .estado(evento.getEstado())
+                .imagemUrl(evento.getImagemUrl())
                 .podeReceberInscricoes(evento.podeReceberInscricoes())
                 .createdAt(evento.getCreatedAt())
                 .build();

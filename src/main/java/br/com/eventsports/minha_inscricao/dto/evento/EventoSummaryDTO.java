@@ -47,6 +47,9 @@ public class EventoSummaryDTO {
 
     @Schema(description = "Estado onde o evento será realizado", example = "SP")
     private String estado;
+
+    @Schema(description = "URL da imagem do evento", example = "/uploads/eventos/imagens/evento123.jpg")
+    private String imagemUrl;
     
     @Schema(description = "Data de criação do evento", example = "2024-01-15T10:30:00", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
