@@ -31,4 +31,20 @@ export class AuthGuard implements CanActivate {
     this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
     return false;
   }
+  
+  /**
+   * Método utilitário para verificar se uma rota específica requer autenticação
+   * Útil para componentes que querem verificar acesso programaticamente
+   */
+  public static canAccessRoute(authService: AuthService, requiredRole?: string): boolean {
+    if (!authService.isAuthenticated()) {
+      return false;
+    }
+    
+    if (requiredRole) {
+      return AuthHelpers.userHasRole(authService, requiredRole);
+    }
+    
+    return true;
+  }
 }

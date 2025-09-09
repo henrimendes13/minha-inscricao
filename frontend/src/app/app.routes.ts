@@ -20,9 +20,20 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login.component').then(c => c.LoginComponent)
   },
   {
+    path: 'perfil',
+    loadComponent: () => import('./features/eventos/eventos-list/eventos-list.component').then(c => c.EventosListComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'minhas-inscricoes',
+    loadComponent: () => import('./features/eventos/eventos-list/eventos-list.component').then(c => c.EventosListComponent),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'dashboard',
     loadComponent: () => import('./layout/main-layout/main-layout.component').then(c => c.MainLayoutComponent),
     canActivate: [AuthGuard],
+    data: { requiredRole: 'ADMIN' },
     children: [
       {
         path: '',
