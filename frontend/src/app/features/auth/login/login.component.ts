@@ -28,6 +28,9 @@ import { AuthService } from '../../../core/auth/auth.service';
   ],
   template: `
     <div class="login-container">
+      <button mat-icon-button class="back-button" (click)="voltar()" title="Voltar">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
       <mat-card class="login-card">
         <mat-card-header>
           <mat-card-title>Login</mat-card-title>
@@ -96,6 +99,37 @@ import { AuthService } from '../../../core/auth/auth.service';
       min-height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       padding: 20px;
+      position: relative;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(255, 255, 255, 0.9) !important;
+      color: #333 !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      width: 48px !important;
+      height: 48px !important;
+      border-radius: 50% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s ease !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 10;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 1) !important;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .back-button mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
     }
 
     .login-card {
@@ -186,7 +220,7 @@ export class LoginComponent {
             horizontalPosition: 'center',
             verticalPosition: 'top'
           });
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/eventos']);
         },
         error: (error) => {
           this.isLoading = false;
@@ -211,5 +245,9 @@ export class LoginComponent {
         }
       });
     }
+  }
+
+  voltar(): void {
+    this.router.navigate(['/eventos']);
   }
 }

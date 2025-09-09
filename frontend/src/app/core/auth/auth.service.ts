@@ -13,9 +13,15 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  refreshToken: string;
-  usuario: UsuarioResponseDTO;
+  token: string;
+  tokenType: string;
+  expiresIn: number;
+  email: string;
+  nome: string;
+  userId: number;
+  tipoUsuario: string;
+  role: string;
+  loginAt: string;
 }
 
 export interface RegisterRequest {
@@ -59,24 +65,8 @@ export class AuthService {
   }
 
   refreshToken(): Observable<{ accessToken: string }> {
-    const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
-    
-    if (!refreshToken) {
-      return throwError(() => new Error('No refresh token available'));
-    }
-
-    return this.http.post<{ accessToken: string }>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.refresh}`, {
-      refreshToken
-    }).pipe(
-      map(response => {
-        localStorage.setItem(this.ACCESS_TOKEN_KEY, response.accessToken);
-        return response;
-      }),
-      catchError(error => {
-        this.logout();
-        return throwError(() => error);
-      })
-    );
+    // Backend não fornece refresh token, então retornamos erro
+    return throwError(() => new Error('Refresh token not supported by backend'));
   }
 
   logout(): void {
@@ -120,10 +110,20 @@ export class AuthService {
   }
 
   private setSession(response: LoginResponse): void {
-    localStorage.setItem(this.ACCESS_TOKEN_KEY, response.accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(response.usuario));
-    this.currentUserSubject.next(response.usuario);
+    localStorage.setItem(this.ACCESS_TOKEN_KEY, response.token);
+    localStorage.setItem(this.REFRESH_TOKEN_KEY, ''); // Backend não fornece refresh token
+    
+    // Criar objeto usuário a partir dos dados da resposta
+    const usuario = {
+      id: response.userId,
+      nome: response.nome,
+      email: response.email,
+      tipoUsuario: response.tipoUsuario,
+      role: response.role
+    };
+    
+    localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
+    this.currentUserSubject.next(usuario as any);
   }
 
   private clearSession(): void {

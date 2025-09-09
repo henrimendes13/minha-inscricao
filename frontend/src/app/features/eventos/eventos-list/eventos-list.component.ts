@@ -1,14 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
 
 import { EventoService } from '../../../core/services/evento.service';
 import { EventoApiResponse } from '../../../models/evento.model';
+import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-eventos-list',
@@ -19,10 +23,51 @@ import { EventoApiResponse } from '../../../models/evento.model';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatMenuModule,
+    MatDividerModule
   ],
   template: `
     <div class="eventos-container">
+      <!-- Header com botão de login -->
+      <div class="top-header">
+        <div class="login-section">
+          <button mat-raised-button color="primary" class="login-button" (click)="irParaLogin()" *ngIf="!isLoggedIn">
+            <mat-icon>login</mat-icon>
+            Fazer Login
+          </button>
+          <div class="user-section" *ngIf="isLoggedIn">
+            <button mat-icon-button [matMenuTriggerFor]="userMenu" class="user-avatar-button" title="Menu do usuário">
+              <mat-icon>account_circle</mat-icon>
+            </button>
+            
+            <mat-menu #userMenu="matMenu" class="user-dropdown-menu">
+              <div class="user-info-header">
+                <mat-icon>account_circle</mat-icon>
+                <div class="user-details">
+                  <span class="user-name">{{ currentUser?.nome || 'Usuário' }}</span>
+                  <span class="user-email">{{ currentUser?.email }}</span>
+                </div>
+              </div>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="gerenciarConta()">
+                <mat-icon>settings</mat-icon>
+                <span>Gerenciar Conta</span>
+              </button>
+              <button mat-menu-item (click)="minhasInscricoes()">
+                <mat-icon>event</mat-icon>
+                <span>Minhas Inscrições</span>
+              </button>
+              <mat-divider></mat-divider>
+              <button mat-menu-item (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                <span>Logout</span>
+              </button>
+            </mat-menu>
+          </div>
+        </div>
+      </div>
+
       <div class="header-section">
         <h1>Eventos Esportivos</h1>
         <p class="subtitle">Descubra e participe dos melhores eventos esportivos</p>
@@ -87,7 +132,164 @@ import { EventoApiResponse } from '../../../models/evento.model';
     .eventos-container {
       min-height: 100vh;
       background: var(--bg-primary);
-      padding: 40px 20px;
+      padding: 110px 20px 40px;
+    }
+
+    .top-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 70px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 24px;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .login-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .login-button {
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%) !important;
+      color: white !important;
+      border: none !important;
+      padding: 8px 20px !important;
+      border-radius: 12px !important;
+      font-weight: 600 !important;
+      font-size: 0.9rem !important;
+      transition: all 0.2s ease !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      height: 44px !important;
+    }
+
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 188, 212, 0.3);
+    }
+
+    .login-button mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    .user-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar-button {
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%) !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 50% !important;
+      width: 48px !important;
+      height: 48px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.2s ease !important;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .user-avatar-button:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(0, 188, 212, 0.4);
+    }
+
+    .user-avatar-button mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+
+    ::ng-deep .user-dropdown-menu {
+      margin-top: 8px !important;
+      border-radius: 16px !important;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+      border: 1px solid var(--border-color) !important;
+      background: var(--bg-card) !important;
+      min-width: 280px !important;
+      overflow: hidden !important;
+    }
+
+    ::ng-deep .user-dropdown-menu .mat-mdc-menu-content {
+      padding: 0 !important;
+    }
+
+    .user-info-header {
+      padding: 20px;
+      background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-info-header mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      opacity: 0.9;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .user-name {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 2px;
+    }
+
+    .user-email {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      line-height: 1.2;
+    }
+
+    ::ng-deep .user-dropdown-menu .mat-mdc-menu-item {
+      padding: 16px 20px !important;
+      height: auto !important;
+      min-height: 56px !important;
+      font-size: 0.95rem !important;
+      font-weight: 500 !important;
+      color: var(--text-primary) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    ::ng-deep .user-dropdown-menu .mat-mdc-menu-item:hover {
+      background: var(--bg-secondary) !important;
+      color: var(--accent-primary) !important;
+    }
+
+    ::ng-deep .user-dropdown-menu .mat-mdc-menu-item mat-icon {
+      margin-right: 12px !important;
+      font-size: 20px !important;
+      width: 20px !important;
+      height: 20px !important;
+      color: inherit !important;
+    }
+
+    ::ng-deep .user-dropdown-menu .mat-divider {
+      margin: 0 !important;
+      border-color: var(--border-color) !important;
     }
 
     .header-section {
@@ -320,7 +522,64 @@ import { EventoApiResponse } from '../../../models/evento.model';
 
     @media (max-width: 768px) {
       .eventos-container {
-        padding: 20px 16px;
+        padding: 90px 16px 20px;
+      }
+
+      .top-header {
+        height: 60px;
+        padding: 0 16px;
+      }
+
+      .login-button {
+        padding: 6px 16px !important;
+        font-size: 0.8rem !important;
+        height: 40px !important;
+      }
+
+      .login-button span {
+        display: none;
+      }
+
+      .user-section {
+        gap: 8px;
+      }
+
+      .user-avatar-button {
+        width: 40px !important;
+        height: 40px !important;
+      }
+
+      .user-avatar-button mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .user-info-header {
+        padding: 16px;
+      }
+
+      .user-info-header mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .user-name {
+        font-size: 0.9rem;
+      }
+
+      .user-email {
+        font-size: 0.8rem;
+      }
+
+      ::ng-deep .user-dropdown-menu {
+        min-width: 260px !important;
+      }
+
+      ::ng-deep .user-dropdown-menu .mat-mdc-menu-item {
+        padding: 14px 16px !important;
+        min-height: 48px !important;
       }
 
       .header-section {
@@ -376,19 +635,45 @@ import { EventoApiResponse } from '../../../models/evento.model';
     }
   `]
 })
-export class EventosListComponent implements OnInit {
+export class EventosListComponent implements OnInit, OnDestroy {
   eventos: EventoApiResponse[] = [];
   isLoading = false;
   hasError = false;
+  isLoggedIn = false;
+  currentUser: any = null;
+  private authSubscription?: Subscription;
 
   constructor(
     public eventoService: EventoService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
     this.carregarEventos();
+    this.verificarEstadoAutenticacao();
+    this.setupAuthSubscription();
+  }
+
+  ngOnDestroy(): void {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
+  }
+
+  setupAuthSubscription(): void {
+    this.authSubscription = this.authService.currentUser$.subscribe(user => {
+      this.currentUser = user;
+      this.isLoggedIn = !!user;
+    });
+  }
+
+  verificarEstadoAutenticacao(): void {
+    this.isLoggedIn = this.authService.isAuthenticated();
+    if (this.isLoggedIn) {
+      this.currentUser = this.authService.getCurrentUser();
+    }
   }
 
   carregarEventos(): void {
@@ -459,5 +744,23 @@ export class EventosListComponent implements OnInit {
     } else {
       return `${formatarData(inicio)} - ${formatarData(fim)}`;
     }
+  }
+
+  irParaLogin(): void {
+    this.router.navigate(['/login']);
+  }
+
+  logout(): void {
+    this.authService.logout();
+  }
+
+  gerenciarConta(): void {
+    // Navegar para página de gerenciamento de conta
+    this.router.navigate(['/perfil']);
+  }
+
+  minhasInscricoes(): void {
+    // Navegar para página de minhas inscrições
+    this.router.navigate(['/minhas-inscricoes']);
   }
 }
