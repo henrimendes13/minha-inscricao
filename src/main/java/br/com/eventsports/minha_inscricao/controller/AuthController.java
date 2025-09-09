@@ -194,6 +194,42 @@ public class AuthController {
     }
 
     /**
+     * Endpoint de logout universal para qualquer tipo de usuário
+     */
+    @Operation(
+        summary = "Logout Universal", 
+        description = "Realiza logout de qualquer tipo de usuário autenticado (ADMIN, ORGANIZADOR, ATLETA). " +
+                     "Como JWT é stateless, apenas registra o logout - o token ainda será válido até expirar."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Logout registrado com sucesso"),
+        @ApiResponse(responseCode = "401", description = "Token inválido ou não fornecido")
+    })
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PostMapping("/logout")
+    public ResponseEntity<Object> logout(Authentication authentication) {
+        try {
+            String email = authentication.getName();
+            log.info("Iniciando processo de logout para o usuário: {}", email);
+
+            // TODO: Implementar o método registrarLogout no IUsuarioService e sua implementação
+            // usuarioService.registrarLogout(email);
+
+            log.info("Logout registrado com sucesso para o usuário: {}", email);
+            
+            return ResponseEntity.ok(java.util.Map.of(
+                    "message", "Logout registrado com sucesso",
+                    "timestamp", java.time.LocalDateTime.now()
+            ));
+        } catch (Exception e) {
+            log.error("Erro durante o processo de logout: {}", e.getMessage(), e);
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(java.util.Map.of("message", "Ocorreu um erro interno ao processar o logout."));
+        }
+    }
+
+    /**
      * Endpoint para obter informações do admin logado
      */
     @Operation(

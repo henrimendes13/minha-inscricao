@@ -63,7 +63,7 @@ export class AuthHelpers {
    */
   static getCurrentUserName(authService: AuthService): string {
     const user = authService.getCurrentUser();
-    return user?.nome || user?.name || 'Usuário';
+    return user?.nome || user?.nome || 'Usuário';
   }
 
   /**
