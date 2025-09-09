@@ -86,8 +86,8 @@ export class AuthInterceptor implements HttpInterceptor {
    * Trata erro 401 - Token inválido/expirado
    */
   private handle401Unauthorized(request: HttpRequest<any>, next: HttpHandler, error: HttpErrorResponse): Observable<HttpEvent<any>> {
-    // Se é endpoint de login, não tenta refresh
-    if (request.url.includes('/login') || request.url.includes('/auth/login')) {
+    // Se é endpoint de autenticação ou logout, não tenta refresh
+    if (this.isAuthEndpoint(request.url) || this.isLogoutEndpoint(request.url)) {
       return throwError(() => error);
     }
 
@@ -109,6 +109,12 @@ export class AuthInterceptor implements HttpInterceptor {
    */
   private handle403Forbidden(error: HttpErrorResponse): Observable<HttpEvent<any>> {
     console.warn('[AUTH-INTERCEPTOR] Acesso negado (403):', error.url);
+    
+    // Se é endpoint de logout, não mostrar erro para o usuário
+    if (this.isLogoutEndpoint(error.url)) {
+      console.log('[AUTH-INTERCEPTOR] Erro 403 em logout - ignorando mensagem de erro (logout local continuará)');
+      return throwError(() => error);
+    }
     
     this.snackBar.open('Acesso negado - Você não tem permissão para esta ação', 'Fechar', {
       duration: 5000,
@@ -217,5 +223,22 @@ export class AuthInterceptor implements HttpInterceptor {
         }
       });
     }, 1000);
+  }
+
+  /**
+   * Verifica se a URL é de um endpoint de logout
+   * Força recompilação - change
+   */
+  private isLogoutEndpoint(url: string | null): boolean {
+    if (!url) return false;
+    return url.includes('/logout') || url.includes('/auth/logout');
+  }
+
+  /**
+   * Verifica se a URL é de um endpoint de autenticação
+   */
+  private isAuthEndpoint(url: string | null): boolean {
+    if (!url) return false;
+    return url.includes('/login') || url.includes('/auth/login') || url.includes('/register') || url.includes('/auth/register');
   }
 }

@@ -52,6 +52,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/admin/login").permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers(POST, "/api/usuarios").permitAll()
+                        //.requestMatchers(POST, "/api/auth/"
                         // Endpoints públicos de documentação Swagger/OpenAPI
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
                                 "/v3/api-docs/**", "/api-docs/**", "/v3/api-docs/swagger-config")

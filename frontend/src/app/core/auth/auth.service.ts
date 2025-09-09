@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { map, catchError, finalize } from 'rxjs/operators';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { API_CONFIG } from '../constants/api.constants';
 import { UsuarioResponseDTO } from '../../models';
@@ -57,7 +58,8 @@ export class AuthService {
 
   constructor(
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private snackBar: MatSnackBar
   ) {
     this.loadUserFromStorage();
   }
@@ -114,12 +116,12 @@ export class AuthService {
       .subscribe({
         next: () => {
           console.log('[AUTH-SERVICE] Logout do servidor bem-sucedido');
-          this.clearSession();
+          this.clearSessionWithSuccess();
         },
         error: (error) => {
           console.warn('[AUTH-SERVICE] Erro no logout do servidor (continuando com logout local):', error);
           // Even if the request fails, clear local session
-          this.clearSession();
+          this.clearSessionWithSuccess();
         },
         complete: () => {
           this.setLoading(false);
@@ -204,6 +206,33 @@ export class AuthService {
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.USER_KEY);
       this.currentUserSubject.next(null);
+      
+      console.log('[AUTH-SERVICE] Sessão limpa - redirecionando para login');
+      this.router.navigate(['/login']);
+    } catch (error) {
+      console.error('[AUTH-SERVICE] Erro ao limpar sessão:', error);
+    }
+  }
+
+  /**
+   * Limpa a sessão e mostra mensagem de sucesso
+   */
+  private clearSessionWithSuccess(): void {
+    console.log('[AUTH-SERVICE] Limpando sessão com mensagem de sucesso');
+    
+    try {
+      localStorage.removeItem(this.ACCESS_TOKEN_KEY);
+      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
+      this.currentUserSubject.next(null);
+      
+      // Mostrar mensagem de sucesso
+      this.snackBar.open('Logout realizado com sucesso!', 'Fechar', {
+        duration: 3000,
+        panelClass: ['success-snackbar'],
+        horizontalPosition: 'center',
+        verticalPosition: 'top'
+      });
       
       console.log('[AUTH-SERVICE] Sessão limpa - redirecionando para login');
       this.router.navigate(['/login']);
