@@ -129,6 +129,9 @@ public class EventoService implements IEventoService {
                 .descricaoStatus(evento.getDescricaoStatus())
                 .nomeOrganizador(evento.getNomeOrganizador())
                 .descricao(evento.getDescricao())
+                .cidade(evento.getCidade())
+                .estado(evento.getEstado())
+                .endereco(evento.getEndereco())
                 .totalCategorias(evento.getTotalCategorias())
                 .totalInscricoes(evento.getTotalInscricoes())
                 .inscricoesAtivas(evento.getInscricoesAtivas())
@@ -150,6 +153,8 @@ public class EventoService implements IEventoService {
                 .nomeOrganizador(evento.getNomeOrganizador())
                 .totalCategorias(evento.getTotalCategorias())
                 .inscricoesAtivas(evento.getInscricoesAtivas())
+                .cidade(evento.getCidade())
+                .estado(evento.getEstado())
                 .podeReceberInscricoes(evento.podeReceberInscricoes())
                 .createdAt(evento.getCreatedAt())
                 .build();
@@ -165,7 +170,10 @@ public class EventoService implements IEventoService {
                 .nome(dto.getNome())
                 .dataInicioDoEvento(inicioDateTime)
                 .dataFimDoEvento(fimDateTime)
-                .descricao(dto.getDescricao());
+                .descricao(dto.getDescricao())
+                .cidade(dto.getCidade())
+                .estado(dto.getEstado())
+                .endereco(dto.getEndereco());
 
         // Obter o organizador do usuário autenticado
         UsuarioEntity organizador = getUsuarioAutenticado();
@@ -186,6 +194,9 @@ public class EventoService implements IEventoService {
         evento.setDataInicioDoEvento(inicioDateTime);
         evento.setDataFimDoEvento(fimDateTime);
         evento.setDescricao(dto.getDescricao());
+        evento.setCidade(dto.getCidade());
+        evento.setEstado(dto.getEstado());
+        evento.setEndereco(dto.getEndereco());
     }
 
     /**

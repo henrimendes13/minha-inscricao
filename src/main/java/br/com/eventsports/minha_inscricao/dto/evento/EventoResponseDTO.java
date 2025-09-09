@@ -57,6 +57,15 @@ public class EventoResponseDTO {
     @Schema(description = "Descrição detalhada do evento", example = "Competição de CrossFit com atletas de elite")
     private String descricao;
 
+    @Schema(description = "Cidade onde o evento será realizado", example = "São Paulo")
+    private String cidade;
+
+    @Schema(description = "Estado onde o evento será realizado", example = "SP")
+    private String estado;
+
+    @Schema(description = "Endereço completo do evento", example = "Rua das Flores, 123 - Centro")
+    private String endereco;
+
     @Schema(description = "Total de categorias do evento", example = "5")
     private Integer totalCategorias;
 

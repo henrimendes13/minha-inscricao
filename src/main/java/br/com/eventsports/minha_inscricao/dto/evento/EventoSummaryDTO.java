@@ -41,6 +41,12 @@ public class EventoSummaryDTO {
 
     @Schema(description = "Indica se o evento pode receber inscrições", example = "true")
     private Boolean podeReceberInscricoes;
+
+    @Schema(description = "Cidade onde o evento será realizado", example = "São Paulo")
+    private String cidade;
+
+    @Schema(description = "Estado onde o evento será realizado", example = "SP")
+    private String estado;
     
     @Schema(description = "Data de criação do evento", example = "2024-01-15T10:30:00", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;

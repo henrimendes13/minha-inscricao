@@ -39,6 +39,15 @@ public class EventoEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "cidade", length = 100)
+    private String cidade;
+
+    @Column(name = "estado", length = 50)
+    private String estado;
+
+    @Column(name = "endereco", length = 300)
+    private String endereco;
+
     // Relacionamento direto com Usuario como organizador
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizador_id")
@@ -80,6 +89,19 @@ public class EventoEntity {
         this.dataInicioDoEvento = dataInicioDoEvento;
         this.dataFimDoEvento = dataFimDoEvento;
         this.descricao = descricao;
+        this.status = StatusEvento.RASCUNHO;
+    }
+
+    // Constructor customizado incluindo campos de localização
+    public EventoEntity(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao, 
+                       String cidade, String estado, String endereco) {
+        this.nome = nome;
+        this.dataInicioDoEvento = dataInicioDoEvento;
+        this.dataFimDoEvento = dataFimDoEvento;
+        this.descricao = descricao;
+        this.cidade = cidade;
+        this.estado = estado;
+        this.endereco = endereco;
         this.status = StatusEvento.RASCUNHO;
     }
 

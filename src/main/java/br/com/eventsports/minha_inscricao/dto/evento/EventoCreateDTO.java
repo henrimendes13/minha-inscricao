@@ -40,4 +40,16 @@ public class EventoCreateDTO {
     @Size(max = 5000, message = "Descrição deve ter no máximo 5000 caracteres")
     @Schema(description = "Descrição detalhada do evento", example = "Competição de CrossFit com atletas de elite", maxLength = 5000)
     private String descricao;
+
+    @Size(max = 100, message = "Cidade deve ter no máximo 100 caracteres")
+    @Schema(description = "Cidade onde o evento será realizado", example = "São Paulo", maxLength = 100)
+    private String cidade;
+
+    @Size(max = 50, message = "Estado deve ter no máximo 50 caracteres")
+    @Schema(description = "Estado onde o evento será realizado", example = "SP", maxLength = 50)
+    private String estado;
+
+    @Size(max = 300, message = "Endereço deve ter no máximo 300 caracteres")
+    @Schema(description = "Endereço completo do evento", example = "Rua das Flores, 123 - Centro", maxLength = 300)
+    private String endereco;
 }

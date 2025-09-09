@@ -18,9 +18,9 @@ import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { TimelineService } from '../../../core/services/timeline.service';
 import { WorkoutService } from '../../../core/services/workout.service';
 
-import { AnexoResponse, Anexo } from '../../../models/anexo.model';
+import { Anexo, AnexoResponse } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
-import { Categoria, LeaderboardResponse, LeaderboardRanking, WorkoutPosicao } from '../../../models/leaderboard.model';
+import { Categoria, LeaderboardRanking, LeaderboardResponse, WorkoutPosicao } from '../../../models/leaderboard.model';
 import { Timeline } from '../../../models/timeline.model';
 import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
 
@@ -69,8 +69,8 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
           <div class="header-info">
             <h1>{{ evento.nome }}</h1>
             <div class="organizer-info">
-              <mat-icon>person</mat-icon>
-              <span>Organizado por {{ evento.nomeOrganizador }}</span>
+              <mat-icon>location_on</mat-icon>
+              <span>{{ evento.endereco }}, {{ evento.cidade }} - {{ evento.estado }}</span>
             </div>
           </div>
         </div>
@@ -543,7 +543,7 @@ export class EventoDetalhesComponent implements OnInit {
   leaderboardLoading = false;
   leaderboardError = false;
   categorias: Categoria[] = [];
-  
+
   // Novo leaderboard ranking
   leaderboardRanking: LeaderboardRanking[] = [];
   selectedCategoriaId: number | null = null;
@@ -687,13 +687,13 @@ export class EventoDetalhesComponent implements OnInit {
     console.log('Categoria alterada para:', categoriaId);
     console.log('Categorias disponíveis:', this.categorias);
     console.log('selectedCategoriaId ANTES:', this.selectedCategoriaId);
-    
+
     this.selectedCategoriaId = categoriaId;
-    
+
     console.log('selectedCategoriaId DEPOIS:', this.selectedCategoriaId);
     console.log('Categoria nome:', this.categorias.find(c => c.id === categoriaId)?.nome);
     console.log('===============================');
-    
+
     this.carregarRankingCategoria(categoriaId);
   }
 

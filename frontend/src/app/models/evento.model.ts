@@ -77,4 +77,7 @@ export interface EventoApiResponse {
   inscricoesAtivas: number;
   podeReceberInscricoes: boolean;
   createdAt: string;
+  endereco: string;
+  cidade: string;
+  estado: string;
 }

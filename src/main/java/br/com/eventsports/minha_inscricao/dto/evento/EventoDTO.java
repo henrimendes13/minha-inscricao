@@ -27,6 +27,15 @@ public class EventoDTO {
     
     @Schema(description = "Descrição detalhada do evento", example = "Competição de CrossFit com atletas de elite")
     private String descricao;
+
+    @Schema(description = "Cidade onde o evento será realizado", example = "São Paulo")
+    private String cidade;
+
+    @Schema(description = "Estado onde o evento será realizado", example = "SP")
+    private String estado;
+
+    @Schema(description = "Endereço completo do evento", example = "Rua das Flores, 123 - Centro")
+    private String endereco;
     
     @Schema(description = "Data de criação do evento", example = "2024-01-15T10:30:00", accessMode = Schema.AccessMode.READ_ONLY)
     private LocalDateTime createdAt;
@@ -40,5 +49,17 @@ public class EventoDTO {
         this.dataInicioDoEvento = dataInicioDoEvento;
         this.dataFimDoEvento = dataFimDoEvento;
         this.descricao = descricao;
+    }
+
+    // Constructor customizado incluindo campos de localização
+    public EventoDTO(String nome, LocalDateTime dataInicioDoEvento, LocalDateTime dataFimDoEvento, String descricao,
+                     String cidade, String estado, String endereco) {
+        this.nome = nome;
+        this.dataInicioDoEvento = dataInicioDoEvento;
+        this.dataFimDoEvento = dataFimDoEvento;
+        this.descricao = descricao;
+        this.cidade = cidade;
+        this.estado = estado;
+        this.endereco = endereco;
     }
 }
