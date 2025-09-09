@@ -684,7 +684,6 @@ export class EventosListComponent implements OnInit, OnDestroy {
       next: (eventos) => {
         this.eventos = eventos;
         this.isLoading = false;
-        console.log('Eventos carregados:', eventos);
       },
       error: (error) => {
         this.isLoading = false;

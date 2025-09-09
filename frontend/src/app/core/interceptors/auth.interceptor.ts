@@ -112,7 +112,6 @@ export class AuthInterceptor implements HttpInterceptor {
     
     // Se é endpoint de logout, não mostrar erro para o usuário
     if (this.isLogoutEndpoint(error.url)) {
-      console.log('[AUTH-INTERCEPTOR] Erro 403 em logout - ignorando mensagem de erro (logout local continuará)');
       return throwError(() => error);
     }
     
@@ -172,13 +171,11 @@ export class AuthInterceptor implements HttpInterceptor {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
-      console.log('[AUTH-INTERCEPTOR] Tentando renovar token...');
 
       return this.authService.refreshToken().pipe(
         switchMap((token: any) => {
           this.isRefreshing = false;
           this.refreshTokenSubject.next(token.accessToken);
-          console.log('[AUTH-INTERCEPTOR] Token renovado com sucesso');
           return next.handle(this.addToken(request, token.accessToken));
         }),
         catchError((refreshError) => {
@@ -204,7 +201,6 @@ export class AuthInterceptor implements HttpInterceptor {
    * Trata token expirado fazendo logout e redirecionando
    */
   private handleTokenExpired(): void {
-    console.log('[AUTH-INTERCEPTOR] Token expirado - fazendo logout');
     
     this.snackBar.open('Sua sessão expirou - Faça login novamente', 'Fechar', {
       duration: 5000,

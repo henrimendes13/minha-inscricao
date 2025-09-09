@@ -14,7 +14,6 @@
  *   ngOnInit() {
  *     // Verificar se usuário está logado
  *     if (AuthHelpers.isUserLoggedIn(this.authService)) {
- *       console.log('Usuário logado!');
  *     }
  * 
  *     // Obter nome do usuário atual
@@ -330,7 +329,6 @@ export class AuthHelpers {
    * @example
    * ```typescript
    * // Durante desenvolvimento
-   * console.log('Auth Debug:', AuthHelpers.getAuthDebugInfo(this.authService));
    * ```
    */
   static getAuthDebugInfo(authService: AuthService): any {

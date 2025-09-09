@@ -30,9 +30,6 @@ export interface JwtPayload {
  * const payload = decodeJwtPayload(token);
  * 
  * if (payload) {
- *   console.log('Usuário:', payload.name);
- *   console.log('Email:', payload.email);
- *   console.log('Expira em:', new Date(payload.exp * 1000));
  * }
  * ```
  */
@@ -85,11 +82,8 @@ export function decodeJwtPayload(token: string | null): JwtPayload | null {
  * const isExpired = isTokenExpired(token);
  * 
  * if (isExpired === true) {
- *   console.log('Token expirado - usuário precisa fazer login novamente');
  * } else if (isExpired === false) {
- *   console.log('Token ainda válido');
  * } else {
- *   console.log('Token inválido');
  * }
  * ```
  */
@@ -130,11 +124,8 @@ export function isTokenExpired(token: string | null): boolean | null {
  * const minutesLeft = getTokenExpirationMinutes(token);
  * 
  * if (minutesLeft === null) {
- *   console.log('Token inválido');
  * } else if (minutesLeft <= 0) {
- *   console.log('Token expirado');
  * } else if (minutesLeft < 5) {
- *   console.log('Token expira em menos de 5 minutos - considerar renovar');
  * }
  * ```
  */
@@ -164,11 +155,9 @@ export function getTokenExpirationMinutes(token: string | null): number | null {
  * const token = authService.getToken();
  * 
  * if (hasRole(token, 'ADMIN')) {
- *   console.log('Usuário é administrador');
  * }
  * 
  * if (hasRole(token, 'ORGANIZADOR')) {
- *   console.log('Usuário pode criar eventos');
  * }
  * ```
  */
@@ -214,9 +203,6 @@ export function hasRole(token: string | null, requiredRole: string): boolean {
  * const userInfo = getUserInfoFromToken(token);
  * 
  * if (userInfo) {
- *   console.log(`Bem-vindo, ${userInfo.name}!`);
- *   console.log(`Email: ${userInfo.email}`);
- *   console.log(`Tipo: ${userInfo.tipoUsuario}`);
  * }
  * ```
  */
@@ -253,7 +239,6 @@ export function getUserInfoFromToken(token: string | null): {
  * ```typescript
  * // Durante desenvolvimento, para entender o token:
  * const token = authService.getToken();
- * console.log('Debug do token:', debugToken(token));
  * ```
  */
 export function debugToken(token: string | null): {
@@ -279,11 +264,6 @@ export function debugToken(token: string | null): {
   };
   
   console.group('[AUTH-UTILS] 🐛 Token Debug Info');
-  console.log('✅ Token válido:', debug.isValid);
-  console.log('⏰ Token expirado:', debug.isExpired);
-  console.log('👤 Informações do usuário:', debug.userInfo);
-  console.log('⏱️ Minutos até expiração:', debug.expirationMinutes);
-  console.log('📋 Payload completo:', debug.payload);
   console.groupEnd();
   
   return debug;

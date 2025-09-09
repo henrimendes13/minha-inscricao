@@ -69,7 +69,6 @@ export class AuthService {
    * Emite estados de loading durante o processo
    */
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    console.log('[AUTH-SERVICE] Iniciando login para:', credentials.email);
     
     this.setLoading(true);
     this.isLoggingInSubject.next(true);
@@ -77,7 +76,6 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.login}`, credentials)
       .pipe(
         map(response => {
-          console.log('[AUTH-SERVICE] Login bem-sucedido');
           this.setSession(response);
           return response;
         }),
@@ -106,7 +104,6 @@ export class AuthService {
    * Emite estados de loading durante o processo
    */
   logout(): void {
-    console.log('[AUTH-SERVICE] Iniciando logout');
     
     this.setLoading(true);
     this.isLoggingOutSubject.next(true);
@@ -115,7 +112,6 @@ export class AuthService {
     this.http.post(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.auth.logout}`, {})
       .subscribe({
         next: () => {
-          console.log('[AUTH-SERVICE] Logout do servidor bem-sucedido');
           this.clearSessionWithSuccess();
         },
         error: (error) => {
@@ -173,7 +169,6 @@ export class AuthService {
   }
 
   private setSession(response: LoginResponse): void {
-    console.log('[AUTH-SERVICE] Configurando sessão para:', response.email);
     
     try {
       localStorage.setItem(this.ACCESS_TOKEN_KEY, response.token);
@@ -191,7 +186,6 @@ export class AuthService {
       localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
       this.currentUserSubject.next(usuario as any);
       
-      console.log('[AUTH-SERVICE] Sessão configurada com sucesso');
     } catch (error) {
       console.error('[AUTH-SERVICE] Erro ao configurar sessão:', error);
       throw error;
@@ -199,7 +193,6 @@ export class AuthService {
   }
 
   private clearSession(): void {
-    console.log('[AUTH-SERVICE] Limpando sessão');
     
     try {
       localStorage.removeItem(this.ACCESS_TOKEN_KEY);
@@ -207,7 +200,6 @@ export class AuthService {
       localStorage.removeItem(this.USER_KEY);
       this.currentUserSubject.next(null);
       
-      console.log('[AUTH-SERVICE] Sessão limpa - redirecionando para login');
       this.router.navigate(['/login']);
     } catch (error) {
       console.error('[AUTH-SERVICE] Erro ao limpar sessão:', error);
@@ -218,7 +210,6 @@ export class AuthService {
    * Limpa a sessão e mostra mensagem de sucesso
    */
   private clearSessionWithSuccess(): void {
-    console.log('[AUTH-SERVICE] Limpando sessão com mensagem de sucesso');
     
     try {
       localStorage.removeItem(this.ACCESS_TOKEN_KEY);
@@ -234,7 +225,6 @@ export class AuthService {
         verticalPosition: 'top'
       });
       
-      console.log('[AUTH-SERVICE] Sessão limpa - redirecionando para login');
       this.router.navigate(['/login']);
     } catch (error) {
       console.error('[AUTH-SERVICE] Erro ao limpar sessão:', error);
@@ -245,7 +235,6 @@ export class AuthService {
    * Carrega usuário do localStorage na inicialização
    */
   private loadUserFromStorage(): void {
-    console.log('[AUTH-SERVICE] Carregando usuário do localStorage');
     
     this.setLoading(true);
     
@@ -254,7 +243,6 @@ export class AuthService {
       
       if (userStr && this.isAuthenticated()) {
         const user = JSON.parse(userStr);
-        console.log('[AUTH-SERVICE] Usuário carregado:', user.email);
         this.currentUserSubject.next(user);
       } else {
         console.debug('[AUTH-SERVICE] Nenhum usuário válido no localStorage');

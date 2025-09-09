@@ -683,16 +683,9 @@ export class EventoDetalhesComponent implements OnInit {
   }
 
   onCategoriaChange(categoriaId: number): void {
-    console.log('=== DEBUG CATEGORIA CHANGE ===');
-    console.log('Categoria alterada para:', categoriaId);
-    console.log('Categorias disponíveis:', this.categorias);
-    console.log('selectedCategoriaId ANTES:', this.selectedCategoriaId);
 
     this.selectedCategoriaId = categoriaId;
 
-    console.log('selectedCategoriaId DEPOIS:', this.selectedCategoriaId);
-    console.log('Categoria nome:', this.categorias.find(c => c.id === categoriaId)?.nome);
-    console.log('===============================');
 
     this.carregarRankingCategoria(categoriaId);
   }
@@ -721,7 +714,6 @@ export class EventoDetalhesComponent implements OnInit {
   carregarWorkouts(): void {
     if (this.workoutData && this.workoutData.length > 0) return; // Cache
 
-    console.log('🏋️ Iniciando carregamento de workouts para evento:', this.eventoId);
     this.workoutLoading = true;
     this.workoutError = false;
 
@@ -731,20 +723,16 @@ export class EventoDetalhesComponent implements OnInit {
 
     this.workoutService.buscarWorkoutsPorEvento(this.eventoId).subscribe({
       next: (data) => {
-        console.log('🏋️ Dados de workout recebidos:', data);
-        console.log('🏋️ Tipo dos dados:', typeof data, Array.isArray(data));
 
         // Garantir que data é um array válido
         if (data && Array.isArray(data)) {
           this.workoutData = data;
           this.workoutsByCategory = this.agruparWorkoutsPorCategoria(data);
         } else {
-          console.log('🏋️ Dados inválidos recebidos, inicializando arrays vazios');
           this.workoutData = [];
           this.workoutsByCategory = [];
         }
 
-        console.log('🏋️ Workouts agrupados por categoria:', this.workoutsByCategory);
         this.workoutLoading = false;
       },
       error: (error) => {
@@ -759,10 +747,8 @@ export class EventoDetalhesComponent implements OnInit {
   }
 
   private agruparWorkoutsPorCategoria(workouts: Workout[]): WorkoutsByCategory[] {
-    console.log('🏋️ agruparWorkoutsPorCategoria recebido:', workouts);
 
     if (!workouts || !Array.isArray(workouts) || workouts.length === 0) {
-      console.log('🏋️ Retornando array vazio - dados inválidos');
       return [];
     }
 
@@ -812,7 +798,6 @@ export class EventoDetalhesComponent implements OnInit {
     const resultado = Array.from(categoriasMap.values())
       .sort((a, b) => a.categoria.nome.localeCompare(b.categoria.nome));
 
-    console.log('🏋️ Resultado final do agrupamento:', resultado);
     return resultado;
   }
 
