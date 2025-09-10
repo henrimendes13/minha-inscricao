@@ -52,3 +52,65 @@ export interface WorkoutsByCategory {
 
 // Response do backend - retorna List<WorkoutSummaryDTO> diretamente
 export type WorkoutResponse = Workout[];
+
+// Interfaces para gerenciamento de resultados
+export interface WorkoutResultCreateDTO {
+  eventoId: number;
+  categoriaId: number;
+  participanteId: number;
+  isEquipe: boolean;
+  resultadoValor: string;
+  finalizado: boolean;
+}
+
+export interface WorkoutResultUpdateDTO {
+  resultadoValor: string;
+  finalizado: boolean;
+}
+
+export interface WorkoutResultStatusDTO {
+  workoutId: number;
+  nomeWorkout: string;
+  categoriaId: number;
+  totalParticipantes: number;
+  participantesFinalizados: number;
+  porcentagemFinalizados: number;
+  workoutFinalizado: boolean;
+  participantesPendentes: string[];
+}
+
+export interface LeaderboardSummaryDTO {
+  id: number;
+  eventoId: number;
+  workoutId: number;
+  categoriaId: number;
+  atletaId?: number;
+  equipeId?: number;
+  nomeParticipante: string;
+  isEquipe: boolean;
+  resultadoValor: string;
+  resultadoFormatado: string;
+  posicaoWorkout: number;
+  pontuacaoWorkout: number;
+  finalizado: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface LeaderboardResponseDTO {
+  id: number;
+  eventoId: number;
+  workoutId: number;
+  categoriaId: number;
+  atletaId?: number;
+  equipeId?: number;
+  nomeParticipante: string;
+  isEquipe: boolean;
+  resultadoValor: string;
+  resultadoFormatado: string;
+  posicaoWorkout: number;
+  pontuacaoWorkout: number;
+  finalizado: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}

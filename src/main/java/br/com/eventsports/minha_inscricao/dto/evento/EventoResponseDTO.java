@@ -33,6 +33,9 @@ public class EventoResponseDTO {
     @Schema(description = "Nome do organizador responsável", example = "João Silva")
     private String nomeOrganizador;
 
+    @Schema(description = "Email do organizador responsável", example = "joao@example.com")
+    private String organizadorEmail;
+
     @Schema(description = "Informações sobre inscrições", example = "Inscrições abertas até 31/12/2024. Taxa: R$ 150,00")
     private String inscricao;
     

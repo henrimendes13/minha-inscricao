@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
+import { EventoOwnerGuard } from './core/guards/evento-owner.guard';
 
 export const routes: Routes = [
   {
@@ -14,6 +15,11 @@ export const routes: Routes = [
   {
     path: 'eventos/:id',
     loadComponent: () => import('./features/eventos/evento-detalhes/evento-detalhes.component').then(c => c.EventoDetalhesComponent)
+  },
+  {
+    path: 'eventos/:eventoId/categoria/:categoriaId/resultados',
+    loadComponent: () => import('./features/workout-resultados/workout-resultados-manage/workout-resultados-manage.component').then(c => c.WorkoutResultadosManageComponent),
+    canActivate: [EventoOwnerGuard]
   },
   {
     path: 'login',

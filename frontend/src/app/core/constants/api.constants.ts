@@ -45,7 +45,17 @@ export const API_CONFIG = {
     workouts: {
       base: '/workouts',
       byId: (id: number) => `/workouts/${id}`,
-      byEvento: (eventoId: number) => `/workouts/evento/${eventoId}`
+      byEvento: (eventoId: number) => `/workouts/evento/${eventoId}`,
+      resultados: {
+        byWorkout: (workoutId: number) => `/workouts/${workoutId}/resultados`,
+        create: (workoutId: number) => `/workouts/${workoutId}/resultados`,
+        updateEquipe: (workoutId: number, equipeId: number) => `/workouts/${workoutId}/resultados/equipe/${equipeId}`,
+        updateAtleta: (workoutId: number, atletaId: number) => `/workouts/${workoutId}/resultados/atleta/${atletaId}`,
+        deleteEquipe: (workoutId: number, equipeId: number) => `/workouts/${workoutId}/resultados/equipe/${equipeId}`,
+        deleteAtleta: (workoutId: number, atletaId: number) => `/workouts/${workoutId}/resultados/atleta/${atletaId}`,
+        status: (workoutId: number) => `/workouts/${workoutId}/status`,
+        verificarInicializados: (workoutId: number) => `/workouts/${workoutId}/resultados/status`
+      }
     },
     timeline: {
       base: '/timeline',

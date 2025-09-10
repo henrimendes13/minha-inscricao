@@ -17,6 +17,8 @@ import { EventoService } from '../../../core/services/evento.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { TimelineService } from '../../../core/services/timeline.service';
 import { WorkoutService } from '../../../core/services/workout.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { AuthHelpers } from '../../../core/auth/auth-helpers';
 
 import { Anexo, AnexoResponse } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
@@ -303,8 +305,8 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                 <!-- Leaderboard Content -->
                 <div *ngIf="!leaderboardLoading && !leaderboardError" class="leaderboard-content">
                   
-                  <!-- Filtros -->
-                  <div class="leaderboard-filters" *ngIf="categorias.length > 0">
+                  <!-- Filtros e Ações -->
+                  <div class="leaderboard-header" *ngIf="categorias.length > 0">
                     <div class="filter-group">
                       <label for="categoria-select">Categoria:</label>
                       <select 
@@ -316,6 +318,18 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                           {{ categoria.nome }}
                         </option>
                       </select>
+                    </div>
+                    
+                    <!-- Botão Gerenciar Resultados -->
+                    <div class="management-actions" *ngIf="podeGerenciarResultados() && selectedCategoriaId">
+                      <button 
+                        mat-raised-button 
+                        color="accent" 
+                        (click)="gerenciarResultados()"
+                        class="manage-results-button">
+                        <mat-icon>add_task</mat-icon>
+                        Adicionar Resultados
+                      </button>
                     </div>
                   </div>
 
@@ -569,6 +583,7 @@ export class EventoDetalhesComponent implements OnInit {
     private leaderboardService: LeaderboardService,
     private workoutService: WorkoutService,
     private anexoService: AnexoService,
+    private authService: AuthService,
     private snackBar: MatSnackBar
   ) { }
 
@@ -1001,5 +1016,43 @@ export class EventoDetalhesComponent implements OnInit {
       default:
         return tipo;
     }
+  }
+
+  // ===============================================
+  // MÉTODOS PARA GERENCIAMENTO DE RESULTADOS
+  // ===============================================
+
+  /**
+   * Verifica se o usuário pode gerenciar resultados do evento
+   * (apenas criador do evento ou admin)
+   */
+  podeGerenciarResultados(): boolean {
+    if (!this.authService.isAuthenticated()) {
+      return false;
+    }
+
+    // Admin sempre pode gerenciar
+    if (AuthHelpers.isAdmin(this.authService)) {
+      return true;
+    }
+
+    // Verificar se é o criador do evento
+    const userEmail = AuthHelpers.getCurrentUserEmail(this.authService);
+    return this.evento?.organizadorEmail === userEmail;
+  }
+
+  /**
+   * Navega para a página de gerenciamento de resultados da categoria selecionada
+   */
+  gerenciarResultados(): void {
+    if (!this.podeGerenciarResultados() || !this.selectedCategoriaId) {
+      this.snackBar.open('Você não tem permissão para gerenciar resultados', 'Fechar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    // Navegar para a página de gerenciamento
+    this.router.navigate(['/eventos', this.eventoId, 'categoria', this.selectedCategoriaId, 'resultados']);
   }
 }

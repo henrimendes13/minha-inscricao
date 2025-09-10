@@ -77,7 +77,9 @@
       "mcp__playwright__browser_select_option",
       "Bash(start http://localhost:4200/eventos/16)",
       "Bash(ls:*)",
-      "Bash(./mvnw:*)"
+      "Bash(./mvnw:*)",
+      "mcp__playwright__browser_type",
+      "Bash(tasklist)"
     ],
     "deny": [],
     "ask": []

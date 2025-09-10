@@ -128,6 +128,7 @@ public class EventoService implements IEventoService {
                 .status(evento.getStatus() != null ? evento.getStatus().name() : null)
                 .descricaoStatus(evento.getDescricaoStatus())
                 .nomeOrganizador(evento.getNomeOrganizador())
+                .organizadorEmail(evento.getOrganizador() != null ? evento.getOrganizador().getEmail() : null)
                 .descricao(evento.getDescricao())
                 .cidade(evento.getCidade())
                 .estado(evento.getEstado())

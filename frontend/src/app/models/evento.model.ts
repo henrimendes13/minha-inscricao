@@ -73,6 +73,7 @@ export interface EventoApiResponse {
   status: string;
   descricaoStatus: string;
   nomeOrganizador: string;
+  organizadorEmail: string;
   totalCategorias: number;
   inscricoesAtivas: number;
   podeReceberInscricoes: boolean;

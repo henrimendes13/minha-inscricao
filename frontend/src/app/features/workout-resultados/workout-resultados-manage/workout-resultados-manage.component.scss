@@ -1,0 +1,903 @@
+// CSS Variables - DARK MODE ONLY
+.workout-resultados-container {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #c0c0c0;  // Aumentado para melhor contraste
+  --border-color: #333333;
+  --accent-primary: #64b5f6;
+  --accent-secondary: #42a5f5;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --card-shadow: rgba(0, 0, 0, 0.4);
+  --icon-color: #c0c0c0;  // Aumentado para melhor contraste
+
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.loading-container, .error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: var(--icon-color);
+    transition: color 0.3s ease;
+  }
+
+  h3 {
+    margin: 16px 0 8px 0;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    transition: color 0.3s ease;
+  }
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  transition: border-color 0.3s ease;
+
+  .back-button {
+    margin-right: 16px;
+    
+    button {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background-color: var(--accent-primary);
+        color: #ffffff;
+      }
+    }
+  }
+
+  .header-info {
+    flex: 1;
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: var(--accent-primary);
+      transition: color 0.3s ease;
+    }
+
+    .event-info {
+      display: flex;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: color 0.3s ease;
+
+      .event-name {
+        font-weight: 500;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+      }
+
+      .category-name {
+        color: var(--accent-primary);
+        font-weight: 500;
+        transition: color 0.3s ease;
+      }
+    }
+  }
+}
+
+.workout-tabs-container {
+  .workout-tab-content {
+    padding: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .workout-info-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    
+    .workout-details {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+
+      .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        strong {
+          color: var(--text-primary);
+          font-weight: 600;
+          transition: color 0.3s ease;
+        }
+        
+        span {
+          color: var(--text-secondary);
+          transition: color 0.3s ease;
+        }
+      }
+    }
+  }
+
+  .status-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    
+    .status-details {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+
+      .status-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .label {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          transition: color 0.3s ease;
+        }
+
+        .value {
+          font-weight: 600;
+          color: var(--text-primary);
+          font-size: 1.1rem;
+          transition: color 0.3s ease;
+
+          &.finalizado {
+            color: var(--success-color);
+          }
+          
+          &.em-andamento {
+            color: var(--warning-color);
+          }
+        }
+      }
+    }
+  }
+
+  .add-result-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    
+    .result-form {
+      .form-row {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+
+        .participant-field {
+          flex: 2;
+          min-width: 200px;
+        }
+
+        .result-field {
+          flex: 1;
+          min-width: 150px;
+        }
+
+        .add-button {
+          margin-top: 8px;
+          min-width: 120px;
+          height: 56px;
+          background-color: var(--accent-primary);
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          
+          &:hover:not(:disabled) {
+            background-color: var(--accent-secondary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px var(--card-shadow);
+          }
+          
+          &:disabled {
+            background-color: var(--text-muted);
+            color: var(--bg-secondary);
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+  }
+
+  .results-table-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    
+    .table-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+
+      mat-spinner {
+        color: var(--accent-primary);
+      }
+
+      p {
+        margin-top: 16px;
+        color: var(--text-secondary);
+        transition: color 0.3s ease;
+      }
+    }
+
+    .no-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+
+      mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--icon-color);
+        margin-bottom: 16px;
+        transition: color 0.3s ease;
+      }
+
+      p {
+        color: var(--text-secondary);
+        margin: 0;
+        transition: color 0.3s ease;
+      }
+    }
+
+    .results-table {
+      .mat-mdc-table {
+        width: 100%;
+        margin-top: 16px;
+        background-color: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
+        transition: all 0.3s ease;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      // Headers da tabela - CRÍTICO para legibilidade
+      .mat-mdc-header-row {
+        background-color: var(--bg-secondary) !important;
+        border-bottom: 2px solid var(--border-color);
+        
+        .mat-mdc-header-cell {
+          background-color: var(--bg-secondary) !important;
+          color: var(--text-primary) !important;
+          font-weight: 700 !important;
+          font-size: 14px !important;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          padding: 16px 12px !important;
+          border-right: 1px solid var(--border-color);
+        }
+      }
+
+      // Rows da tabela
+      .mat-mdc-row {
+        background-color: var(--bg-primary) !important;
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background-color: var(--bg-secondary) !important;
+        }
+
+        .mat-mdc-cell {
+          background-color: inherit !important;
+          color: var(--text-primary) !important;
+          font-weight: 500 !important;
+          font-size: 13px !important;
+          padding: 12px !important;
+          border-right: 1px solid rgba(255,255,255,0.1);
+        }
+      }
+
+      .participant-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .team-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+          color: var(--accent-primary);
+          transition: color 0.3s ease;
+        }
+      }
+
+      .finalizado {
+        color: var(--success-color) !important;
+        font-weight: 600 !important;
+        background-color: rgba(76, 175, 80, 0.1) !important;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+
+      .pendente {
+        color: var(--warning-color) !important;
+        font-weight: 600 !important;
+        background-color: rgba(255, 152, 0, 0.1) !important;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+    }
+  }
+}
+
+.no-workouts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  background-color: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: var(--icon-color);
+    margin-bottom: 24px;
+    transition: color 0.3s ease;
+  }
+
+  h3 {
+    margin: 0 0 16px 0;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin: 0;
+    transition: color 0.3s ease;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .workout-resultados-container {
+    padding: 16px;
+  }
+
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    .header-info .event-info {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+  }
+
+  .workout-tabs-container {
+    .add-result-card .result-form .form-row {
+      flex-direction: column;
+      align-items: stretch;
+
+      .participant-field,
+      .result-field {
+        flex: none;
+        min-width: auto;
+      }
+
+      .add-button {
+        margin-top: 0;
+        height: 48px;
+      }
+    }
+
+    .status-card .status-details {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .workout-info-card .workout-details {
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .results-table-card .results-table {
+      overflow-x: auto;
+      
+      .mat-mdc-table {
+        min-width: 600px;
+      }
+    }
+  }
+}
+
+// Material Design theme adjustments with dark mode support
+.workout-resultados-container {
+  mat-card {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px var(--card-shadow) !important;
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    transition: all 0.3s ease !important;
+
+    &:hover {
+      box-shadow: 0 6px 16px var(--card-shadow) !important;
+      transform: translateY(-1px);
+    }
+
+    mat-card-header {
+      color: var(--text-primary) !important;
+      
+      mat-card-title {
+        color: var(--text-primary) !important;
+        font-weight: 600;
+      }
+      
+      mat-card-subtitle {
+        color: var(--text-secondary) !important;
+      }
+    }
+
+    mat-card-content {
+      color: var(--text-primary) !important;
+    }
+  }
+
+  mat-tab-group {
+    background-color: var(--bg-primary);
+    
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      transition: all 0.3s ease;
+    }
+
+    .mat-mdc-tab {
+      color: var(--text-primary) !important;
+      font-weight: 600 !important;  // Fonte mais pesada
+      background-color: var(--bg-secondary) !important;
+      transition: all 0.3s ease;
+      border-radius: 8px 8px 0 0;
+      margin: 0 2px;
+      min-height: 48px;
+
+      &.mdc-tab--active {
+        color: var(--accent-primary) !important;
+        font-weight: 700 !important;
+        background-color: var(--bg-primary) !important;
+        border: 2px solid var(--accent-primary);
+        border-bottom: none;
+      }
+
+      &:hover:not(.mdc-tab--active) {
+        color: var(--accent-secondary) !important;
+        background-color: var(--bg-primary) !important;
+      }
+      
+      .mdc-tab__text-label {
+        color: inherit !important;
+        font-size: 15px !important;  // Tamanho maior
+        font-weight: inherit !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);  // Sombra no texto
+      }
+      
+      .mdc-tab__content {
+        padding: 12px 24px !important;
+      }
+    }
+
+    .mat-mdc-tab-body-wrapper {
+      margin-top: 0;
+      background-color: var(--bg-primary);
+    }
+  }
+
+  // Form field styling - Melhor contraste
+  .mat-mdc-form-field {
+    .mat-mdc-form-field-flex {
+      align-items: center;
+      background-color: var(--bg-secondary) !important;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .mat-mdc-text-field-wrapper {
+      background-color: var(--bg-secondary) !important;
+      border-radius: 8px;
+    }
+    
+    .mat-mdc-form-field-subscript-wrapper {
+      color: var(--text-primary) !important;  // Mudado para branco
+    }
+    
+    input, textarea {
+      color: var(--text-primary) !important;
+      caret-color: var(--accent-primary) !important;
+      font-weight: 500;  // Fonte mais pesada
+      
+      &::placeholder {
+        color: var(--text-muted) !important;  // Placeholder mais visível
+        opacity: 0.8;
+        font-weight: 400;
+      }
+    }
+    
+    label {
+      color: var(--text-primary) !important;  // Label em branco
+      font-weight: 500;  // Fonte mais pesada
+    }
+    
+    &.mat-focused {
+      label {
+        color: var(--accent-primary) !important;
+        font-weight: 600;
+      }
+      
+      .mat-mdc-form-field-flex {
+        border-color: var(--accent-primary);
+      }
+    }
+    
+    // Floating label específico
+    .mat-mdc-floating-label {
+      color: var(--text-primary) !important;
+      font-weight: 500;
+    }
+    
+    // Required asterisk
+    .mat-mdc-form-field-required-marker {
+      color: var(--warning-color) !important;
+    }
+  }
+
+  // Button styling
+  button {
+    transition: all 0.3s ease;
+    
+    &.mat-mdc-raised-button {
+      box-shadow: 0 2px 4px var(--card-shadow);
+      
+      &:hover {
+        box-shadow: 0 4px 8px var(--card-shadow);
+        transform: translateY(-1px);
+      }
+    }
+    
+    &.mat-primary {
+      background-color: var(--accent-primary) !important;
+      color: #ffffff !important;
+    }
+    
+    &.mat-accent {
+      background-color: var(--warning-color) !important;
+      color: #ffffff !important;
+    }
+  }
+
+  // Select dropdown styling - Melhor contraste
+  .mat-mdc-select {
+    color: var(--text-primary) !important;
+    font-weight: 500;
+    
+    .mat-mdc-select-trigger {
+      color: var(--text-primary) !important;
+      font-weight: 500;
+    }
+    
+    .mat-mdc-select-arrow {
+      color: var(--text-primary) !important;  // Seta em branco
+    }
+    
+    .mat-mdc-select-placeholder {
+      color: var(--text-muted) !important;
+      opacity: 0.9;
+    }
+    
+    .mat-mdc-select-value-text {
+      color: var(--text-primary) !important;
+      font-weight: 500;
+    }
+  }
+  
+  // Estilos específicos para elementos mencionados
+  
+  // Labels dos form fields (ex: "Resultado (tempo)", "Participante") - ANTI-SOBREPOSIÇÃO
+  .mat-mdc-form-field-label, 
+  .mat-mdc-form-field .mat-mdc-floating-label,
+  .mat-form-field-label {
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;  // Mais pesado ainda
+    font-size: 15px !important;   // Tamanho maior
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;  // Sombra para destacar
+    z-index: 100 !important;      // Z-index alto para evitar sobreposição
+    position: relative !important;
+    background-color: var(--bg-primary) !important; // Fundo para não sobrepor
+    padding: 0 4px !important;
+    margin-bottom: 8px !important;  // Espaço para evitar sobreposição
+  }
+  
+  // Placeholders (ex: "Ex: 10:30, 150, 25", "Selecione um participante...")
+  input::placeholder,
+  textarea::placeholder,
+  .mat-mdc-select-placeholder {
+    color: var(--text-muted) !important;
+    opacity: 0.9 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+  }
+  
+  // Texto nas abas - MÁXIMA ESPECIFICIDADE E CONTRASTE
+  mat-tab-group .mat-mdc-tab-header .mat-mdc-tab .mdc-tab__content .mdc-tab__text-label,
+  mat-tab-group .mat-mdc-tab-header .mat-mdc-tab-label,
+  mat-tab-group .mat-mdc-tab .mdc-tab__text-label,
+  .mat-mdc-tab .mdc-tab__text-label,
+  .mat-mdc-tab-label {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    text-transform: none !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+    letter-spacing: 0.5px !important;
+    font-family: 'Roboto', sans-serif !important;
+  }
+  
+  // Aba ativa - ainda mais destacada
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__text-label,
+  .mat-mdc-tab.mdc-tab--active .mdc-tab__content .mdc-tab__text-label {
+    color: #64b5f6 !important;
+    font-weight: 800 !important;
+    font-size: 17px !important;
+    text-shadow: 0 2px 6px rgba(100, 181, 246, 0.5) !important;
+  }
+  
+  // Asterisco obrigatório
+  .mat-form-field-required-marker,
+  .mat-mdc-form-field-required-marker {
+    color: var(--accent-primary) !important;
+    font-weight: bold !important;
+  }
+  
+  // Títulos dos cards para máxima legibilidade
+  mat-card-header, .mat-mdc-card-header {
+    .mat-mdc-card-title, mat-card-title {
+      color: var(--text-primary) !important;
+      font-weight: 700 !important;
+      font-size: 18px !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+    }
+    
+    .mat-mdc-card-subtitle, mat-card-subtitle {
+      color: var(--text-secondary) !important;
+      font-weight: 500 !important;
+      font-size: 14px !important;
+    }
+  }
+  
+  // Headers de seções (como "Status do Workout", "Adicionar Resultado", etc)
+  .card-header, .section-header {
+    h3, h4, .title {
+      color: var(--text-primary) !important;
+      font-weight: 700 !important;
+      font-size: 16px !important;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+      margin-bottom: 12px !important;
+    }
+    
+    mat-icon {
+      color: var(--accent-primary) !important;
+      font-size: 20px !important;
+    }
+  }
+}
+
+// OVERRIDE CRÍTICO FINAL - Forçar visibilidade das abas com máxima especificidade CSS
+:host ::ng-deep {
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      .mat-mdc-tab {
+        // Força cor branca em todos os estados da aba
+        color: #ffffff !important;
+        
+        .mdc-tab__content {
+          .mdc-tab__text-label {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 16px !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+          }
+        }
+        
+        // Aba ativa com cor azul mais intensa
+        &.mdc-tab--active {
+          color: #64b5f6 !important;
+          
+          .mdc-tab__content .mdc-tab__text-label {
+            color: #64b5f6 !important;
+            font-weight: 800 !important;
+            font-size: 17px !important;
+            text-shadow: 0 2px 6px rgba(100, 181, 246, 0.8) !important;
+          }
+        }
+        
+        // Aba em hover
+        &:hover:not(.mdc-tab--active) {
+          .mdc-tab__content .mdc-tab__text-label {
+            color: #e0e0e0 !important;
+            text-shadow: 0 2px 4px rgba(224, 224, 224, 0.3) !important;
+          }
+        }
+      }
+    }
+  }
+  
+  // Garantir que nenhum elemento pai está interferindo
+  mat-tab-group {
+    .mat-mdc-tab-header {
+      background-color: #1e1e1e !important;
+      
+      .mat-mdc-tab-header-pagination {
+        display: none !important; // Remove paginação se houver
+      }
+    }
+    
+    .mat-mdc-tab-body-wrapper {
+      background-color: #121212 !important;
+    }
+  }
+  
+  // ANTI-OVERLAPPING - Garantir espaçamento adequado entre elementos
+  .main-content {
+    .event-header {
+      margin-bottom: 24px !important;
+      padding-bottom: 16px !important;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 10;
+      position: relative;
+    }
+    
+    .category-info {
+      margin-bottom: 20px !important;
+      padding: 16px !important;
+      z-index: 9;
+      position: relative;
+    }
+    
+    .workouts-tabs {
+      margin-top: 32px !important;
+      z-index: 8;
+      position: relative;
+      
+      mat-tab-group {
+        margin-bottom: 24px !important;
+        
+        .mat-mdc-tab-header {
+          margin-bottom: 16px !important;
+          z-index: 20;
+          position: relative;
+        }
+        
+        .mat-mdc-tab-body-wrapper {
+          z-index: 7;
+          position: relative;
+          padding-top: 16px !important;
+        }
+      }
+    }
+    
+    // Garantir que cards não se sobreponham
+    mat-card {
+      margin-bottom: 20px !important;
+      z-index: 5;
+      position: relative;
+      
+      mat-card-header {
+        padding-bottom: 16px !important;
+        margin-bottom: 16px !important;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+      }
+      
+      mat-card-content {
+        padding-top: 16px !important;
+      }
+    }
+    
+    // Formulários com espaçamento adequado
+    .add-result-form {
+      .form-row {
+        margin-bottom: 24px !important;
+        
+        .mat-mdc-form-field {
+          margin-bottom: 16px !important;
+          
+          .mat-mdc-form-field-flex {
+            position: relative;
+            z-index: 15;
+          }
+          
+          .mat-mdc-form-field-label-wrapper {
+            z-index: 16;
+            position: relative;
+          }
+        }
+      }
+    }
+    
+    // Tabelas com posicionamento correto
+    .results-table {
+      margin-top: 24px !important;
+      z-index: 6;
+      position: relative;
+      
+      .mat-mdc-table {
+        z-index: 6;
+        position: relative;
+        
+        .mat-mdc-header-row {
+          z-index: 7;
+          position: relative;
+        }
+        
+        .mat-mdc-row {
+          z-index: 5;
+          position: relative;
+        }
+      }
+    }
+  }
+  
+  // Indicador de equipe no dropdown
+  .team-indicator {
+    font-size: 12px;
+    font-style: italic;
+    color: var(--accent-secondary) !important;
+    font-weight: 500;
+  }
+}

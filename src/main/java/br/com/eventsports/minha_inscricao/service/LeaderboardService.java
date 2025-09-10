@@ -326,6 +326,7 @@ public class LeaderboardService implements ILeaderboardService {
      * Calcula ranking de um workout (atribui posições com critério de empate)
      */
     @Transactional
+    @CacheEvict(value = "leaderboards", key = "'workout_' + #categoriaId + '_' + #workoutId")
     public List<LeaderboardSummaryDTO> calcularRankingWorkout(Long categoriaId, Long workoutId) {
         List<LeaderboardEntity> resultados = leaderboardRepository
                 .findByCategoriaIdAndWorkoutIdOrderByPosicaoWorkoutAsc(categoriaId, workoutId);
