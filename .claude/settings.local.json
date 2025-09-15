@@ -79,7 +79,8 @@
       "Bash(ls:*)",
       "Bash(./mvnw:*)",
       "mcp__playwright__browser_type",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(ng build:*)"
     ],
     "deny": [],
     "ask": []

@@ -1346,6 +1346,278 @@
   }
 }
 
+// ===============================================
+// ESTILOS PARA SEÇÃO DE INSCRIÇÕES
+// ===============================================
+
+.inscricoes-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  margin-bottom: 24px;
+}
+
+.inscricoes-card mat-card-header {
+  background: var(--bg-tertiary);
+  margin: -16px -16px 16px -16px;
+  padding: 20px;
+  border-radius: 16px 16px 0 0;
+}
+
+.inscricoes-card mat-card-title {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  color: var(--text-primary) !important;
+  font-size: 1.3rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+.inscricoes-card mat-card-title mat-icon {
+  color: var(--accent-primary);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+// Estados de loading/erro para categorias
+.loading-categorias,
+.error-categorias,
+.empty-categorias {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.loading-categorias mat-spinner {
+  --mdc-circular-progress-active-indicator-color: var(--accent-primary);
+}
+
+.error-categorias {
+  border-color: rgba(244, 67, 54, 0.2);
+}
+
+.error-categorias mat-icon {
+  color: #f44336;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.empty-categorias mat-icon {
+  color: var(--text-tertiary);
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+// Lista de categorias
+.categorias-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.categoria-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #2d2d2d; // Dark background similar à screenshot
+  border-radius: 12px;
+  border: 1px solid #444;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #353535;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.categoria-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  h3 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+  
+  .categoria-descricao {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin: 0;
+    line-height: 1.4;
+  }
+  
+  .categoria-valor {
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+}
+
+// Controles de quantidade
+.categoria-controles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  .controle-btn {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    
+    &:hover:not(:disabled) {
+      background: rgba(38, 198, 218, 0.2) !important;
+      border-color: var(--accent-primary) !important;
+      color: var(--accent-primary) !important;
+    }
+    
+    &:disabled {
+      background: rgba(255, 255, 255, 0.05) !important;
+      color: #666 !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+      cursor: not-allowed;
+    }
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .add-btn:hover:not(:disabled) {
+    background: rgba(76, 175, 80, 0.2) !important;
+    border-color: #4caf50 !important;
+    color: #4caf50 !important;
+  }
+  
+  .remove-btn:hover:not(:disabled) {
+    background: rgba(244, 67, 54, 0.2) !important;
+    border-color: #f44336 !important;
+    color: #f44336 !important;
+  }
+  
+  .quantidade {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    min-width: 30px;
+    text-align: center;
+    background: rgba(38, 198, 218, 0.15);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(38, 198, 218, 0.3);
+  }
+}
+
+// Seção de comprar
+.comprar-section {
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(38, 198, 218, 0.1) 0%, rgba(38, 198, 218, 0.05) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(38, 198, 218, 0.3);
+  text-align: center;
+  margin-top: 8px;
+  
+  .valor-total {
+    margin-bottom: 16px;
+    
+    strong {
+      font-size: 1.5rem;
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+  }
+  
+  .comprar-button {
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%) !important;
+    color: white !important;
+    border: none !important;
+    padding: 16px 32px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    letter-spacing: 1px !important;
+    transition: all 0.3s ease !important;
+    min-width: 200px;
+    
+    &:hover {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+    }
+  }
+}
+
+// Seção de compartilhar
+.share-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  
+  .share-button {
+    color: var(--accent-primary) !important;
+    border: 1px solid var(--accent-primary) !important;
+    background: transparent !important;
+    padding: 14px 24px !important;
+    border-radius: 12px !important;
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.2s ease !important;
+    width: 100%;
+    
+    &:hover {
+      background: var(--accent-primary) !important;
+      color: white !important;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+// Responsive para inscrições
+@media (max-width: 768px) {
+  .categoria-item {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    
+    .categoria-info {
+      text-align: center;
+    }
+    
+    .categoria-controles {
+      justify-content: center;
+    }
+  }
+  
+  .comprar-section {
+    padding: 16px;
+  }
+}
+
 // Ultra small screens (phones)
 @media (max-width: 480px) {
   .leaderboard-card .card-header {
@@ -1408,6 +1680,17 @@
   .leaderboard-tab {
     margin: 0 !important;
     padding: 0 !important;
+  }
+  
+  // Responsive para inscrições em telas muito pequenas
+  .categoria-controles .controle-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  .comprar-button {
+    font-size: 0.95rem !important;
+    min-width: 160px;
   }
 }
 

@@ -26,6 +26,20 @@ export interface Categoria {
   eventoId: number;
 }
 
+// Interface específica para seleção de inscrições
+export interface CategoriaInscricao {
+  id: number;
+  nome: string;
+  descricao?: string;
+  eventoId: number;
+  valorInscricao: number;
+  ativa: boolean;
+  tipoParticipacao: string;
+  idadeMinima?: number;
+  idadeMaxima?: number;
+  genero?: string;
+}
+
 // Novas interfaces baseadas no backend
 export interface WorkoutPosicao {
   workoutId: number;

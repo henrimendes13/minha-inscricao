@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -16,21 +16,19 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
+import { AuthService } from '../../../core/auth/auth.service';
 import { EventoService } from '../../../core/services/evento.service';
+import { InscricaoService, ParticipanteDTO } from '../../../core/services/inscricao.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { WorkoutService } from '../../../core/services/workout.service';
-import { InscricaoService, ParticipanteDTO } from '../../../core/services/inscricao.service';
-import { AuthHelpers } from '../../../core/auth/auth-helpers';
-import { AuthService } from '../../../core/auth/auth.service';
 
 import { EventoApiResponse } from '../../../models/evento.model';
 import { Categoria } from '../../../models/leaderboard.model';
-import { 
+import {
+  LeaderboardSummaryDTO,
   Workout,
   WorkoutResultCreateDTO,
-  WorkoutResultUpdateDTO,
   WorkoutResultStatusDTO,
-  LeaderboardSummaryDTO,
   WorkoutType
 } from '../../../models/workout.model';
 
@@ -170,7 +168,7 @@ import {
 
                         <mat-form-field appearance="outline" class="result-field">
                           <mat-label>Resultado ({{ workout.unidadeMedida }})</mat-label>
-                          <input matInput formControlName="resultadoValor" placeholder="Ex: 10:30, 150, 25">
+                          <input matInput formControlName="resultadoValor">
                           <mat-error *ngIf="resultForm.get('resultadoValor')?.hasError('required')">
                             Resultado é obrigatório
                           </mat-error>
@@ -341,7 +339,7 @@ export class WorkoutResultadosManageComponent implements OnInit {
     this.route.params.subscribe(params => {
       this.eventoId = +params['eventoId'];
       this.categoriaId = +params['categoriaId'];
-      
+
       if (this.eventoId && this.categoriaId) {
         this.carregarDados();
       } else {
@@ -353,7 +351,7 @@ export class WorkoutResultadosManageComponent implements OnInit {
   carregarDados(): void {
     console.log('🔄 [DEBUG] Iniciando carregarDados()');
     console.log('🔄 [DEBUG] eventoId:', this.eventoId, 'categoriaId:', this.categoriaId);
-    
+
     this.isLoading = true;
     this.hasError = false;
 
@@ -373,26 +371,26 @@ export class WorkoutResultadosManageComponent implements OnInit {
           workouts: data.workouts?.length || 0,
           participantes: data.participantes?.length || 0
         });
-        
+
         this.evento = data.evento;
         this.categoria = data.categorias.find(c => c.id === this.categoriaId) || null;
         this.workouts = data.workouts.filter(w => w.nomesCategorias.includes(this.categoria?.nome || ''));
         this.participantes = data.participantes;
-        
+
         console.log('👥 [DEBUG] Participantes carregados:', this.participantes);
         console.log('🏃 [DEBUG] Categoria encontrada:', this.categoria?.nome);
         console.log('🏋️ [DEBUG] Workouts filtrados:', this.workouts.length);
-        
+
         if (this.workouts.length > 0) {
           this.carregarResultadosWorkout(this.workouts[0]);
         }
-        
+
         this.isLoading = false;
       },
       error: (error) => {
         console.error('❌ [ERROR] Falha no forkJoin:', error);
         console.error('❌ [ERROR] Detalhes do erro:', JSON.stringify(error, null, 2));
-        
+
         this.isLoading = false;
         this.hasError = true;
       }
@@ -435,9 +433,9 @@ export class WorkoutResultadosManageComponent implements OnInit {
       // Se o participante tem nomeEquipe preenchido, é uma equipe
       // Se não tem nomeEquipe, é um atleta individual
       const isEquipe = !!(participante.nomeEquipe && participante.nomeEquipe.trim());
-      this.resultForm.patchValue({ 
+      this.resultForm.patchValue({
         participanteId: participanteId,
-        isEquipe: isEquipe 
+        isEquipe: isEquipe
       });
     }
   }
@@ -482,7 +480,7 @@ export class WorkoutResultadosManageComponent implements OnInit {
       return;
     }
 
-    const removerMethod = result.isEquipe 
+    const removerMethod = result.isEquipe
       ? this.workoutService.removerResultadoEquipe(workout.id, result.equipeId!)
       : this.workoutService.removerResultadoAtleta(workout.id, result.atletaId!);
 

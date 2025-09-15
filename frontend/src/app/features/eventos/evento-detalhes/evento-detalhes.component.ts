@@ -17,12 +17,13 @@ import { EventoService } from '../../../core/services/evento.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { TimelineService } from '../../../core/services/timeline.service';
 import { WorkoutService } from '../../../core/services/workout.service';
+import { CategoriaService } from '../../../core/services/categoria.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AuthHelpers } from '../../../core/auth/auth-helpers';
 
 import { Anexo, AnexoResponse } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
-import { Categoria, LeaderboardRanking, LeaderboardResponse, WorkoutPosicao } from '../../../models/leaderboard.model';
+import { Categoria, CategoriaInscricao, LeaderboardRanking, LeaderboardResponse, WorkoutPosicao } from '../../../models/leaderboard.model';
 import { Timeline } from '../../../models/timeline.model';
 import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
 
@@ -145,20 +146,99 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
 
                   <!-- Right Column - Actions & Details -->
                   <div class="right-column">
-                    <mat-card class="action-card">
+                    <!-- Seção de Inscrições Disponíveis -->
+                    <mat-card class="inscricoes-card" *ngIf="evento.podeReceberInscricoes">
                       <mat-card-header>
                         <mat-card-title>
                           <mat-icon>sports</mat-icon>
-                          Participar do Evento
+                          Selecione seu ingresso
+                        </mat-card-title>
+                      </mat-card-header>
+                      <mat-card-content>
+                        <!-- Loading State -->
+                        <div *ngIf="categoriasCarregando" class="loading-categorias">
+                          <mat-spinner diameter="30"></mat-spinner>
+                          <span>Carregando categorias...</span>
+                        </div>
+
+                        <!-- Error State -->
+                        <div *ngIf="categoriasError && !categoriasCarregando" class="error-categorias">
+                          <mat-icon>error_outline</mat-icon>
+                          <span>Erro ao carregar categorias</span>
+                        </div>
+
+                        <!-- Lista de Categorias -->
+                        <div *ngIf="!categoriasCarregando && !categoriasError" class="categorias-list">
+                          <!-- Empty State -->
+                          <div *ngIf="categoriasInscricao.length === 0" class="empty-categorias">
+                            <mat-icon>info_outline</mat-icon>
+                            <span>Nenhuma categoria disponível para inscrição</span>
+                          </div>
+
+                          <!-- Categorias Disponíveis -->
+                          <div *ngFor="let categoria of categoriasInscricao" class="categoria-item">
+                            <div class="categoria-info">
+                              <h3>{{ categoria.nome }}</h3>
+                              <p *ngIf="categoria.descricao" class="categoria-descricao">{{ categoria.descricao }}</p>
+                              <span class="categoria-valor">R$ {{ categoria.valorInscricao | number:'1.2-2' }} por atleta + taxas</span>
+                            </div>
+                            
+                            <div class="categoria-controles">
+                              <button 
+                                mat-icon-button 
+                                (click)="removerCategoria(categoria.id)" 
+                                [disabled]="!getQuantidadeCategoria(categoria.id)"
+                                class="controle-btn remove-btn">
+                                <mat-icon>remove</mat-icon>
+                              </button>
+                              
+                              <span class="quantidade">{{ getQuantidadeCategoria(categoria.id) }}</span>
+                              
+                              <button 
+                                mat-icon-button 
+                                (click)="adicionarCategoria(categoria.id)"
+                                class="controle-btn add-btn">
+                                <mat-icon>add</mat-icon>
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Seção de Comprar -->
+                          <div *ngIf="temItensNoCarrinho()" class="comprar-section">
+                            <div class="valor-total">
+                              <strong>Total: R$ {{ calcularValorTotal() | number:'1.2-2' }}</strong>
+                            </div>
+                            <button 
+                              mat-raised-button 
+                              color="primary" 
+                              class="comprar-button" 
+                              (click)="prosseguirInscricao()">
+                              COMPRAR INGRESSO
+                            </button>
+                          </div>
+                        </div>
+
+                        <!-- Botão Compartilhar (sempre visível) -->
+                        <div class="share-section">
+                          <mat-divider></mat-divider>
+                          <button mat-button class="share-button" (click)="compartilhar()">
+                            <mat-icon>share</mat-icon>
+                            Compartilhar
+                          </button>
+                        </div>
+                      </mat-card-content>
+                    </mat-card>
+
+                    <!-- Fallback para eventos sem inscrições abertas -->
+                    <mat-card class="action-card" *ngIf="!evento.podeReceberInscricoes">
+                      <mat-card-header>
+                        <mat-card-title>
+                          <mat-icon>sports</mat-icon>
+                          Status do Evento
                         </mat-card-title>
                       </mat-card-header>
                       <mat-card-content>
                         <div class="action-info">
-                          <div class="price-section" *ngIf="evento.podeReceberInscricoes">
-                            <div class="price-label">Valor da Inscrição</div>
-                            <div class="price-value">Gratuito</div>
-                          </div>
-                          
                           <div class="status-section">
                             <div class="status-indicator" [class]="getStatusClass(evento.status)">
                               <mat-icon>{{ getStatusIcon(evento.status) }}</mat-icon>
@@ -171,12 +251,10 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                           <div class="action-buttons">
                             <button 
                               mat-raised-button 
-                              color="primary" 
                               class="inscricao-button"
-                              [disabled]="!evento.podeReceberInscricoes"
-                              (click)="fazerInscricao()">
-                              <mat-icon>{{ evento.podeReceberInscricoes ? 'add' : 'block' }}</mat-icon>
-                              {{ evento.podeReceberInscricoes ? 'Fazer Inscrição' : 'Inscrições Fechadas' }}
+                              disabled>
+                              <mat-icon>block</mat-icon>
+                              Inscrições Fechadas
                             </button>
 
                             <button mat-button class="share-button" (click)="compartilhar()">
@@ -575,6 +653,12 @@ export class EventoDetalhesComponent implements OnInit {
   anexoLoading = false;
   anexoError = false;
 
+  // Inscrições (categorias disponíveis)
+  categoriasInscricao: CategoriaInscricao[] = [];
+  categoriasCarregando = false;
+  categoriasError = false;
+  carrinhoCategorias: Map<number, number> = new Map(); // categoriaId -> quantidade
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -583,6 +667,7 @@ export class EventoDetalhesComponent implements OnInit {
     private leaderboardService: LeaderboardService,
     private workoutService: WorkoutService,
     private anexoService: AnexoService,
+    private categoriaService: CategoriaService,
     private authService: AuthService,
     private snackBar: MatSnackBar
   ) { }
@@ -606,6 +691,8 @@ export class EventoDetalhesComponent implements OnInit {
       next: (evento) => {
         this.evento = evento;
         this.isLoading = false;
+        // Carregar categorias após carregar o evento
+        this.carregarCategorias();
       },
       error: (error) => {
         this.isLoading = false;
@@ -1054,5 +1141,109 @@ export class EventoDetalhesComponent implements OnInit {
 
     // Navegar para a página de gerenciamento
     this.router.navigate(['/eventos', this.eventoId, 'categoria', this.selectedCategoriaId, 'resultados']);
+  }
+
+  // ===============================================
+  // MÉTODOS PARA GERENCIAMENTO DE INSCRIÇÕES
+  // ===============================================
+
+  /**
+   * Carrega as categorias disponíveis para inscrição
+   */
+  carregarCategorias(): void {
+    if (!this.evento || !this.evento.podeReceberInscricoes) {
+      return;
+    }
+
+    this.categoriasCarregando = true;
+    this.categoriasError = false;
+
+    this.categoriaService.buscarCategoriasPorEvento(this.eventoId).subscribe({
+      next: (categorias) => {
+        // Filtrar apenas categorias ativas
+        this.categoriasInscricao = this.categoriaService.filtrarCategoriasAtivas(categorias);
+        this.categoriasCarregando = false;
+      },
+      error: (error) => {
+        this.categoriasCarregando = false;
+        this.categoriasError = true;
+        console.error('Erro ao carregar categorias:', error);
+      }
+    });
+  }
+
+  /**
+   * Adiciona uma unidade de uma categoria ao carrinho
+   */
+  adicionarCategoria(categoriaId: number): void {
+    const quantidadeAtual = this.carrinhoCategorias.get(categoriaId) || 0;
+    this.carrinhoCategorias.set(categoriaId, quantidadeAtual + 1);
+  }
+
+  /**
+   * Remove uma unidade de uma categoria do carrinho
+   */
+  removerCategoria(categoriaId: number): void {
+    const quantidadeAtual = this.carrinhoCategorias.get(categoriaId) || 0;
+    if (quantidadeAtual > 0) {
+      const novaQuantidade = quantidadeAtual - 1;
+      if (novaQuantidade === 0) {
+        this.carrinhoCategorias.delete(categoriaId);
+      } else {
+        this.carrinhoCategorias.set(categoriaId, novaQuantidade);
+      }
+    }
+  }
+
+  /**
+   * Retorna a quantidade de uma categoria no carrinho
+   */
+  getQuantidadeCategoria(categoriaId: number): number {
+    return this.carrinhoCategorias.get(categoriaId) || 0;
+  }
+
+  /**
+   * Calcula o valor total do carrinho
+   */
+  calcularValorTotal(): number {
+    return this.categoriaService.calcularValorTotal(this.categoriasInscricao, this.carrinhoCategorias);
+  }
+
+  /**
+   * Procede com o processo de inscrição
+   */
+  prosseguirInscricao(): void {
+    if (this.carrinhoCategorias.size === 0) {
+      this.snackBar.open('Selecione pelo menos uma categoria para inscrição', 'Fechar', {
+        duration: 3000
+      });
+      return;
+    }
+
+    // Preparar dados para o processo de inscrição
+    const categoriasEscolhidas: Array<{categoriaId: number, quantidade: number}> = [];
+    this.carrinhoCategorias.forEach((quantidade, categoriaId) => {
+      categoriasEscolhidas.push({ categoriaId, quantidade });
+    });
+
+    // Por enquanto, mostrar uma mensagem (implementar navegação posteriormente)
+    this.snackBar.open(`Inscrição em desenvolvimento. Categorias selecionadas: ${categoriasEscolhidas.length}`, 'Fechar', {
+      duration: 5000
+    });
+
+    // TODO: Implementar navegação para formulário de inscrição
+    // this.router.navigate(['/inscricoes', 'nova'], { 
+    //   queryParams: { 
+    //     eventoId: this.eventoId,
+    //     categorias: JSON.stringify(categoriasEscolhidas)
+    //   }
+    // });
+  }
+
+  /**
+   * Verifica se há itens no carrinho
+   */
+  temItensNoCarrinho(): boolean {
+    return this.carrinhoCategorias.size > 0 && this.calcularValorTotal() > 0;
   }
 }
