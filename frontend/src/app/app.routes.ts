@@ -22,6 +22,10 @@ export const routes: Routes = [
     canActivate: [EventoOwnerGuard]
   },
   {
+    path: 'inscricoes/nova/:eventoId',
+    loadComponent: () => import('./features/inscricoes/inscricao-nova/inscricao-nova.component').then(c => c.InscricaoNovaComponent)
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(c => c.LoginComponent)
   },

@@ -1,3 +1,6 @@
+// Import types from existing models
+import { Genero } from './atleta.model';
+
 export interface InscricaoCreateDTO {
   eventoId: number;
   categoriaId: number;
@@ -45,4 +48,45 @@ export enum StatusInscricao {
 export enum TipoParticipacao {
   INDIVIDUAL = 'INDIVIDUAL',
   EQUIPE = 'EQUIPE'
+}
+
+// Inscription-specific DTOs
+export interface AtletaInscricaoDTO {
+  nome: string;
+  cpf?: string;
+  dataNascimento: string;
+  genero: Genero;
+  telefone?: string;
+  emergenciaNome?: string;
+  emergenciaTelefone?: string;
+  observacoesMedicas?: string;
+  endereco?: string;
+  email?: string;
+  aceitaTermos: boolean;
+  categoriaId: number;
+  valorInscricao?: number;
+  codigoDesconto?: string;
+  termosInscricaoAceitos: boolean;
+}
+
+export interface EquipeInscricaoDTO {
+  nome: string;
+  categoriaId: number;
+  atletas: AtletaInscricaoDTO[];
+  capitaoCpf?: string;
+  valorInscricao?: number;
+  codigoDesconto?: string;
+  termosAceitos: boolean;
+}
+
+export interface CategoriaEscolhida {
+  categoriaId: number;
+  quantidade: number;
+}
+
+export interface InscricaoFormData {
+  eventoId: number;
+  categorias: CategoriaEscolhida[];
+  tipoInscricao: TipoParticipacao;
+  valorTotal: number;
 }

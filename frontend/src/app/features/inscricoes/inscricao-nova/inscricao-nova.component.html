@@ -1,0 +1,396 @@
+<div class="inscricao-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="60"></mat-spinner>
+    <h3>Carregando dados da inscrição...</h3>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="hasError && !isLoading" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <h3>Erro ao carregar dados</h3>
+    <p>Não foi possível carregar as informações necessárias para a inscrição.</p>
+    <button mat-raised-button color="primary" (click)="voltar()">
+      <mat-icon>arrow_back</mat-icon>
+      Voltar ao Evento
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && !hasError" class="inscricao-content">
+    
+    <!-- Header -->
+    <div class="header-section">
+      <button mat-icon-button (click)="voltar()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="header-info">
+        <h1>Inscrição - {{ nomeEvento }}</h1>
+        <p class="breadcrumb">
+          <span>Evento</span>
+          <mat-icon>chevron_right</mat-icon>
+          <span>Seleção de Categorias</span>
+          <mat-icon>chevron_right</mat-icon>
+          <span class="current">Dados da Inscrição</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Resumo da Seleção -->
+    <mat-card class="resumo-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>receipt</mat-icon>
+          Resumo da Seleção
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="resumo-grid">
+          <div class="resumo-item">
+            <strong>Tipo de Inscrição:</strong>
+            <span class="tipo-badge" [class.individual]="!isFormularioEquipe" [class.equipe]="isFormularioEquipe">
+              {{ isFormularioEquipe ? 'Equipe' : 'Individual' }}
+            </span>
+          </div>
+          <div class="resumo-item">
+            <strong>Categorias:</strong>
+            <span>{{ resumoCategorias }}</span>
+          </div>
+          <div class="resumo-item">
+            <strong>Valor Total:</strong>
+            <span class="valor-total">R$ {{ valorTotal | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Formulário Principal -->
+    <form [formGroup]="inscricaoForm" (ngSubmit)="submitInscricao()" class="inscricao-form">
+      
+      <!-- Formulário Individual -->
+      <div *ngIf="!isFormularioEquipe" class="individual-form">
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>person</mat-icon>
+              Dados {{ atletasFormArray.length === 1 ? 'do Atleta' : 'dos Atletas' }}
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div formArrayName="atletas" class="atletas-list">
+              <div *ngFor="let atletaForm of atletasFormArray.controls; let i = index" 
+                   [formGroupName]="i" 
+                   class="atleta-form-section">
+                
+                <h4 class="atleta-titulo">
+                  Atleta {{ i + 1 }}
+                  <span class="categoria-info" *ngIf="getCategoriaById(atletaForm.get('categoriaId')?.value) as categoria">
+                    - {{ categoria.nome }}
+                  </span>
+                </h4>
+                
+                <!-- Dados Pessoais -->
+                <div class="form-section">
+                  <h5>Dados Pessoais</h5>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Nome Completo *</mat-label>
+                      <input matInput formControlName="nome" placeholder="Ex: João Silva Santos">
+                      <mat-error *ngIf="atletaForm.get('nome')?.hasError('required')">
+                        Nome é obrigatório
+                      </mat-error>
+                      <mat-error *ngIf="atletaForm.get('nome')?.hasError('maxlength')">
+                        Nome deve ter no máximo 200 caracteres
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                  
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>CPF</mat-label>
+                      <input matInput formControlName="cpf" 
+                             placeholder="000.000.000-00"
+                             (blur)="formatarCpf($event, atletaForm.get('cpf'))">
+                      <mat-error *ngIf="atletaForm.get('cpf')?.hasError('cpfInvalido')">
+                        CPF deve estar no formato 000.000.000-00
+                      </mat-error>
+                    </mat-form-field>
+                    
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Data de Nascimento *</mat-label>
+                      <input matInput [matDatepicker]="picker" formControlName="dataNascimento">
+                      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                      <mat-datepicker #picker></mat-datepicker>
+                      <mat-error *ngIf="atletaForm.get('dataNascimento')?.hasError('required')">
+                        Data de nascimento é obrigatória
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                  
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Gênero *</mat-label>
+                      <mat-select formControlName="genero">
+                        <mat-option *ngFor="let genero of generos" [value]="genero.value">
+                          {{ genero.label }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-error *ngIf="atletaForm.get('genero')?.hasError('required')">
+                        Gênero é obrigatório
+                      </mat-error>
+                    </mat-form-field>
+                    
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Telefone</mat-label>
+                      <input matInput formControlName="telefone" 
+                             placeholder="(11) 99999-9999"
+                             (blur)="formatarTelefone($event, atletaForm.get('telefone'))">
+                      <mat-error *ngIf="atletaForm.get('telefone')?.hasError('telefoneInvalido')">
+                        Telefone deve estar no formato (XX) XXXXX-XXXX
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                  
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Email</mat-label>
+                      <input matInput type="email" formControlName="email" placeholder="joao@email.com">
+                      <mat-error *ngIf="atletaForm.get('email')?.hasError('email')">
+                        Email deve ter um formato válido
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                  
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Endereço</mat-label>
+                      <input matInput formControlName="endereco" 
+                             placeholder="Rua das Palmeiras, 456 - Vila Nova - São Paulo/SP">
+                    </mat-form-field>
+                  </div>
+                </div>
+                
+                <!-- Contato de Emergência -->
+                <div class="form-section">
+                  <h5>Contato de Emergência</h5>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Nome do Contato</mat-label>
+                      <input matInput formControlName="emergenciaNome" placeholder="Maria Silva">
+                    </mat-form-field>
+                    
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Telefone do Contato</mat-label>
+                      <input matInput formControlName="emergenciaTelefone" 
+                             placeholder="(11) 88888-8888"
+                             (blur)="formatarTelefone($event, atletaForm.get('emergenciaTelefone'))">
+                      <mat-error *ngIf="atletaForm.get('emergenciaTelefone')?.hasError('telefoneInvalido')">
+                        Telefone deve estar no formato (XX) XXXXX-XXXX
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+                
+                <!-- Informações Médicas -->
+                <div class="form-section">
+                  <h5>Informações Médicas</h5>
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Observações Médicas</mat-label>
+                      <textarea matInput formControlName="observacoesMedicas" 
+                                rows="3" 
+                                placeholder="Alergias, medicamentos, limitações físicas, etc."></textarea>
+                    </mat-form-field>
+                  </div>
+                </div>
+                
+                <!-- Termos -->
+                <div class="form-section">
+                  <mat-checkbox formControlName="aceitaTermos" class="terms-checkbox">
+                    Aceito os termos e condições gerais *
+                  </mat-checkbox>
+                  <mat-error *ngIf="atletaForm.get('aceitaTermos')?.hasError('required') && atletaForm.get('aceitaTermos')?.touched">
+                    Você deve aceitar os termos para continuar
+                  </mat-error>
+                  
+                  <mat-checkbox formControlName="termosInscricaoAceitos" class="terms-checkbox">
+                    Aceito os termos específicos da inscrição no evento *
+                  </mat-checkbox>
+                  <mat-error *ngIf="atletaForm.get('termosInscricaoAceitos')?.hasError('required') && atletaForm.get('termosInscricaoAceitos')?.touched">
+                    Você deve aceitar os termos da inscrição para continuar
+                  </mat-error>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Termo Geral Final -->
+            <div class="form-section final-terms">
+              <mat-checkbox formControlName="termosGerais" class="terms-checkbox main-terms">
+                Declaro que todas as informações fornecidas são verdadeiras e aceito todas as condições do evento *
+              </mat-checkbox>
+              <mat-error *ngIf="inscricaoForm.get('termosGerais')?.hasError('required') && inscricaoForm.get('termosGerais')?.touched">
+                Você deve aceitar os termos gerais para prosseguir
+              </mat-error>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      
+      <!-- Formulário Equipe -->
+      <div *ngIf="isFormularioEquipe" class="equipe-form">
+        <!-- Dados da Equipe -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>groups</mat-icon>
+              Dados da Equipe
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Nome da Equipe *</mat-label>
+                <input matInput formControlName="nomeEquipe" placeholder="Ex: Warriors CrossFit">
+                <mat-error *ngIf="inscricaoForm.get('nomeEquipe')?.hasError('required')">
+                  Nome da equipe é obrigatório
+                </mat-error>
+                <mat-error *ngIf="inscricaoForm.get('nomeEquipe')?.hasError('minlength')">
+                  Nome deve ter pelo menos 3 caracteres
+                </mat-error>
+              </mat-form-field>
+            </div>
+            
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>CPF do Capitão (Opcional)</mat-label>
+                <input matInput formControlName="capitaoCpf" 
+                       placeholder="000.000.000-00"
+                       (blur)="formatarCpf($event, inscricaoForm.get('capitaoCpf'))">
+                <mat-hint>Se não informado, será o primeiro atleta da lista</mat-hint>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="half-width">
+                <mat-label>Código de Desconto</mat-label>
+                <input matInput formControlName="codigoDesconto" placeholder="DESCONTO10">
+              </mat-form-field>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        
+        <!-- Atletas da Equipe -->
+        <mat-card class="form-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>person</mat-icon>
+              Atletas da Equipe ({{ atletasFormArray.length }}/6)
+            </mat-card-title>
+            <div class="header-actions">
+              <button type="button" mat-icon-button 
+                      (click)="adicionarAtleta()" 
+                      [disabled]="atletasFormArray.length >= 6"
+                      matTooltip="Adicionar atleta">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <div formArrayName="atletas" class="atletas-list">
+              <div *ngFor="let atletaForm of atletasFormArray.controls; let i = index" 
+                   [formGroupName]="i" 
+                   class="atleta-form-section equipe-atleta">
+                
+                <div class="atleta-header">
+                  <h4 class="atleta-titulo">Atleta {{ i + 1 }}</h4>
+                  <button type="button" mat-icon-button 
+                          (click)="removerAtleta(i)" 
+                          [disabled]="atletasFormArray.length <= 2"
+                          matTooltip="Remover atleta"
+                          class="remove-atleta">
+                    <mat-icon>remove_circle</mat-icon>
+                  </button>
+                </div>
+                
+                <!-- Usar o mesmo formulário de atleta da versão individual -->
+                <div class="form-section">
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Nome Completo *</mat-label>
+                      <input matInput formControlName="nome" placeholder="Ex: João Silva Santos">
+                      <mat-error *ngIf="atletaForm.get('nome')?.hasError('required')">
+                        Nome é obrigatório
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                  
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>CPF</mat-label>
+                      <input matInput formControlName="cpf" 
+                             placeholder="000.000.000-00"
+                             (blur)="formatarCpf($event, atletaForm.get('cpf'))">
+                    </mat-form-field>
+                    
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Data de Nascimento *</mat-label>
+                      <input matInput [matDatepicker]="picker2" formControlName="dataNascimento">
+                      <mat-datepicker-toggle matIconSuffix [for]="picker2"></mat-datepicker-toggle>
+                      <mat-datepicker #picker2></mat-datepicker>
+                    </mat-form-field>
+                  </div>
+                  
+                  <div class="form-row">
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Gênero *</mat-label>
+                      <mat-select formControlName="genero">
+                        <mat-option *ngFor="let genero of generos" [value]="genero.value">
+                          {{ genero.label }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    
+                    <mat-form-field appearance="outline" class="half-width">
+                      <mat-label>Telefone</mat-label>
+                      <input matInput formControlName="telefone" 
+                             placeholder="(11) 99999-9999"
+                             (blur)="formatarTelefone($event, atletaForm.get('telefone'))">
+                    </mat-form-field>
+                  </div>
+                  
+                  <mat-checkbox formControlName="aceitaTermos" class="terms-checkbox">
+                    Aceito os termos e condições *
+                  </mat-checkbox>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Termos da Equipe -->
+            <div class="form-section final-terms">
+              <mat-checkbox formControlName="termosAceitos" class="terms-checkbox main-terms">
+                Declaro que todos os atletas concordam com os termos e condições do evento *
+              </mat-checkbox>
+              <mat-error *ngIf="inscricaoForm.get('termosAceitos')?.hasError('required') && inscricaoForm.get('termosAceitos')?.touched">
+                Você deve aceitar os termos para prosseguir
+              </mat-error>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" mat-button (click)="voltar()" [disabled]="isSubmitting">
+          <mat-icon>arrow_back</mat-icon>
+          Voltar
+        </button>
+        
+        <button type="submit" mat-raised-button color="primary" 
+                [disabled]="!inscricaoForm.valid || isSubmitting"
+                class="submit-button">
+          <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+          <mat-icon *ngIf="!isSubmitting">check</mat-icon>
+          {{ isSubmitting ? 'Processando...' : 'Finalizar Inscrição' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

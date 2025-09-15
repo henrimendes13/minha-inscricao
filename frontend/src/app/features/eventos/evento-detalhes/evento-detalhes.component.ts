@@ -1226,18 +1226,12 @@ export class EventoDetalhesComponent implements OnInit {
       categoriasEscolhidas.push({ categoriaId, quantidade });
     });
 
-    // Por enquanto, mostrar uma mensagem (implementar navegação posteriormente)
-    this.snackBar.open(`Inscrição em desenvolvimento. Categorias selecionadas: ${categoriasEscolhidas.length}`, 'Fechar', {
-      duration: 5000
+    // Navegar para o formulário de inscrição
+    this.router.navigate(['/inscricoes', 'nova', this.eventoId], { 
+      queryParams: { 
+        categorias: JSON.stringify(categoriasEscolhidas)
+      }
     });
-
-    // TODO: Implementar navegação para formulário de inscrição
-    // this.router.navigate(['/inscricoes', 'nova'], { 
-    //   queryParams: { 
-    //     eventoId: this.eventoId,
-    //     categorias: JSON.stringify(categoriasEscolhidas)
-    //   }
-    // });
   }
 
   /**
