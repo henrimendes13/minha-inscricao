@@ -14,7 +14,13 @@
   text-align: center;
   gap: 16px;
   min-height: 200px;
-  
+
+  // Mobile: Permitir heights menores para melhor scroll
+  @media (max-width: 768px) {
+    min-height: 120px;
+    padding: 30px 15px;
+  }
+
   mat-spinner {
     --mdc-circular-progress-active-indicator-color: var(--accent-primary);
   }
@@ -31,6 +37,12 @@
     padding: 20px;
     min-height: 120px;
     gap: 12px;
+
+    // Mobile: Ainda menor para tabs
+    @media (max-width: 768px) {
+      min-height: 80px;
+      padding: 15px;
+    }
     
     mat-spinner {
       transform: scale(0.8);
@@ -299,6 +311,12 @@
   padding: 20px;
   min-height: 120px;
   gap: 12px;
+
+  // Mobile: Otimizado para tabs
+  @media (max-width: 768px) {
+    min-height: 80px;
+    padding: 15px;
+  }
   
   mat-spinner {
     transform: scale(0.8);

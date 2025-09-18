@@ -72,10 +72,64 @@ body {
 .text-tertiary { color: var(--text-tertiary) !important; }
 
 // ============================================
+// MOBILE SCROLL IMPROVEMENTS - GLOBAL
+// ============================================
+
+// Regras universais para Angular Material Tabs
+@media (max-width: 768px) {
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  ::ng-deep .mat-mdc-tab-body-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  // Containers de conteúdo mobile
+  .mobile-content-container {
+    padding: 0 15px 60px 15px !important;
+    overflow: visible !important;
+  }
+
+  // Tabs mobile
+  .mobile-tab-content {
+    padding: 0 0 40px 0 !important;
+    overflow: visible !important;
+  }
+}
+
+// Classes utilitárias para scroll
+.scroll-safe-mobile {
+  @media (max-width: 768px) {
+    padding-bottom: 60px !important;
+    overflow: visible !important;
+  }
+}
+
+.mobile-scroll-container {
+  @media (max-width: 768px) {
+    padding: 0 15px 60px 15px;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+}
+
+.tab-content-mobile {
+  @media (max-width: 768px) {
+    padding: 0 0 40px 0;
+    overflow: visible;
+  }
+}
+
+// ============================================
 // IMPORTAÇÃO DE COMPONENTES UNIVERSAIS
 // ============================================
 
 // Components reutilizáveis
 @import './styles/components/cards';
-@import './styles/components/grids';  
+@import './styles/components/grids';
 @import './styles/components/states';

@@ -251,16 +251,24 @@
 }
 
 // Responsividade geral
+@media (max-width: 768px) {
+  .details-grid {
+    padding: 0 15px 60px 15px;
+    overflow: visible;
+    box-sizing: border-box;
+  }
+}
+
 @media (max-width: 480px) {
   .details-grid,
   .dashboard-grid {
     gap: 16px;
   }
-  
+
   .content-grid {
     gap: 20px;
   }
-  
+
   .section-header {
     margin-bottom: 16px;
   }
