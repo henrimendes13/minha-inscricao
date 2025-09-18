@@ -1162,7 +1162,32 @@ export class EventoDetalhesComponent implements OnInit {
       return;
     }
 
-    // Preparar dados para o processo de inscrição
+    // Verificar se o usuário está autenticado
+    if (!this.authService.isAuthenticated()) {
+      // Preparar dados para preservar durante o login
+      const categoriasEscolhidas: Array<{ categoriaId: number, quantidade: number }> = [];
+      this.carrinhoCategorias.forEach((quantidade, categoriaId) => {
+        categoriasEscolhidas.push({ categoriaId, quantidade });
+      });
+
+      // Construir a URL de retorno após o login
+      const returnUrl = `/inscricoes/nova/${this.eventoId}?categorias=${encodeURIComponent(JSON.stringify(categoriasEscolhidas))}`;
+
+      // Mostrar mensagem informativa
+      this.snackBar.open('Você precisa estar logado para fazer uma inscrição', 'Fechar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'top'
+      });
+
+      // Redirecionar para login com URL de retorno
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl }
+      });
+      return;
+    }
+
+    // Usuário autenticado - preparar dados para o processo de inscrição
     const categoriasEscolhidas: Array<{ categoriaId: number, quantidade: number }> = [];
     this.carrinhoCategorias.forEach((quantidade, categoriaId) => {
       categoriasEscolhidas.push({ categoriaId, quantidade });

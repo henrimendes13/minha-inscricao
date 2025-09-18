@@ -23,7 +23,8 @@ export const routes: Routes = [
   },
   {
     path: 'inscricoes/nova/:eventoId',
-    loadComponent: () => import('./features/inscricoes/inscricao-nova/inscricao-nova.component').then(c => c.InscricaoNovaComponent)
+    loadComponent: () => import('./features/inscricoes/inscricao-nova/inscricao-nova.component').then(c => c.InscricaoNovaComponent),
+    canActivate: [AuthGuard]
   },
   {
     path: 'login',
