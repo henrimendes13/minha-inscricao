@@ -68,6 +68,7 @@ export enum StatusEvento {
 export interface EventoApiResponse {
   id: number;
   nome: string;
+  descricao?: string;
   dataInicioDoEvento: string;
   dataFimDoEvento: string;
   status: string;

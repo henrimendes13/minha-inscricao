@@ -80,7 +80,8 @@
       "Bash(./mvnw:*)",
       "mcp__playwright__browser_type",
       "Bash(tasklist)",
-      "Bash(ng build:*)"
+      "Bash(ng build:*)",
+      "Bash(netstat:*)"
     ],
     "deny": [],
     "ask": []

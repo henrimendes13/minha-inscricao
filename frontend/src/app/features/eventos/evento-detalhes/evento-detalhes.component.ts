@@ -12,14 +12,14 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { AuthHelpers } from '../../../core/auth/auth-helpers';
+import { AuthService } from '../../../core/auth/auth.service';
 import { AnexoService } from '../../../core/services/anexo.service';
+import { CategoriaService } from '../../../core/services/categoria.service';
 import { EventoService } from '../../../core/services/evento.service';
 import { LeaderboardService } from '../../../core/services/leaderboard.service';
 import { TimelineService } from '../../../core/services/timeline.service';
 import { WorkoutService } from '../../../core/services/workout.service';
-import { CategoriaService } from '../../../core/services/categoria.service';
-import { AuthService } from '../../../core/auth/auth.service';
-import { AuthHelpers } from '../../../core/auth/auth-helpers';
 
 import { Anexo, AnexoResponse } from '../../../models/anexo.model';
 import { EventoApiResponse } from '../../../models/evento.model';
@@ -101,59 +101,24 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                       </div>
                     </div>
 
-                    <mat-card class="event-info-card">
-                      <mat-card-header>
-                        <mat-card-title>
-                          <mat-icon>info</mat-icon>
-                          Informações do Evento
-                        </mat-card-title>
-                      </mat-card-header>
-                      <mat-card-content>
-                        <div class="info-item">
-                          <mat-icon>calendar_today</mat-icon>
-                          <div class="info-content">
-                            <strong>Período:</strong>
-                            <span>{{ formatarDataRange(evento.dataInicioDoEvento, evento.dataFimDoEvento) }}</span>
-                          </div>
-                        </div>
-                        
-                        <div class="info-item">
-                          <mat-icon>category</mat-icon>
-                          <div class="info-content">
-                            <strong>Categorias:</strong>
-                            <span>{{ evento.totalCategorias }} disponíveis</span>
-                          </div>
-                        </div>
-
-                        <div class="info-item">
-                          <mat-icon>people</mat-icon>
-                          <div class="info-content">
-                            <strong>Inscrições:</strong>
-                            <span>{{ evento.inscricoesAtivas }} ativas</span>
-                          </div>
-                        </div>
-
-                        <div class="info-item">
-                          <mat-icon>schedule</mat-icon>
-                          <div class="info-content">
-                            <strong>Criado em:</strong>
-                            <span>{{ formatarData(evento.createdAt) }}</span>
-                          </div>
-                        </div>
-                      </mat-card-content>
-                    </mat-card>
+                    <!-- Seção Sobre o Evento -->
+                    <div class="evento-sobre-section" *ngIf="evento.descricao">
+                      <h3 class="sobre-titulo">Sobre o Evento:</h3>
+                      <p class="evento-descricao">{{ evento.descricao }}</p>
+                    </div>
                   </div>
 
                   <!-- Right Column - Actions & Details -->
                   <div class="right-column">
+                    <br>
                     <!-- Seção de Inscrições Disponíveis -->
                     <mat-card class="inscricoes-card" *ngIf="evento.podeReceberInscricoes">
-                      <mat-card-header>
+                      <br>
                         <mat-card-title>
                           <mat-icon>sports</mat-icon>
                           Selecione seu ingresso
                         </mat-card-title>
-                      </mat-card-header>
+                        <br>
                       <mat-card-content>
                         <!-- Loading State -->
                         <div *ngIf="categoriasCarregando" class="loading-categorias">
@@ -262,29 +227,6 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                               Compartilhar
                             </button>
                           </div>
-                        </div>
-                      </mat-card-content>
-                    </mat-card>
-
-                    <mat-card class="details-card">
-                      <mat-card-header>
-                        <mat-card-title>
-                          <mat-icon>description</mat-icon>
-                          Detalhes Adicionais
-                        </mat-card-title>
-                      </mat-card-header>
-                      <mat-card-content>
-                        <div class="detail-item">
-                          <strong>ID do Evento:</strong> #{{ evento.id }}
-                        </div>
-                        <div class="detail-item">
-                          <strong>Status:</strong> {{ evento.status }}
-                        </div>
-                        <div class="detail-item">
-                          <strong>Permite Inscrições:</strong> 
-                          <span class="boolean-value" [class.active]="evento.podeReceberInscricoes">
-                            {{ evento.podeReceberInscricoes ? 'Sim' : 'Não' }}
-                          </span>
                         </div>
                       </mat-card-content>
                     </mat-card>
@@ -1221,14 +1163,14 @@ export class EventoDetalhesComponent implements OnInit {
     }
 
     // Preparar dados para o processo de inscrição
-    const categoriasEscolhidas: Array<{categoriaId: number, quantidade: number}> = [];
+    const categoriasEscolhidas: Array<{ categoriaId: number, quantidade: number }> = [];
     this.carrinhoCategorias.forEach((quantidade, categoriaId) => {
       categoriasEscolhidas.push({ categoriaId, quantidade });
     });
 
     // Navegar para o formulário de inscrição
-    this.router.navigate(['/inscricoes', 'nova', this.eventoId], { 
-      queryParams: { 
+    this.router.navigate(['/inscricoes', 'nova', this.eventoId], {
+      queryParams: {
         categorias: JSON.stringify(categoriasEscolhidas)
       }
     });
