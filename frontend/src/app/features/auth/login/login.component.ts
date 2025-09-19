@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -189,21 +189,28 @@ import { AuthService } from '../../../core/auth/auth.service';
     }
   `]
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   hidePassword = true;
+  returnUrl: string = '/eventos';
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private snackBar: MatSnackBar
   ) {
     this.loginForm = this.fb.group({
       email: ['henri@henri.com', [Validators.required, Validators.email]],
       senha: ['henri', [Validators.required]]
     });
+  }
+
+  ngOnInit(): void {
+    // Capturar o returnUrl dos query parameters
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/eventos';
   }
 
   onSubmit(): void {
@@ -220,7 +227,8 @@ export class LoginComponent {
             horizontalPosition: 'center',
             verticalPosition: 'top'
           });
-          this.router.navigate(['/eventos']);
+          // Redirecionar para a URL de retorno ou para eventos como fallback
+          this.router.navigateByUrl(this.returnUrl);
         },
         error: (error) => {
           this.isLoading = false;
