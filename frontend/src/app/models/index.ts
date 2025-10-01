@@ -2,6 +2,7 @@ export * from './evento.model';
 export * from './usuario.model';
 export * from './atleta.model';
 export * from './equipe.model';
+export * from './dashboard-estatisticas';
 
 // Export only specific interfaces from inscricao.model to avoid conflicts
 export type {

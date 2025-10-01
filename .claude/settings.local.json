@@ -81,7 +81,10 @@
       "mcp__playwright__browser_type",
       "Bash(tasklist)",
       "Bash(ng build:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(start cmd /k \"cd /d c:\\Users\\Henrique\\source\\repos\\minha-inscricao\\frontend && npm start\")",
+      "Bash(findstr:*)",
+      "Bash(ng generate component:*)"
     ],
     "deny": [],
     "ask": []

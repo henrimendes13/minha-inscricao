@@ -3,7 +3,7 @@ import { Observable, map, catchError, throwError } from 'rxjs';
 
 import { BaseHttpService } from './base-http.service';
 import { API_CONFIG } from '../constants/api.constants';
-import { EventoApiResponse } from '../../models/evento.model';
+import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../../models/evento.model';
 
 @Injectable({
   providedIn: 'root'
@@ -85,6 +85,141 @@ export class EventoService extends BaseHttpService {
       default:
         return '#607d8b';
     }
+  }
+
+  /**
+   * Cria novo evento
+   */
+  criarEvento(evento: EventoCreateRequest): Observable<EventoApiResponse> {
+    return this.post<EventoApiResponse>(API_CONFIG.endpoints.eventos.base, evento)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao criar evento:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Atualiza evento existente
+   */
+  atualizarEvento(id: number, evento: EventoUpdateRequest): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(API_CONFIG.endpoints.eventos.byId(id), evento)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao atualizar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Deleta evento
+   */
+  deletarEvento(id: number): Observable<void> {
+    return this.delete<void>(API_CONFIG.endpoints.eventos.byId(id))
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao deletar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Publica evento (muda status para ABERTO)
+   */
+  publicarEvento(id: number): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/publicar`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao publicar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Encerra inscrições do evento
+   */
+  encerrarInscricoes(id: number): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/encerrar-inscricoes`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao encerrar inscrições do evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Inicia evento (muda status para EM_ANDAMENTO)
+   */
+  iniciarEvento(id: number): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/iniciar`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao iniciar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Finaliza evento (muda status para FINALIZADO)
+   */
+  finalizarEvento(id: number): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/finalizar`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao finalizar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Cancela evento (muda status para CANCELADO)
+   */
+  cancelarEvento(id: number): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/cancelar`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao cancelar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Adia evento (muda status para ADIADO)
+   */
+  adiarEvento(id: number): Observable<EventoApiResponse> {
+    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/adiar`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao adiar evento ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Converte data do DatePicker para formato do backend (dd-MM-yyyy)
+   */
+  converterDataParaBackend(data: Date): string {
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const ano = data.getFullYear();
+    return `${dia}-${mes}-${ano}`;
+  }
+
+  /**
+   * Converte data do backend (dd-MM-yyyy) para Date
+   */
+  converterDataDoBackend(dataStr: string): Date {
+    const [dia, mes, ano] = dataStr.split('-').map(Number);
+    return new Date(ano, mes - 1, dia);
   }
 
   /**

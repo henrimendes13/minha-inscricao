@@ -44,7 +44,7 @@ export const routes: Routes = [
     path: 'dashboard',
     loadComponent: () => import('./layout/main-layout/main-layout.component').then(c => c.MainLayoutComponent),
     canActivate: [AuthGuard],
-    data: { requiredRole: 'ADMIN' },
+    data: { requiredEmail: 'admin@admin.com' },
     children: [
       {
         path: '',

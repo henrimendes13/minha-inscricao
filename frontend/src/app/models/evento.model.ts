@@ -1,3 +1,37 @@
+// Interface alinhada com EventoCreateDTO do backend
+export interface EventoCreateRequest {
+  nome: string;
+  dataInicioDoEvento: string; // formato: dd-MM-yyyy
+  dataFimDoEvento: string;    // formato: dd-MM-yyyy
+  descricao?: string;
+  cidade?: string;
+  estado?: string;
+  endereco?: string;
+}
+
+// Interface alinhada com EventoUpdateDTO do backend
+export interface EventoUpdateRequest {
+  nome: string;
+  dataInicioDoEvento: string; // formato: dd-MM-yyyy
+  dataFimDoEvento: string;    // formato: dd-MM-yyyy
+  descricao?: string;
+  cidade?: string;
+  estado?: string;
+  endereco?: string;
+}
+
+// Enum de status alinhado com o backend
+export enum StatusEvento {
+  RASCUNHO = 'RASCUNHO',
+  ABERTO = 'ABERTO',
+  INSCRICOES_ENCERRADAS = 'INSCRICOES_ENCERRADAS',
+  EM_ANDAMENTO = 'EM_ANDAMENTO',
+  FINALIZADO = 'FINALIZADO',
+  CANCELADO = 'CANCELADO',
+  ADIADO = 'ADIADO'
+}
+
+// Legacy DTOs (manter para compatibilidade)
 export interface EventoCreateDTO {
   nome: string;
   descricao?: string;
@@ -53,15 +87,6 @@ export interface EventoSummaryDTO {
   dataFim: string;
   local?: string;
   status: StatusEvento;
-}
-
-export enum StatusEvento {
-  PLANEJADO = 'PLANEJADO',
-  INSCRICOES_ABERTAS = 'INSCRICOES_ABERTAS',
-  INSCRICOES_FECHADAS = 'INSCRICOES_FECHADAS',
-  EM_ANDAMENTO = 'EM_ANDAMENTO',
-  FINALIZADO = 'FINALIZADO',
-  CANCELADO = 'CANCELADO'
 }
 
 // Interface para a resposta da API real

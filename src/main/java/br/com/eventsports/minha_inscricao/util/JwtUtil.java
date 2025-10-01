@@ -169,17 +169,20 @@ public class JwtUtil {
      */
     public Authentication getAuthenticationFromToken(String token) {
         String email = getEmailFromToken(token);
-        String role = getRoleFromToken(token);
-        
-        // Define role padrão se não encontrada
-        if (role == null) {
-            role = "admin@admin.com".equals(email) ? "ROLE_ADMIN" : "ROLE_USER";
+        String tipoUsuario = getTipoUsuarioFromToken(token);
+
+        // Define authority baseada no tipoUsuario
+        String authority;
+        if (tipoUsuario != null) {
+            authority = tipoUsuario; // Usa diretamente: ADMIN, ORGANIZADOR, ATLETA
+        } else {
+            authority = "admin@admin.com".equals(email) ? "ADMIN" : "ATLETA";
         }
-        
+
         return new UsernamePasswordAuthenticationToken(
-                email, 
-                null, 
-                Arrays.asList(new SimpleGrantedAuthority(role))
+                email,
+                null,
+                Arrays.asList(new SimpleGrantedAuthority(authority))
         );
     }
 
