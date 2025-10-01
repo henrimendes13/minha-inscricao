@@ -1,1 +1,85 @@
-<p>evento-dialog works!</p>
+<h2 mat-dialog-title>{{ titulo }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="eventoForm" class="evento-form">
+    <!-- Nome do Evento -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome do Evento *</mat-label>
+      <input matInput formControlName="nome" placeholder="Ex: CrossFit Games 2024" maxlength="200">
+      <mat-icon matPrefix>event</mat-icon>
+      <mat-error *ngIf="eventoForm.get('nome')?.invalid">
+        {{ getErrorMessage('nome') }}
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Descrição -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descrição</mat-label>
+      <textarea matInput formControlName="descricao" rows="4"
+                placeholder="Descrição detalhada do evento" maxlength="5000"></textarea>
+      <mat-icon matPrefix>description</mat-icon>
+      <mat-hint align="end">{{ eventoForm.get('descricao')?.value?.length || 0 }}/5000</mat-hint>
+    </mat-form-field>
+
+    <!-- Datas -->
+    <div class="date-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Data de Início *</mat-label>
+        <input matInput [matDatepicker]="pickerInicio" formControlName="dataInicioDoEvento">
+        <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+        <mat-datepicker #pickerInicio></mat-datepicker>
+        <mat-error *ngIf="eventoForm.get('dataInicioDoEvento')?.invalid">
+          {{ getErrorMessage('dataInicioDoEvento') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Data de Fim *</mat-label>
+        <input matInput [matDatepicker]="pickerFim" formControlName="dataFimDoEvento">
+        <mat-datepicker-toggle matSuffix [for]="pickerFim"></mat-datepicker-toggle>
+        <mat-datepicker #pickerFim></mat-datepicker>
+        <mat-error *ngIf="eventoForm.get('dataFimDoEvento')?.invalid">
+          {{ getErrorMessage('dataFimDoEvento') }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <!-- Localização -->
+    <div class="location-row">
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Cidade</mat-label>
+        <input matInput formControlName="cidade" placeholder="Ex: São Paulo" maxlength="100">
+        <mat-icon matPrefix>location_city</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Estado</mat-label>
+        <mat-select formControlName="estado">
+          <mat-option *ngFor="let estado of estadosBrasileiros" [value]="estado">
+            {{ estado }}
+          </mat-option>
+        </mat-select>
+        <mat-icon matPrefix>map</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Endereço -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Endereço</mat-label>
+      <input matInput formControlName="endereco"
+             placeholder="Ex: Rua das Flores, 123 - Centro" maxlength="300">
+      <mat-icon matPrefix>place</mat-icon>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isLoading">
+    Cancelar
+  </button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isLoading || eventoForm.invalid">
+    <mat-icon *ngIf="!isLoading">save</mat-icon>
+    <mat-icon *ngIf="isLoading" class="spinning">hourglass_empty</mat-icon>
+    {{ data.modo === 'criar' ? 'Criar' : 'Salvar' }}
+  </button>
+</mat-dialog-actions>

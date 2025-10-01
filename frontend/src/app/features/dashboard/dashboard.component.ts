@@ -32,6 +32,8 @@ import { DashboardEstatisticas, UsuarioResponseDTO } from '../../models';
         </p>
       </div>
 
+      <!-- Bot\u00f5es de A\u00e7\u00e3o -->
+
       <!-- Loading State -->
       <div *ngIf="isLoading" class="loading-container">
         <mat-spinner></mat-spinner>

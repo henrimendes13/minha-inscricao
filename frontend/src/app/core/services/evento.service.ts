@@ -127,81 +127,59 @@ export class EventoService extends BaseHttpService {
   }
 
   /**
-   * Publica evento (muda status para ABERTO)
+   * Muda status do evento (usa endpoint PATCH /api/eventos/{id}/status)
    */
-  publicarEvento(id: number): Observable<EventoApiResponse> {
-    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/publicar`, {})
+  private mudarStatus(id: number, novoStatus: string, motivo?: string): Observable<EventoApiResponse> {
+    const body = { novoStatus, motivo };
+    return this.patch<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/status`, body)
       .pipe(
         catchError(error => {
-          console.error(`Erro ao publicar evento ${id}:`, error);
+          console.error(`Erro ao mudar status do evento ${id} para ${novoStatus}:`, error);
           return throwError(() => error);
         })
       );
+  }
+
+  /**
+   * Publica evento (muda status para ABERTO)
+   */
+  publicarEvento(id: number): Observable<EventoApiResponse> {
+    return this.mudarStatus(id, 'ABERTO', 'Evento publicado');
   }
 
   /**
    * Encerra inscrições do evento
    */
   encerrarInscricoes(id: number): Observable<EventoApiResponse> {
-    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/encerrar-inscricoes`, {})
-      .pipe(
-        catchError(error => {
-          console.error(`Erro ao encerrar inscrições do evento ${id}:`, error);
-          return throwError(() => error);
-        })
-      );
+    return this.mudarStatus(id, 'INSCRICOES_ENCERRADAS', 'Inscrições encerradas');
   }
 
   /**
    * Inicia evento (muda status para EM_ANDAMENTO)
    */
   iniciarEvento(id: number): Observable<EventoApiResponse> {
-    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/iniciar`, {})
-      .pipe(
-        catchError(error => {
-          console.error(`Erro ao iniciar evento ${id}:`, error);
-          return throwError(() => error);
-        })
-      );
+    return this.mudarStatus(id, 'EM_ANDAMENTO', 'Evento iniciado');
   }
 
   /**
    * Finaliza evento (muda status para FINALIZADO)
    */
   finalizarEvento(id: number): Observable<EventoApiResponse> {
-    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/finalizar`, {})
-      .pipe(
-        catchError(error => {
-          console.error(`Erro ao finalizar evento ${id}:`, error);
-          return throwError(() => error);
-        })
-      );
+    return this.mudarStatus(id, 'FINALIZADO', 'Evento finalizado');
   }
 
   /**
    * Cancela evento (muda status para CANCELADO)
    */
   cancelarEvento(id: number): Observable<EventoApiResponse> {
-    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/cancelar`, {})
-      .pipe(
-        catchError(error => {
-          console.error(`Erro ao cancelar evento ${id}:`, error);
-          return throwError(() => error);
-        })
-      );
+    return this.mudarStatus(id, 'CANCELADO', 'Evento cancelado');
   }
 
   /**
    * Adia evento (muda status para ADIADO)
    */
   adiarEvento(id: number): Observable<EventoApiResponse> {
-    return this.put<EventoApiResponse>(`${API_CONFIG.endpoints.eventos.byId(id)}/adiar`, {})
-      .pipe(
-        catchError(error => {
-          console.error(`Erro ao adiar evento ${id}:`, error);
-          return throwError(() => error);
-        })
-      );
+    return this.mudarStatus(id, 'ADIADO', 'Evento adiado');
   }
 
   /**

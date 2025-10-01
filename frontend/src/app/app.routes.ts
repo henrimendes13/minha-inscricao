@@ -49,6 +49,10 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () => import('./features/dashboard/dashboard.component').then(c => c.DashboardComponent)
+      },
+      {
+        path: 'eventos',
+        loadComponent: () => import('./features/dashboard/evento-management/evento-management.component').then(c => c.EventoManagementComponent)
       }
     ]
   },

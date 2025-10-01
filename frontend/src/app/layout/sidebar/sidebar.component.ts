@@ -91,25 +91,20 @@ export class SidebarComponent {
     {
       label: 'Dashboard',
       icon: 'dashboard',
-      route: '/dashboard'
+      route: '/dashboard',
+      roles: [TipoUsuario.ADMIN]
     },
     {
       label: 'Eventos',
-      icon: 'event',
-      route: '/eventos',
-      roles: [TipoUsuario.ORGANIZADOR, TipoUsuario.ADMIN]
+      icon: 'event_note',
+      route: '/dashboard/eventos',
+      roles: [TipoUsuario.ADMIN]
     },
     {
       label: 'Minhas Inscrições',
       icon: 'assignment',
       route: '/inscricoes',
       roles: [TipoUsuario.ATLETA]
-    },
-    {
-      label: 'Todas as Inscrições',
-      icon: 'list_alt',
-      route: '/inscricoes',
-      roles: [TipoUsuario.ORGANIZADOR, TipoUsuario.ADMIN]
     },
     {
       label: 'Atletas',
@@ -130,15 +125,24 @@ export class SidebarComponent {
 
   get visibleNavItems(): NavItem[] {
     const currentUser = this.authService.getCurrentUser();
-    
+
     if (!currentUser) {
       return [];
     }
+
+    // Admin tem acesso a tudo se for admin@admin.com
+    const isAdmin = currentUser.email === 'admin@admin.com';
 
     return this.navItems.filter(item => {
       if (!item.roles || item.roles.length === 0) {
         return true;
       }
+
+      // Se o usuário é admin@admin.com, tem acesso a itens ADMIN
+      if (isAdmin && item.roles.includes(TipoUsuario.ADMIN)) {
+        return true;
+      }
+
       return item.roles.includes(currentUser.tipoUsuario as TipoUsuario);
     });
   }
