@@ -357,6 +357,250 @@
   }
 }
 
+// Categorias styles
+.categorias-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+
+  h3 {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+  }
+
+  button {
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+.categoria-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #999;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 16px;
+    color: #ccc;
+  }
+
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #666;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.categorias-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.categoria-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  mat-card-content {
+    padding: 20px;
+  }
+
+  .categoria-info {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+
+    .categoria-main {
+      flex: 1;
+
+      h4 {
+        margin: 0 0 8px 0;
+        font-size: 18px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .categoria-descricao {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        color: #666;
+        line-height: 1.5;
+      }
+
+      .categoria-tags {
+        mat-chip-set {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        mat-chip {
+          font-size: 12px;
+          padding: 4px 12px;
+          height: auto;
+          min-height: 28px;
+
+          &.chip-ativo {
+            background-color: #4caf50;
+            color: white;
+          }
+
+          &.chip-inativo {
+            background-color: #f44336;
+            color: white;
+          }
+        }
+      }
+    }
+
+    .categoria-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 180px;
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+
+        .label {
+          font-weight: 500;
+          color: #666;
+          margin-right: 8px;
+        }
+
+        .value {
+          color: #333;
+        }
+      }
+    }
+
+    .categoria-actions {
+      display: flex;
+      gap: 4px;
+      align-items: flex-start;
+    }
+  }
+}
+
+.categoria-form-panel {
+  margin-top: 24px;
+  border: 2px solid #1976d2;
+  border-radius: 8px;
+
+  .categoria-form {
+    padding: 16px 0;
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+
+      .half-width {
+        flex: 1;
+      }
+    }
+
+    .checkbox-field {
+      margin: 16px 0;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+
+      button {
+        min-width: 140px;
+
+        mat-spinner {
+          display: inline-block;
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+}
+
+// Responsive - Categorias
+@media (max-width: 968px) {
+  .categorias-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .categoria-card {
+    .categoria-info {
+      flex-direction: column;
+
+      .categoria-details {
+        width: 100%;
+      }
+
+      .categoria-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
+    }
+  }
+
+  .categoria-form {
+    .form-row {
+      flex-direction: column;
+
+      .half-width {
+        width: 100%;
+      }
+    }
+
+    .form-actions {
+      flex-direction: column-reverse;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
+
 // Custom snackbar styles (global)
 :host ::ng-deep {
   .success-snackbar {

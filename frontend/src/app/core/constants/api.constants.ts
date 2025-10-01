@@ -35,7 +35,12 @@ export const API_CONFIG = {
     categorias: {
       base: '/categorias',
       byId: (id: number) => `/categorias/${id}`,
-      byEvento: (eventoId: number) => `/categorias/evento/${eventoId}`
+      byEvento: (eventoId: number) => `/categorias/evento/${eventoId}`,
+      create: (eventoId: number) => `/categorias/evento/${eventoId}`,
+      update: (id: number) => `/categorias/${id}`,
+      delete: (id: number) => `/categorias/${id}`,
+      ativar: (id: number) => `/categorias/${id}/ativar`,
+      desativar: (id: number) => `/categorias/${id}/desativar`
     },
     leaderboard: {
       base: '/leaderboard',

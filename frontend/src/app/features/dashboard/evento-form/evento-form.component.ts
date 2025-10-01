@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,10 +13,27 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 
 import { EventoService } from '../../../core/services/evento.service';
 import { ImagemService } from '../../../core/services/imagem.service';
+import { CategoriaService } from '../../../core/services/categoria.service';
 import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../../../models/evento.model';
+import {
+  CategoriaCreateRequest,
+  CategoriaUpdateRequest,
+  CategoriaApiResponse,
+  CategoriaSummaryResponse,
+  Genero,
+  getGeneroLabel,
+  getTipoParticipacaoLabel,
+  formatarFaixaEtaria
+} from '../../../models/categoria.model';
+import { TipoParticipacao } from '../../../models';
 
 @Component({
   selector: 'app-evento-form',
@@ -34,7 +51,11 @@ import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../
     MatIconModule,
     MatCardModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatExpansionModule,
+    MatChipsModule,
+    MatTooltipModule,
+    MatCheckboxModule
   ],
   templateUrl: './evento-form.component.html',
   styleUrl: './evento-form.component.scss'
@@ -56,6 +77,15 @@ export class EventoFormComponent implements OnInit {
   isUploadingImagem = false;
   uploadImagemError: string | null = null;
 
+  // Propriedades para controle de categorias
+  categorias: CategoriaSummaryResponse[] = [];
+  isLoadingCategorias = false;
+  categoriaEmEdicao: CategoriaApiResponse | null = null;
+  modoCategoria: 'criar' | 'editar' = 'criar';
+  formularioCategoria!: FormGroup;
+  mostrarFormularioCategoria = false;
+  isSavingCategoria = false;
+
   estadosBrasileiros = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
     'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
@@ -66,17 +96,21 @@ export class EventoFormComponent implements OnInit {
     private fb: FormBuilder,
     private eventoService: EventoService,
     private imagemService: ImagemService,
+    private categoriaService: CategoriaService,
     private route: ActivatedRoute,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.detectarModo();
     this.inicializarFormulario();
+    this.inicializarFormularioCategoria();
 
     if (this.modo === 'editar' && this.eventoId) {
       this.carregarEvento();
+      this.carregarCategorias();
     }
   }
 
@@ -279,7 +313,7 @@ export class EventoFormComponent implements OnInit {
     const validacao = this.imagemService.validarImagem(file);
     if (!validacao.isValid) {
       this.uploadImagemError = validacao.errorMessage || 'Erro ao validar imagem';
-      this.showSnackBar(this.uploadImagemError, 'error');
+      this.showSnackBar(this.uploadImagemError || 'Erro ao validar imagem', 'error');
       this.limparSelecaoImagem();
       return;
     }
@@ -395,5 +429,233 @@ export class EventoFormComponent implements OnInit {
     if (inputFile) {
       inputFile.click();
     }
+  }
+
+  // ==================== MÉTODOS DE CATEGORIAS ====================
+
+  /**
+   * Inicializa o formulário de categoria com validações
+   */
+  inicializarFormularioCategoria(): void {
+    this.formularioCategoria = this.fb.group({
+      nome: ['', [Validators.required, Validators.maxLength(100)]],
+      descricao: ['', Validators.maxLength(300)],
+      idadeMinima: [null, [Validators.min(16), Validators.max(80)]],
+      idadeMaxima: [null, [Validators.min(16), Validators.max(100)]],
+      genero: [null],
+      tipoParticipacao: ['INDIVIDUAL', Validators.required],
+      quantidadeDeAtletasPorEquipe: [null, [Validators.min(1), Validators.max(6)]],
+      valorInscricao: [0, [Validators.required, Validators.min(0)]],
+      ativa: [true]
+    }, { validators: this.validadorIdadeCategoria });
+  }
+
+  /**
+   * Validador customizado para verificar se idade máxima >= idade mínima
+   */
+  validadorIdadeCategoria(control: AbstractControl): ValidationErrors | null {
+    const idadeMin = control.get('idadeMinima')?.value;
+    const idadeMax = control.get('idadeMaxima')?.value;
+
+    if (idadeMin && idadeMax && idadeMax < idadeMin) {
+      return { idadeInvalida: true };
+    }
+
+    return null;
+  }
+
+  /**
+   * Carrega lista de categorias do evento
+   */
+  carregarCategorias(): void {
+    if (!this.eventoId) return;
+
+    this.isLoadingCategorias = true;
+    this.categoriaService.listarCategoriasPorEvento(this.eventoId).subscribe({
+      next: (categorias) => {
+        this.categorias = categorias;
+        this.isLoadingCategorias = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar categorias:', error);
+        this.showSnackBar('Erro ao carregar categorias', 'error');
+        this.isLoadingCategorias = false;
+      }
+    });
+  }
+
+  /**
+   * Abre formulário para criar nova categoria
+   */
+  abrirFormularioCategoria(): void {
+    this.modoCategoria = 'criar';
+    this.categoriaEmEdicao = null;
+    this.formularioCategoria.reset({
+      tipoParticipacao: 'INDIVIDUAL',
+      valorInscricao: 0,
+      ativa: true,
+      genero: null
+    });
+    this.mostrarFormularioCategoria = true;
+  }
+
+  /**
+   * Abre formulário para editar categoria existente
+   */
+  editarCategoria(categoria: CategoriaSummaryResponse): void {
+    this.modoCategoria = 'editar';
+
+    // Buscar categoria completa
+    this.categoriaService.buscarCategoriaPorIdCompleta(categoria.id).subscribe({
+      next: (categoriaCompleta) => {
+        this.categoriaEmEdicao = categoriaCompleta;
+        this.formularioCategoria.patchValue({
+          nome: categoriaCompleta.nome,
+          descricao: categoriaCompleta.descricao || '',
+          idadeMinima: categoriaCompleta.idadeMinima,
+          idadeMaxima: categoriaCompleta.idadeMaxima,
+          genero: categoriaCompleta.genero,
+          tipoParticipacao: categoriaCompleta.tipoParticipacao,
+          quantidadeDeAtletasPorEquipe: categoriaCompleta.quantidadeDeAtletasPorEquipe,
+          valorInscricao: categoriaCompleta.valorInscricao,
+          ativa: categoriaCompleta.ativa
+        });
+        this.mostrarFormularioCategoria = true;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar categoria:', error);
+        this.showSnackBar('Erro ao carregar categoria para edição', 'error');
+      }
+    });
+  }
+
+  /**
+   * Salva categoria (cria ou atualiza)
+   */
+  salvarCategoria(): void {
+    if (this.formularioCategoria.invalid || !this.eventoId) {
+      this.formularioCategoria.markAllAsTouched();
+      this.showSnackBar('Por favor, preencha todos os campos obrigatórios', 'error');
+      return;
+    }
+
+    this.isSavingCategoria = true;
+    const formValue = this.formularioCategoria.value;
+
+    const categoriaData: CategoriaCreateRequest = {
+      nome: formValue.nome,
+      descricao: formValue.descricao || undefined,
+      idadeMinima: formValue.idadeMinima || undefined,
+      idadeMaxima: formValue.idadeMaxima || undefined,
+      genero: formValue.genero || undefined,
+      tipoParticipacao: formValue.tipoParticipacao,
+      quantidadeDeAtletasPorEquipe: formValue.quantidadeDeAtletasPorEquipe || undefined,
+      valorInscricao: formValue.valorInscricao,
+      ativa: formValue.ativa
+    };
+
+    const operacao = this.modoCategoria === 'criar'
+      ? this.categoriaService.criarCategoria(this.eventoId, categoriaData)
+      : this.categoriaService.atualizarCategoria(this.categoriaEmEdicao!.id, categoriaData);
+
+    operacao.subscribe({
+      next: () => {
+        const mensagem = this.modoCategoria === 'criar'
+          ? 'Categoria criada com sucesso!'
+          : 'Categoria atualizada com sucesso!';
+
+        this.showSnackBar(mensagem, 'success');
+        this.carregarCategorias();
+        this.cancelarFormularioCategoria();
+        this.isSavingCategoria = false;
+      },
+      error: (error) => {
+        console.error('Erro ao salvar categoria:', error);
+        const mensagem = error.error?.message || 'Erro ao salvar categoria';
+        this.showSnackBar(mensagem, 'error');
+        this.isSavingCategoria = false;
+      }
+    });
+  }
+
+  /**
+   * Cancela formulário de categoria
+   */
+  cancelarFormularioCategoria(): void {
+    this.mostrarFormularioCategoria = false;
+    this.categoriaEmEdicao = null;
+    this.formularioCategoria.reset({
+      tipoParticipacao: 'INDIVIDUAL',
+      valorInscricao: 0,
+      ativa: true,
+      genero: null
+    });
+  }
+
+  /**
+   * Deleta categoria com confirmação
+   */
+  deletarCategoria(categoriaId: number): void {
+    const confirmacao = confirm('Tem certeza que deseja deletar esta categoria? Esta ação não pode ser desfeita.');
+
+    if (!confirmacao) return;
+
+    this.categoriaService.deletarCategoria(categoriaId).subscribe({
+      next: () => {
+        this.showSnackBar('Categoria deletada com sucesso!', 'success');
+        this.carregarCategorias();
+      },
+      error: (error) => {
+        console.error('Erro ao deletar categoria:', error);
+        const mensagem = error.error?.message || 'Erro ao deletar categoria';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  /**
+   * Alterna status ativo/inativo da categoria
+   */
+  toggleStatusCategoria(categoria: CategoriaSummaryResponse): void {
+    const operacao = categoria.ativa
+      ? this.categoriaService.desativarCategoria(categoria.id)
+      : this.categoriaService.ativarCategoria(categoria.id);
+
+    operacao.subscribe({
+      next: () => {
+        const mensagem = categoria.ativa
+          ? 'Categoria desativada com sucesso!'
+          : 'Categoria ativada com sucesso!';
+
+        this.showSnackBar(mensagem, 'success');
+        this.carregarCategorias();
+      },
+      error: (error) => {
+        console.error('Erro ao alterar status da categoria:', error);
+        const mensagem = error.error?.message || 'Erro ao alterar status da categoria';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  /**
+   * Retorna label formatado do gênero
+   */
+  getGeneroLabel(genero: Genero | null | undefined): string {
+    return getGeneroLabel(genero);
+  }
+
+  /**
+   * Retorna label formatado do tipo de participação
+   */
+  getTipoLabel(tipo: TipoParticipacao): string {
+    return getTipoParticipacaoLabel(tipo);
+  }
+
+  /**
+   * Retorna label formatado da faixa etária
+   */
+  getFaixaEtariaLabel(idadeMin?: number, idadeMax?: number): string {
+    return formatarFaixaEtaria(idadeMin, idadeMax);
   }
 }

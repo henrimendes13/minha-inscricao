@@ -210,14 +210,213 @@
             </div>
           </mat-tab>
 
-          <!-- Aba 3: Categorias (Placeholder) -->
+          <!-- Aba 3: Categorias -->
           <mat-tab label="Categorias" [disabled]="modo === 'criar'">
             <div class="tab-content">
-              <div class="placeholder-content">
-                <mat-icon class="placeholder-icon">category</mat-icon>
-                <h3>Gerenciar Categorias</h3>
-                <p>Funcionalidade será implementada em breve.</p>
-                <p class="hint">Salve o evento primeiro para gerenciar categorias.</p>
+
+              <!-- Loading State -->
+              <div *ngIf="isLoadingCategorias" class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Carregando categorias...</p>
+              </div>
+
+              <!-- Content -->
+              <div *ngIf="!isLoadingCategorias">
+
+                <!-- Header com botão adicionar -->
+                <div class="categorias-header">
+                  <div>
+                    <h3>Categorias do Evento</h3>
+                    <p>Gerencie as categorias de participação deste evento</p>
+                  </div>
+                  <button mat-raised-button color="primary" (click)="abrirFormularioCategoria()">
+                    <mat-icon>add</mat-icon>
+                    Adicionar Categoria
+                  </button>
+                </div>
+
+                <!-- Lista vazia -->
+                <div *ngIf="categorias.length === 0" class="categoria-empty-state">
+                  <mat-icon>category</mat-icon>
+                  <h4>Nenhuma categoria criada</h4>
+                  <p>Clique em "Adicionar Categoria" para começar</p>
+                </div>
+
+                <!-- Lista de categorias -->
+                <div *ngIf="categorias.length > 0" class="categorias-list">
+                  <mat-card *ngFor="let categoria of categorias" class="categoria-card">
+                    <mat-card-content>
+                      <div class="categoria-info">
+                        <div class="categoria-main">
+                          <h4>{{ categoria.nome }}</h4>
+                          <p *ngIf="categoria.descricaoCompleta" class="categoria-descricao">{{ categoria.descricaoCompleta }}</p>
+                          <div class="categoria-tags">
+                            <mat-chip-listbox>
+                              <mat-chip-option [class.chip-ativo]="categoria.ativa" [class.chip-inativo]="!categoria.ativa">
+                                {{ categoria.ativa ? 'Ativa' : 'Inativa' }}
+                              </mat-chip-option>
+                              <mat-chip-option>{{ getTipoLabel(categoria.tipoParticipacao) }}</mat-chip-option>
+                              <mat-chip-option>{{ getGeneroLabel(categoria.genero) }}</mat-chip-option>
+                            </mat-chip-listbox>
+                          </div>
+                        </div>
+                        <div class="categoria-details">
+                          <div class="detail-item">
+                            <span class="label">Valor:</span>
+                            <span class="value">{{ categoria.valorInscricao | currency:'BRL' }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="label">Inscrições:</span>
+                            <span class="value">{{ categoria.numeroInscricoesAtivas }}</span>
+                          </div>
+                          <div class="detail-item" *ngIf="categoria.quantidadeDeAtletasPorEquipe">
+                            <span class="label">Atletas/Equipe:</span>
+                            <span class="value">{{ categoria.quantidadeDeAtletasPorEquipe }}</span>
+                          </div>
+                        </div>
+                        <div class="categoria-actions">
+                          <button mat-icon-button color="primary" (click)="editarCategoria(categoria)" matTooltip="Editar">
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                          <button mat-icon-button [color]="categoria.ativa ? 'warn' : 'accent'"
+                                  (click)="toggleStatusCategoria(categoria)"
+                                  [matTooltip]="categoria.ativa ? 'Desativar' : 'Ativar'">
+                            <mat-icon>{{ categoria.ativa ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                          </button>
+                          <button mat-icon-button color="warn" (click)="deletarCategoria(categoria.id)" matTooltip="Deletar">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+
+                <!-- Formulário de criação/edição -->
+                <mat-expansion-panel *ngIf="mostrarFormularioCategoria" [expanded]="true" class="categoria-form-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ modoCategoria === 'criar' ? 'Nova Categoria' : 'Editar Categoria' }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <form [formGroup]="formularioCategoria" class="categoria-form">
+                    <!-- Nome -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Nome da Categoria</mat-label>
+                      <input matInput formControlName="nome" placeholder="Ex: Masculino Elite" maxlength="100">
+                      <mat-error *ngIf="formularioCategoria.get('nome')?.hasError('required')">
+                        Nome é obrigatório
+                      </mat-error>
+                      <mat-error *ngIf="formularioCategoria.get('nome')?.hasError('maxlength')">
+                        Máximo de 100 caracteres
+                      </mat-error>
+                    </mat-form-field>
+
+                    <!-- Descrição -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Descrição (Opcional)</mat-label>
+                      <textarea matInput formControlName="descricao" rows="3" maxlength="300"
+                                placeholder="Descreva os requisitos e características desta categoria"></textarea>
+                      <mat-hint align="end">{{ formularioCategoria.get('descricao')?.value?.length || 0 }}/300</mat-hint>
+                    </mat-form-field>
+
+                    <!-- Tipo de Participação -->
+                    <div class="form-row">
+                      <mat-form-field class="half-width">
+                        <mat-label>Tipo de Participação</mat-label>
+                        <mat-select formControlName="tipoParticipacao">
+                          <mat-option value="INDIVIDUAL">Individual</mat-option>
+                          <mat-option value="EQUIPE">Equipe</mat-option>
+                        </mat-select>
+                        <mat-error>Tipo é obrigatório</mat-error>
+                      </mat-form-field>
+
+                      <!-- Gênero -->
+                      <mat-form-field class="half-width">
+                        <mat-label>Gênero</mat-label>
+                        <mat-select formControlName="genero">
+                          <mat-option [value]="null">Misto</mat-option>
+                          <mat-option value="MASCULINO">Masculino</mat-option>
+                          <mat-option value="FEMININO">Feminino</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Faixa Etária -->
+                    <div class="form-row">
+                      <mat-form-field class="half-width">
+                        <mat-label>Idade Mínima</mat-label>
+                        <input matInput type="number" formControlName="idadeMinima" min="16" max="80" placeholder="16">
+                        <mat-error *ngIf="formularioCategoria.get('idadeMinima')?.hasError('min')">
+                          Mínimo: 16 anos
+                        </mat-error>
+                        <mat-error *ngIf="formularioCategoria.get('idadeMinima')?.hasError('max')">
+                          Máximo: 80 anos
+                        </mat-error>
+                      </mat-form-field>
+
+                      <mat-form-field class="half-width">
+                        <mat-label>Idade Máxima</mat-label>
+                        <input matInput type="number" formControlName="idadeMaxima" min="16" max="100" placeholder="35">
+                        <mat-error *ngIf="formularioCategoria.get('idadeMaxima')?.hasError('min')">
+                          Mínimo: 16 anos
+                        </mat-error>
+                        <mat-error *ngIf="formularioCategoria.get('idadeMaxima')?.hasError('max')">
+                          Máximo: 100 anos
+                        </mat-error>
+                        <mat-error *ngIf="formularioCategoria.hasError('idadeInvalida')">
+                          Idade máxima deve ser maior ou igual à mínima
+                        </mat-error>
+                      </mat-form-field>
+                    </div>
+
+                    <!-- Quantidade de Atletas (condicional para EQUIPE) -->
+                    <mat-form-field class="full-width" *ngIf="formularioCategoria.get('tipoParticipacao')?.value === 'EQUIPE'">
+                      <mat-label>Quantidade de Atletas por Equipe</mat-label>
+                      <input matInput type="number" formControlName="quantidadeDeAtletasPorEquipe" min="1" max="6" placeholder="3">
+                      <mat-hint>Número exato de atletas que devem compor cada equipe</mat-hint>
+                      <mat-error *ngIf="formularioCategoria.get('quantidadeDeAtletasPorEquipe')?.hasError('min')">
+                        Mínimo: 1 atleta
+                      </mat-error>
+                      <mat-error *ngIf="formularioCategoria.get('quantidadeDeAtletasPorEquipe')?.hasError('max')">
+                        Máximo: 6 atletas
+                      </mat-error>
+                    </mat-form-field>
+
+                    <!-- Valor da Inscrição -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Valor da Inscrição</mat-label>
+                      <input matInput type="number" formControlName="valorInscricao" min="0" step="0.01" placeholder="150.00">
+                      <span matTextPrefix>R$&nbsp;</span>
+                      <mat-error *ngIf="formularioCategoria.get('valorInscricao')?.hasError('required')">
+                        Valor é obrigatório
+                      </mat-error>
+                      <mat-error *ngIf="formularioCategoria.get('valorInscricao')?.hasError('min')">
+                        Valor deve ser maior ou igual a zero
+                      </mat-error>
+                    </mat-form-field>
+
+                    <!-- Status Ativa -->
+                    <div class="checkbox-field">
+                      <mat-checkbox formControlName="ativa">Categoria ativa para inscrições</mat-checkbox>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="form-actions">
+                      <button mat-button type="button" (click)="cancelarFormularioCategoria()">
+                        Cancelar
+                      </button>
+                      <button mat-raised-button color="primary" type="button" (click)="salvarCategoria()"
+                              [disabled]="formularioCategoria.invalid || isSavingCategoria">
+                        <mat-icon *ngIf="!isSavingCategoria">save</mat-icon>
+                        <mat-spinner *ngIf="isSavingCategoria" diameter="20"></mat-spinner>
+                        {{ isSavingCategoria ? 'Salvando...' : 'Salvar Categoria' }}
+                      </button>
+                    </div>
+                  </form>
+                </mat-expansion-panel>
+
               </div>
             </div>
           </mat-tab>

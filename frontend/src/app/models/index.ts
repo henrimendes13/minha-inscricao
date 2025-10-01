@@ -20,3 +20,18 @@ export {
   StatusInscricao,
   TipoParticipacao
 } from './inscricao.model';
+
+// Export categoria models
+export type {
+  CategoriaCreateRequest,
+  CategoriaUpdateRequest,
+  CategoriaApiResponse,
+  CategoriaSummaryResponse
+} from './categoria.model';
+
+export {
+  Genero,
+  getGeneroLabel,
+  getTipoParticipacaoLabel,
+  formatarFaixaEtaria
+} from './categoria.model';
