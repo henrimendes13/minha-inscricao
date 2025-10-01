@@ -10,7 +10,7 @@
         <p>Crie e gerencie todos os eventos do sistema</p>
       </div>
     </div>
-    <button mat-raised-button color="primary" (click)="abrirDialogCriar()" class="create-button">
+    <button mat-raised-button color="primary" (click)="navegarParaCriar()" class="create-button">
       <mat-icon>add</mat-icon>
       Criar Novo Evento
     </button>
@@ -126,7 +126,7 @@
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="abrirDialogEditar(evento)">
+            <button mat-menu-item (click)="navegarParaEditar(evento)">
               <mat-icon>edit</mat-icon>
               <span>Editar</span>
             </button>

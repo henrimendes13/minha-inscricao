@@ -1,0 +1,278 @@
+<div class="form-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <button mat-icon-button (click)="voltarParaLista()" class="back-button">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div class="title-section">
+        <h1>{{ getTitulo() }}</h1>
+        <p *ngIf="modo === 'criar'">Preencha as informações para criar um novo evento</p>
+        <p *ngIf="modo === 'editar' && evento">Status: <strong>{{ evento.descricaoStatus }}</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Carregando evento...</p>
+  </div>
+
+  <!-- Form Content -->
+  <div *ngIf="!isLoading" class="form-content">
+    <mat-card>
+      <mat-card-content>
+        <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="300ms">
+
+          <!-- Aba 1: Informações Básicas -->
+          <mat-tab label="Informações Básicas">
+            <div class="tab-content">
+              <form [formGroup]="eventoForm">
+
+                <!-- Nome do Evento -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Nome do Evento *</mat-label>
+                  <input matInput formControlName="nome" placeholder="Ex: CrossFit Games 2024" maxlength="200">
+                  <mat-icon matPrefix>event</mat-icon>
+                  <mat-error *ngIf="eventoForm.get('nome')?.invalid">
+                    {{ getErrorMessage('nome') }}
+                  </mat-error>
+                  <mat-hint align="end">{{ eventoForm.get('nome')?.value?.length || 0 }}/200</mat-hint>
+                </mat-form-field>
+
+                <!-- Descrição -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Descrição</mat-label>
+                  <textarea matInput formControlName="descricao" rows="6"
+                            placeholder="Descrição detalhada do evento" maxlength="5000"></textarea>
+                  <mat-icon matPrefix>description</mat-icon>
+                  <mat-hint align="end">{{ eventoForm.get('descricao')?.value?.length || 0 }}/5000</mat-hint>
+                </mat-form-field>
+
+                <!-- Datas -->
+                <div class="date-row">
+                  <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Data de Início *</mat-label>
+                    <input matInput [matDatepicker]="pickerInicio" formControlName="dataInicioDoEvento">
+                    <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerInicio></mat-datepicker>
+                    <mat-error *ngIf="eventoForm.get('dataInicioDoEvento')?.invalid">
+                      {{ getErrorMessage('dataInicioDoEvento') }}
+                    </mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Data de Fim *</mat-label>
+                    <input matInput [matDatepicker]="pickerFim" formControlName="dataFimDoEvento">
+                    <mat-datepicker-toggle matSuffix [for]="pickerFim"></mat-datepicker-toggle>
+                    <mat-datepicker #pickerFim></mat-datepicker>
+                    <mat-error *ngIf="eventoForm.get('dataFimDoEvento')?.invalid">
+                      {{ getErrorMessage('dataFimDoEvento') }}
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+
+                <!-- Localização -->
+                <div class="location-row">
+                  <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Cidade</mat-label>
+                    <input matInput formControlName="cidade" placeholder="Ex: São Paulo" maxlength="100">
+                    <mat-icon matPrefix>location_city</mat-icon>
+                    <mat-hint align="end">{{ eventoForm.get('cidade')?.value?.length || 0 }}/100</mat-hint>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="half-width">
+                    <mat-label>Estado</mat-label>
+                    <mat-select formControlName="estado">
+                      <mat-option *ngFor="let estado of estadosBrasileiros" [value]="estado">
+                        {{ estado }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-icon matPrefix>map</mat-icon>
+                  </mat-form-field>
+                </div>
+
+                <!-- Endereço -->
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Endereço</mat-label>
+                  <input matInput formControlName="endereco"
+                         placeholder="Ex: Rua das Flores, 123 - Centro" maxlength="300">
+                  <mat-icon matPrefix>place</mat-icon>
+                  <mat-hint align="end">{{ eventoForm.get('endereco')?.value?.length || 0 }}/300</mat-hint>
+                </mat-form-field>
+
+              </form>
+            </div>
+          </mat-tab>
+
+          <!-- Aba 2: Imagem -->
+          <mat-tab label="Imagem">
+            <div class="tab-content">
+
+              <!-- Hidden file input -->
+              <input type="file" id="imagem-input" accept="image/jpeg,image/jpg,image/png,image/webp"
+                     (change)="onImagemSelecionada($event)" style="display: none;">
+
+              <!-- Nota: apenas disponível no modo de edição -->
+              <div *ngIf="modo === 'criar'" class="info-message">
+                <mat-icon>info</mat-icon>
+                <p>Salve o evento primeiro para poder fazer upload da imagem.</p>
+              </div>
+
+              <!-- Seção de Upload (quando não há imagem) -->
+              <div *ngIf="modo === 'editar' && !imagemAtualUrl" class="upload-section">
+                <div class="upload-area">
+                  <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                  <h3>Adicionar Imagem do Evento</h3>
+                  <p class="upload-hint">Formatos aceitos: JPG, JPEG, PNG, WEBP</p>
+                  <p class="upload-hint">Tamanho máximo: 5MB</p>
+
+                  <button mat-raised-button color="primary" (click)="abrirSeletorImagem()"
+                          [disabled]="isUploadingImagem">
+                    <mat-icon>add_photo_alternate</mat-icon>
+                    Selecionar Imagem
+                  </button>
+                </div>
+
+                <!-- Preview da imagem selecionada -->
+                <div *ngIf="imagemPreview" class="preview-section">
+                  <h4>Preview da Imagem Selecionada</h4>
+                  <img [src]="imagemPreview" alt="Preview" class="image-preview">
+
+                  <div class="preview-actions">
+                    <button mat-raised-button color="primary" (click)="uploadImagem()"
+                            [disabled]="isUploadingImagem || !imagemSelecionada">
+                      <mat-icon *ngIf="!isUploadingImagem">upload</mat-icon>
+                      <mat-spinner *ngIf="isUploadingImagem" diameter="20"></mat-spinner>
+                      {{ isUploadingImagem ? 'Enviando...' : 'Enviar Imagem' }}
+                    </button>
+                    <button mat-button (click)="limparSelecaoImagem()" [disabled]="isUploadingImagem">
+                      <mat-icon>cancel</mat-icon>
+                      Cancelar
+                    </button>
+                  </div>
+
+                  <!-- Mensagem de erro -->
+                  <div *ngIf="uploadImagemError" class="error-message">
+                    <mat-icon>error</mat-icon>
+                    <p>{{ uploadImagemError }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seção de Imagem Atual (quando há imagem) -->
+              <div *ngIf="modo === 'editar' && imagemAtualUrl" class="current-image-section">
+                <h3>Imagem Atual do Evento</h3>
+                <div class="image-container">
+                  <img [src]="getImagemUrl()" alt="Imagem do evento" class="current-image">
+                </div>
+
+                <div class="image-actions">
+                  <button mat-raised-button color="primary" (click)="abrirSeletorImagem()"
+                          [disabled]="isUploadingImagem">
+                    <mat-icon>edit</mat-icon>
+                    Alterar Imagem
+                  </button>
+                  <button mat-raised-button color="warn" (click)="removerImagem()"
+                          [disabled]="isUploadingImagem">
+                    <mat-icon>delete</mat-icon>
+                    Remover Imagem
+                  </button>
+                </div>
+
+                <!-- Preview de nova imagem selecionada -->
+                <div *ngIf="imagemPreview" class="preview-section">
+                  <h4>Nova Imagem Selecionada</h4>
+                  <img [src]="imagemPreview" alt="Preview" class="image-preview">
+
+                  <div class="preview-actions">
+                    <button mat-raised-button color="primary" (click)="uploadImagem()"
+                            [disabled]="isUploadingImagem || !imagemSelecionada">
+                      <mat-icon *ngIf="!isUploadingImagem">upload</mat-icon>
+                      <mat-spinner *ngIf="isUploadingImagem" diameter="20"></mat-spinner>
+                      {{ isUploadingImagem ? 'Enviando...' : 'Enviar Nova Imagem' }}
+                    </button>
+                    <button mat-button (click)="limparSelecaoImagem()" [disabled]="isUploadingImagem">
+                      <mat-icon>cancel</mat-icon>
+                      Cancelar
+                    </button>
+                  </div>
+
+                  <!-- Mensagem de erro -->
+                  <div *ngIf="uploadImagemError" class="error-message">
+                    <mat-icon>error</mat-icon>
+                    <p>{{ uploadImagemError }}</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </mat-tab>
+
+          <!-- Aba 3: Categorias (Placeholder) -->
+          <mat-tab label="Categorias" [disabled]="modo === 'criar'">
+            <div class="tab-content">
+              <div class="placeholder-content">
+                <mat-icon class="placeholder-icon">category</mat-icon>
+                <h3>Gerenciar Categorias</h3>
+                <p>Funcionalidade será implementada em breve.</p>
+                <p class="hint">Salve o evento primeiro para gerenciar categorias.</p>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Aba 4: Workouts (Placeholder) -->
+          <mat-tab label="Workouts" [disabled]="modo === 'criar'">
+            <div class="tab-content">
+              <div class="placeholder-content">
+                <mat-icon class="placeholder-icon">fitness_center</mat-icon>
+                <h3>Gerenciar Workouts</h3>
+                <p>Funcionalidade será implementada em breve.</p>
+                <p class="hint">Salve o evento primeiro para gerenciar workouts.</p>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Aba 5: Timeline (Placeholder) -->
+          <mat-tab label="Timeline" [disabled]="modo === 'criar'">
+            <div class="tab-content">
+              <div class="placeholder-content">
+                <mat-icon class="placeholder-icon">schedule</mat-icon>
+                <h3>Cronograma do Evento</h3>
+                <p>Funcionalidade será implementada em breve.</p>
+                <p class="hint">Salve o evento primeiro para gerenciar o cronograma.</p>
+              </div>
+            </div>
+          </mat-tab>
+
+          <!-- Aba 6: Anexos (Placeholder) -->
+          <mat-tab label="Anexos" [disabled]="modo === 'criar'">
+            <div class="tab-content">
+              <div class="placeholder-content">
+                <mat-icon class="placeholder-icon">attach_file</mat-icon>
+                <h3>Anexos e Documentos</h3>
+                <p>Funcionalidade será implementada em breve.</p>
+                <p class="hint">Salve o evento primeiro para adicionar anexos.</p>
+              </div>
+            </div>
+          </mat-tab>
+
+        </mat-tab-group>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button mat-button (click)="voltarParaLista()" [disabled]="isSaving">
+        <mat-icon>cancel</mat-icon>
+        Cancelar
+      </button>
+      <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="isSaving || eventoForm.invalid">
+        <mat-icon *ngIf="!isSaving">save</mat-icon>
+        <mat-icon *ngIf="isSaving" class="spinning">hourglass_empty</mat-icon>
+        {{ modo === 'criar' ? 'Criar Evento' : 'Salvar Alterações' }}
+      </button>
+    </div>
+  </div>
+</div>

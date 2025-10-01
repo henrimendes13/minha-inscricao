@@ -85,7 +85,8 @@
       "Bash(start cmd /k \"cd /d c:\\Users\\Henrique\\source\\repos\\minha-inscricao\\frontend && npm start\")",
       "Bash(findstr:*)",
       "Bash(ng generate component:*)",
-      "Bash(start http://localhost:4200/dashboard)"
+      "Bash(start http://localhost:4200/dashboard)",
+      "Bash(start http://localhost:4200/dashboard/eventos)"
     ],
     "deny": [],
     "ask": []

@@ -53,6 +53,14 @@ export const routes: Routes = [
       {
         path: 'eventos',
         loadComponent: () => import('./features/dashboard/evento-management/evento-management.component').then(c => c.EventoManagementComponent)
+      },
+      {
+        path: 'eventos/criar',
+        loadComponent: () => import('./features/dashboard/evento-form/evento-form.component').then(c => c.EventoFormComponent)
+      },
+      {
+        path: 'eventos/:id/editar',
+        loadComponent: () => import('./features/dashboard/evento-form/evento-form.component').then(c => c.EventoFormComponent)
       }
     ]
   },

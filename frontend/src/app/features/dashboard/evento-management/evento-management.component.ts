@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
@@ -13,7 +12,6 @@ import { MatCardModule } from '@angular/material/card';
 
 import { EventoService } from '../../../core/services/evento.service';
 import { EventoApiResponse } from '../../../models/evento.model';
-import { EventoDialogComponent, EventoDialogData } from '../evento-dialog/evento-dialog.component';
 
 @Component({
   selector: 'app-evento-management',
@@ -23,7 +21,6 @@ import { EventoDialogComponent, EventoDialogData } from '../evento-dialog/evento
     MatTableModule,
     MatButtonModule,
     MatIconModule,
-    MatDialogModule,
     MatSnackBarModule,
     MatChipsModule,
     MatMenuModule,
@@ -41,7 +38,6 @@ export class EventoManagementComponent implements OnInit {
 
   constructor(
     private eventoService: EventoService,
-    private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router
   ) {}
@@ -68,32 +64,12 @@ export class EventoManagementComponent implements OnInit {
     });
   }
 
-  abrirDialogCriar(): void {
-    const dialogRef = this.dialog.open(EventoDialogComponent, {
-      width: '600px',
-      data: { modo: 'criar' } as EventoDialogData
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.showSnackBar('Evento criado com sucesso!', 'success');
-        this.carregarEventos();
-      }
-    });
+  navegarParaCriar(): void {
+    this.router.navigate(['/dashboard/eventos/criar']);
   }
 
-  abrirDialogEditar(evento: EventoApiResponse): void {
-    const dialogRef = this.dialog.open(EventoDialogComponent, {
-      width: '600px',
-      data: { modo: 'editar', evento } as EventoDialogData
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.showSnackBar('Evento atualizado com sucesso!', 'success');
-        this.carregarEventos();
-      }
-    });
+  navegarParaEditar(evento: EventoApiResponse): void {
+    this.router.navigate(['/dashboard/eventos', evento.id, 'editar']);
   }
 
   deletarEvento(evento: EventoApiResponse): void {
