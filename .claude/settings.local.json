@@ -86,7 +86,8 @@
       "Bash(findstr:*)",
       "Bash(ng generate component:*)",
       "Bash(start http://localhost:4200/dashboard)",
-      "Bash(start http://localhost:4200/dashboard/eventos)"
+      "Bash(start http://localhost:4200/dashboard/eventos)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

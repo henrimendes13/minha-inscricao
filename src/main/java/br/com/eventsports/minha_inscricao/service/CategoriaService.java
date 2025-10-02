@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +42,10 @@ public class CategoriaService implements ICategoriaService {
     }
 
     @CachePut(value = "categorias", key = "#result.id")
-    @CacheEvict(value = "categorias", key = "'all'")
+    @Caching(evict = {
+        @CacheEvict(value = "categorias", key = "'all'"),
+        @CacheEvict(value = "categorias", key = "'byEvento:' + #eventoId")
+    })
     public CategoriaResponseDTO save(Long eventoId, CategoriaCreateDTO categoriaCreateDTO) {
         validateCategoriaData(eventoId, categoriaCreateDTO);
         CategoriaEntity categoria = convertCreateDTOToEntity(eventoId, categoriaCreateDTO);
@@ -50,7 +54,7 @@ public class CategoriaService implements ICategoriaService {
     }
 
     @CachePut(value = "categorias", key = "#id")
-    @CacheEvict(value = "categorias", key = "'all'")
+    @CacheEvict(value = "categorias", allEntries = true)
     public CategoriaResponseDTO update(Long id, CategoriaUpdateDTO categoriaUpdateDTO) {
         validateCategoriaUpdateData(id, categoriaUpdateDTO);
         CategoriaEntity existingCategoria = categoriaRepository.findById(id)

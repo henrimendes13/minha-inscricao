@@ -50,7 +50,14 @@ export class ImagemService extends BaseHttpService {
       return imagemUrl;
     }
 
-    // Se for URL relativa, adicionar base URL
+    // Se a URL já começar com /api/, usar apenas o protocolo e host
+    if (imagemUrl.startsWith('/api/')) {
+      // Extrair apenas o protocolo e host de API_CONFIG.baseUrl (ex: http://localhost:8080)
+      const baseUrlWithoutApi = API_CONFIG.baseUrl.replace('/api', '');
+      return `${baseUrlWithoutApi}${imagemUrl}`;
+    }
+
+    // Se for URL relativa sem /api/, adicionar base URL completa
     return `${API_CONFIG.baseUrl}${imagemUrl}`;
   }
 
