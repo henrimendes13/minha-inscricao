@@ -51,6 +51,11 @@ export const API_CONFIG = {
       base: '/workouts',
       byId: (id: number) => `/workouts/${id}`,
       byEvento: (eventoId: number) => `/workouts/evento/${eventoId}`,
+      create: '/workouts',
+      update: (id: number) => `/workouts/${id}`,
+      delete: (id: number) => `/workouts/${id}`,
+      ativar: (id: number) => `/workouts/${id}/ativar`,
+      desativar: (id: number) => `/workouts/${id}/desativar`,
       resultados: {
         byWorkout: (workoutId: number) => `/workouts/${workoutId}/resultados`,
         create: (workoutId: number) => `/workouts/${workoutId}/resultados`,

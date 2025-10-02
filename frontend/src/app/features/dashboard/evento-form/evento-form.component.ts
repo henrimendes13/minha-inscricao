@@ -22,6 +22,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { EventoService } from '../../../core/services/evento.service';
 import { ImagemService } from '../../../core/services/imagem.service';
 import { CategoriaService } from '../../../core/services/categoria.service';
+import { WorkoutService } from '../../../core/services/workout.service';
 import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../../../models/evento.model';
 import {
   CategoriaCreateRequest,
@@ -33,6 +34,15 @@ import {
   getTipoParticipacaoLabel,
   formatarFaixaEtaria
 } from '../../../models/categoria.model';
+import {
+  Workout,
+  WorkoutCreateRequest,
+  WorkoutUpdateRequest,
+  WorkoutApiResponse,
+  WorkoutType,
+  getTipoWorkoutLabel,
+  getUnidadeMedidaLabel
+} from '../../../models/workout.model';
 import { TipoParticipacao } from '../../../models';
 
 @Component({
@@ -86,6 +96,15 @@ export class EventoFormComponent implements OnInit {
   mostrarFormularioCategoria = false;
   isSavingCategoria = false;
 
+  // Propriedades para controle de workouts
+  workouts: Workout[] = [];
+  isLoadingWorkouts = false;
+  workoutEmEdicao: WorkoutApiResponse | null = null;
+  modoWorkout: 'criar' | 'editar' = 'criar';
+  formularioWorkout!: FormGroup;
+  mostrarFormularioWorkout = false;
+  isSavingWorkout = false;
+
   estadosBrasileiros = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
     'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
@@ -97,6 +116,7 @@ export class EventoFormComponent implements OnInit {
     private eventoService: EventoService,
     private imagemService: ImagemService,
     private categoriaService: CategoriaService,
+    private workoutService: WorkoutService,
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
@@ -107,10 +127,12 @@ export class EventoFormComponent implements OnInit {
     this.detectarModo();
     this.inicializarFormulario();
     this.inicializarFormularioCategoria();
+    this.inicializarFormularioWorkout();
 
     if (this.modo === 'editar' && this.eventoId) {
       this.carregarEvento();
       this.carregarCategorias();
+      this.carregarWorkouts();
     }
   }
 
@@ -657,5 +679,230 @@ export class EventoFormComponent implements OnInit {
    */
   getFaixaEtariaLabel(idadeMin?: number, idadeMax?: number): string {
     return formatarFaixaEtaria(idadeMin, idadeMax);
+  }
+
+  // ==================== MÉTODOS DE WORKOUTS ====================
+
+  /**
+   * Inicializa o formulário de workout com validações
+   */
+  inicializarFormularioWorkout(): void {
+    this.formularioWorkout = this.fb.group({
+      nome: ['', [Validators.required, Validators.maxLength(100)]],
+      descricao: ['', Validators.maxLength(1000)],
+      tipo: ['REPS', Validators.required],
+      categoriasIds: [[], Validators.required],
+      ativo: [true]
+    });
+  }
+
+  /**
+   * Carrega lista de workouts do evento
+   */
+  carregarWorkouts(): void {
+    if (!this.eventoId) return;
+
+    this.isLoadingWorkouts = true;
+    this.workoutService.buscarWorkoutsPorEvento(this.eventoId).subscribe({
+      next: (workouts) => {
+        this.workouts = workouts;
+        this.isLoadingWorkouts = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar workouts:', error);
+        this.showSnackBar('Erro ao carregar workouts', 'error');
+        this.isLoadingWorkouts = false;
+      }
+    });
+  }
+
+  /**
+   * Abre formulário para criar novo workout
+   */
+  abrirFormularioWorkout(): void {
+    this.modoWorkout = 'criar';
+    this.workoutEmEdicao = null;
+    this.formularioWorkout.reset({
+      tipo: 'REPS',
+      categoriasIds: [],
+      ativo: true
+    });
+    this.mostrarFormularioWorkout = true;
+  }
+
+  /**
+   * Abre formulário para editar workout existente
+   */
+  editarWorkout(workout: Workout): void {
+    this.modoWorkout = 'editar';
+
+    // Buscar workout completo
+    this.workoutService.buscarWorkoutPorId(workout.id).subscribe({
+      next: (workoutCompleto) => {
+        this.workoutEmEdicao = workoutCompleto;
+        this.formularioWorkout.patchValue({
+          nome: workoutCompleto.nome,
+          descricao: workoutCompleto.descricao || '',
+          tipo: workoutCompleto.tipo,
+          categoriasIds: workoutCompleto.categorias.map(c => c.id),
+          ativo: workoutCompleto.ativo
+        });
+        this.mostrarFormularioWorkout = true;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar workout:', error);
+        this.showSnackBar('Erro ao carregar workout para edição', 'error');
+      }
+    });
+  }
+
+  /**
+   * Salva workout (cria ou atualiza)
+   */
+  salvarWorkout(): void {
+    if (this.formularioWorkout.invalid || !this.eventoId) {
+      this.formularioWorkout.markAllAsTouched();
+      this.showSnackBar('Por favor, preencha todos os campos obrigatórios', 'error');
+      return;
+    }
+
+    const formValue = this.formularioWorkout.value;
+
+    // Validar se há categorias selecionadas
+    if (!formValue.categoriasIds || formValue.categoriasIds.length === 0) {
+      this.showSnackBar('Selecione pelo menos uma categoria', 'error');
+      return;
+    }
+
+    this.isSavingWorkout = true;
+
+    if (this.modoWorkout === 'criar') {
+      const workoutData: WorkoutCreateRequest = {
+        nome: formValue.nome,
+        descricao: formValue.descricao || undefined,
+        tipo: formValue.tipo,
+        eventoId: this.eventoId,
+        categoriasIds: formValue.categoriasIds,
+        ativo: formValue.ativo
+      };
+
+      this.workoutService.criarWorkout(workoutData).subscribe({
+        next: () => {
+          this.showSnackBar('Workout criado com sucesso!', 'success');
+          this.carregarWorkouts();
+          this.cancelarFormularioWorkout();
+          this.isSavingWorkout = false;
+        },
+        error: (error) => {
+          console.error('Erro ao criar workout:', error);
+          const mensagem = error.error?.message || 'Erro ao criar workout';
+          this.showSnackBar(mensagem, 'error');
+          this.isSavingWorkout = false;
+        }
+      });
+    } else {
+      const workoutData: WorkoutUpdateRequest = {
+        nome: formValue.nome,
+        descricao: formValue.descricao || undefined,
+        tipo: formValue.tipo,
+        categoriasIds: formValue.categoriasIds,
+        ativo: formValue.ativo
+      };
+
+      this.workoutService.atualizarWorkout(this.workoutEmEdicao!.id, workoutData).subscribe({
+        next: () => {
+          this.showSnackBar('Workout atualizado com sucesso!', 'success');
+          this.carregarWorkouts();
+          this.cancelarFormularioWorkout();
+          this.isSavingWorkout = false;
+        },
+        error: (error) => {
+          console.error('Erro ao atualizar workout:', error);
+          const mensagem = error.error?.message || 'Erro ao atualizar workout';
+          this.showSnackBar(mensagem, 'error');
+          this.isSavingWorkout = false;
+        }
+      });
+    }
+  }
+
+  /**
+   * Cancela formulário de workout
+   */
+  cancelarFormularioWorkout(): void {
+    this.mostrarFormularioWorkout = false;
+    this.workoutEmEdicao = null;
+    this.formularioWorkout.reset({
+      tipo: 'REPS',
+      categoriasIds: [],
+      ativo: true
+    });
+  }
+
+  /**
+   * Deleta workout com confirmação
+   */
+  deletarWorkout(workoutId: number): void {
+    const confirmacao = confirm('Tem certeza que deseja deletar este workout? Esta ação não pode ser desfeita.');
+
+    if (!confirmacao) return;
+
+    this.workoutService.deletarWorkout(workoutId).subscribe({
+      next: () => {
+        this.showSnackBar('Workout deletado com sucesso!', 'success');
+        this.carregarWorkouts();
+      },
+      error: (error) => {
+        console.error('Erro ao deletar workout:', error);
+        const mensagem = error.error?.message || 'Erro ao deletar workout';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  /**
+   * Alterna status ativo/inativo do workout
+   */
+  toggleStatusWorkout(workout: Workout): void {
+    const operacao = workout.ativo
+      ? this.workoutService.desativarWorkout(workout.id)
+      : this.workoutService.ativarWorkout(workout.id);
+
+    operacao.subscribe({
+      next: () => {
+        const mensagem = workout.ativo
+          ? 'Workout desativado com sucesso!'
+          : 'Workout ativado com sucesso!';
+
+        this.showSnackBar(mensagem, 'success');
+        this.carregarWorkouts();
+      },
+      error: (error) => {
+        console.error('Erro ao alterar status do workout:', error);
+        const mensagem = error.error?.message || 'Erro ao alterar status do workout';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  /**
+   * Retorna label formatado do tipo de workout
+   */
+  getTipoWorkoutLabel(tipo: WorkoutType | string): string {
+    return getTipoWorkoutLabel(tipo);
+  }
+
+  /**
+   * Retorna label formatado da unidade de medida
+   */
+  getUnidadeMedidaLabel(tipo: WorkoutType | string): string {
+    return getUnidadeMedidaLabel(tipo);
+  }
+
+  /**
+   * Retorna categorias ativas para seleção no formulário de workout
+   */
+  getCategoriasAtivas(): CategoriaSummaryResponse[] {
+    return this.categorias.filter(cat => cat.ativa);
   }
 }

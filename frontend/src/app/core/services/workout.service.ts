@@ -3,10 +3,13 @@ import { Observable, catchError, throwError } from 'rxjs';
 
 import { BaseHttpService } from './base-http.service';
 import { API_CONFIG } from '../constants/api.constants';
-import { 
-  Workout, 
-  WorkoutResultCreateDTO, 
-  WorkoutResultUpdateDTO, 
+import {
+  Workout,
+  WorkoutCreateRequest,
+  WorkoutUpdateRequest,
+  WorkoutApiResponse,
+  WorkoutResultCreateDTO,
+  WorkoutResultUpdateDTO,
   WorkoutResultStatusDTO,
   LeaderboardSummaryDTO,
   LeaderboardResponseDTO
@@ -17,6 +20,10 @@ import {
 })
 export class WorkoutService extends BaseHttpService {
 
+  // ===============================================
+  // MÉTODOS CRUD DE WORKOUTS
+  // ===============================================
+
   /**
    * Busca workouts de um evento específico
    */
@@ -25,6 +32,84 @@ export class WorkoutService extends BaseHttpService {
       .pipe(
         catchError(error => {
           console.error(`Erro ao buscar workouts do evento ${eventoId}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Busca workout por ID (retorna detalhes completos)
+   */
+  buscarWorkoutPorId(id: number): Observable<WorkoutApiResponse> {
+    return this.get<WorkoutApiResponse>(API_CONFIG.endpoints.workouts.byId(id))
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar workout ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Cria novo workout
+   */
+  criarWorkout(workout: WorkoutCreateRequest): Observable<WorkoutApiResponse> {
+    return this.post<WorkoutApiResponse>(API_CONFIG.endpoints.workouts.create, workout)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao criar workout:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Atualiza workout existente
+   */
+  atualizarWorkout(id: number, workout: WorkoutUpdateRequest): Observable<WorkoutApiResponse> {
+    return this.put<WorkoutApiResponse>(API_CONFIG.endpoints.workouts.update(id), workout)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao atualizar workout ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Deleta workout
+   */
+  deletarWorkout(id: number): Observable<void> {
+    return this.delete<void>(API_CONFIG.endpoints.workouts.delete(id))
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao deletar workout ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Ativa workout
+   */
+  ativarWorkout(id: number): Observable<void> {
+    return this.put<void>(API_CONFIG.endpoints.workouts.ativar(id), {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao ativar workout ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Desativa workout
+   */
+  desativarWorkout(id: number): Observable<void> {
+    return this.put<void>(API_CONFIG.endpoints.workouts.desativar(id), {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao desativar workout ${id}:`, error);
           return throwError(() => error);
         })
       );

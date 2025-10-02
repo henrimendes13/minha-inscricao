@@ -421,14 +421,159 @@
             </div>
           </mat-tab>
 
-          <!-- Aba 4: Workouts (Placeholder) -->
+          <!-- Aba 4: Workouts -->
           <mat-tab label="Workouts" [disabled]="modo === 'criar'">
             <div class="tab-content">
-              <div class="placeholder-content">
-                <mat-icon class="placeholder-icon">fitness_center</mat-icon>
-                <h3>Gerenciar Workouts</h3>
-                <p>Funcionalidade será implementada em breve.</p>
-                <p class="hint">Salve o evento primeiro para gerenciar workouts.</p>
+
+              <!-- Loading State -->
+              <div *ngIf="isLoadingWorkouts" class="loading-container">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Carregando workouts...</p>
+              </div>
+
+              <!-- Content -->
+              <div *ngIf="!isLoadingWorkouts">
+
+                <!-- Header com botão adicionar -->
+                <div class="categorias-header">
+                  <div>
+                    <h3>Workouts do Evento</h3>
+                    <p>Gerencie os workouts (provas) deste evento</p>
+                  </div>
+                  <button mat-raised-button color="primary" (click)="abrirFormularioWorkout()">
+                    <mat-icon>add</mat-icon>
+                    Adicionar Workout
+                  </button>
+                </div>
+
+                <!-- Lista vazia -->
+                <div *ngIf="workouts.length === 0" class="categoria-empty-state">
+                  <mat-icon>fitness_center</mat-icon>
+                  <h4>Nenhum workout criado</h4>
+                  <p>Clique em "Adicionar Workout" para começar</p>
+                </div>
+
+                <!-- Lista de workouts -->
+                <div *ngIf="workouts.length > 0" class="categorias-list">
+                  <mat-card *ngFor="let workout of workouts" class="categoria-card">
+                    <mat-card-content>
+                      <div class="categoria-info">
+                        <div class="categoria-main">
+                          <h4>{{ workout.nome }}</h4>
+                          <p *ngIf="workout.descricao" class="categoria-descricao">{{ workout.descricao }}</p>
+                          <div class="categoria-tags">
+                            <mat-chip-listbox>
+                              <mat-chip-option [class.chip-ativo]="workout.ativo" [class.chip-inativo]="!workout.ativo">
+                                {{ workout.ativo ? 'Ativo' : 'Inativo' }}
+                              </mat-chip-option>
+                              <mat-chip-option>{{ getTipoWorkoutLabel(workout.tipo) }}</mat-chip-option>
+                              <mat-chip-option>{{ getUnidadeMedidaLabel(workout.tipo) }}</mat-chip-option>
+                            </mat-chip-listbox>
+                          </div>
+                          <div class="workout-categorias" *ngIf="workout.nomesCategorias">
+                            <span class="label">Categorias:</span>
+                            <span class="value">{{ workout.nomesCategorias }}</span>
+                          </div>
+                        </div>
+                        <div class="categoria-details">
+                          <div class="detail-item">
+                            <span class="label">Categorias:</span>
+                            <span class="value">{{ workout.quantidadeCategorias }}</span>
+                          </div>
+                        </div>
+                        <div class="categoria-actions">
+                          <button mat-icon-button color="primary" (click)="editarWorkout(workout)" matTooltip="Editar">
+                            <mat-icon>edit</mat-icon>
+                          </button>
+                          <button mat-icon-button [color]="workout.ativo ? 'warn' : 'accent'"
+                                  (click)="toggleStatusWorkout(workout)"
+                                  [matTooltip]="workout.ativo ? 'Desativar' : 'Ativar'">
+                            <mat-icon>{{ workout.ativo ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+                          </button>
+                          <button mat-icon-button color="warn" (click)="deletarWorkout(workout.id)" matTooltip="Deletar">
+                            <mat-icon>delete</mat-icon>
+                          </button>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                </div>
+
+                <!-- Formulário de criação/edição -->
+                <mat-expansion-panel *ngIf="mostrarFormularioWorkout" [expanded]="true" class="categoria-form-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      {{ modoWorkout === 'criar' ? 'Novo Workout' : 'Editar Workout' }}
+                    </mat-panel-title>
+                  </mat-expansion-panel-header>
+
+                  <form [formGroup]="formularioWorkout" class="categoria-form">
+                    <!-- Nome -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Nome do Workout</mat-label>
+                      <input matInput formControlName="nome" placeholder="Ex: 21-15-9 Thrusters/Pull-ups" maxlength="100">
+                      <mat-error *ngIf="formularioWorkout.get('nome')?.hasError('required')">
+                        Nome é obrigatório
+                      </mat-error>
+                      <mat-error *ngIf="formularioWorkout.get('nome')?.hasError('maxlength')">
+                        Máximo de 100 caracteres
+                      </mat-error>
+                    </mat-form-field>
+
+                    <!-- Descrição -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Descrição (Opcional)</mat-label>
+                      <textarea matInput formControlName="descricao" rows="3" maxlength="1000"
+                                placeholder="Descreva o workout em detalhes"></textarea>
+                      <mat-hint align="end">{{ formularioWorkout.get('descricao')?.value?.length || 0 }}/1000</mat-hint>
+                    </mat-form-field>
+
+                    <!-- Tipo de Workout -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Tipo de Workout</mat-label>
+                      <mat-select formControlName="tipo">
+                        <mat-option value="REPS">Repetições (REPS)</mat-option>
+                        <mat-option value="PESO">Peso (PESO)</mat-option>
+                        <mat-option value="TEMPO">Tempo (TEMPO)</mat-option>
+                      </mat-select>
+                      <mat-hint>Define como os resultados serão medidos</mat-hint>
+                      <mat-error>Tipo é obrigatório</mat-error>
+                    </mat-form-field>
+
+                    <!-- Categorias -->
+                    <mat-form-field class="full-width">
+                      <mat-label>Categorias Participantes</mat-label>
+                      <mat-select formControlName="categoriasIds" multiple>
+                        <mat-option *ngFor="let categoria of getCategoriasAtivas()" [value]="categoria.id">
+                          {{ categoria.nome }}
+                        </mat-option>
+                      </mat-select>
+                      <mat-hint>Selecione as categorias que participarão deste workout</mat-hint>
+                      <mat-error *ngIf="formularioWorkout.get('categoriasIds')?.hasError('required')">
+                        Selecione pelo menos uma categoria
+                      </mat-error>
+                    </mat-form-field>
+
+                    <!-- Status Ativo -->
+                    <div class="checkbox-field">
+                      <mat-checkbox formControlName="ativo">Workout ativo para lançamento de resultados</mat-checkbox>
+                    </div>
+
+                    <!-- Botões -->
+                    <div class="form-actions">
+                      <button mat-button type="button" (click)="cancelarFormularioWorkout()">
+                        Cancelar
+                      </button>
+                      <button mat-raised-button color="primary" type="button" (click)="salvarWorkout()"
+                              [disabled]="formularioWorkout.invalid || isSavingWorkout">
+                        <mat-icon *ngIf="!isSavingWorkout">save</mat-icon>
+                        <mat-spinner *ngIf="isSavingWorkout" diameter="20"></mat-spinner>
+                        {{ isSavingWorkout ? 'Salvando...' : 'Salvar Workout' }}
+                      </button>
+                    </div>
+                  </form>
+                </mat-expansion-panel>
+
               </div>
             </div>
           </mat-tab>

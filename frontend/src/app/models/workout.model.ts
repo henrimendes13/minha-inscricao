@@ -114,3 +114,67 @@ export interface LeaderboardResponseDTO {
   createdAt: string;
   updatedAt?: string;
 }
+
+// ============================================
+// Interfaces para CRUD de Workouts
+// ============================================
+
+export interface WorkoutCreateRequest {
+  nome: string;
+  descricao?: string;
+  tipo: WorkoutType;
+  eventoId: number;
+  categoriasIds: number[];
+  ativo: boolean;
+}
+
+export interface WorkoutUpdateRequest {
+  nome: string;
+  descricao?: string;
+  tipo: WorkoutType;
+  categoriasIds: number[];
+  ativo: boolean;
+}
+
+export interface WorkoutApiResponse {
+  id: number;
+  nome: string;
+  descricao?: string;
+  tipo: WorkoutType;
+  ativo: boolean;
+  evento: EventoSummary;
+  categorias: CategoriaSummary[];
+  quantidadeCategorias: number;
+  nomesCategorias: string;
+  unidadeMedida: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+// ============================================
+// Helper Functions
+// ============================================
+
+export function getTipoWorkoutLabel(tipo: WorkoutType | string | null | undefined): string {
+  if (!tipo) return 'Não definido';
+
+  const labels: Record<string, string> = {
+    'REPS': 'Repetições',
+    'PESO': 'Peso',
+    'TEMPO': 'Tempo'
+  };
+
+  return labels[tipo] || tipo;
+}
+
+export function getUnidadeMedidaLabel(tipo: WorkoutType | string | null | undefined): string {
+  if (!tipo) return '';
+
+  const unidades: Record<string, string> = {
+    'REPS': 'reps',
+    'PESO': 'kg',
+    'TEMPO': 'min:seg'
+  };
+
+  return unidades[tipo] || '';
+}

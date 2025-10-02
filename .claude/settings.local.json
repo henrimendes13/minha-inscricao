@@ -87,7 +87,8 @@
       "Bash(ng generate component:*)",
       "Bash(start http://localhost:4200/dashboard)",
       "Bash(start http://localhost:4200/dashboard/eventos)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(npx ng:*)"
     ],
     "deny": [],
     "ask": []
