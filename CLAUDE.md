@@ -97,6 +97,8 @@ The frontend uses Angular standalone components with lazy loading:
 
 ### Frontend (Angular)
 
+**Note**: All Angular commands must be run from the `frontend/` directory.
+
 ```bash
 # Navigate to frontend directory first
 cd frontend
@@ -112,10 +114,13 @@ ng serve --proxy-config proxy.conf.json
 # Build for production
 ng build
 
+# Build with watch mode
+ng build --watch --configuration development
+
 # Run tests
 ng test
 
-# Generate new component
+# Generate new component (standalone by default in Angular 19)
 ng generate component component-name
 
 # Generate new service
@@ -206,3 +211,15 @@ docker logs minha_inscricao
 - **Frontend**: Angular CLI dev server auto-reloads on changes
 - Changes to Java files trigger automatic restart
 - Changes to Angular files trigger automatic browser refresh
+
+## UI Libraries
+
+- **Angular Material**: Material Design components (v19.2.19)
+- **PrimeNG**: Rich UI component library (v19.1.4) with PrimeIcons
+- **Styling**: SCSS with Azure Blue Material theme
+
+## Additional Notes
+
+### Package Name
+- The original package name `br.com.eventsports.minha-inscricao` is invalid
+- Project uses `br.com.eventsports.minha_inscricao` instead (underscores, not hyphens)

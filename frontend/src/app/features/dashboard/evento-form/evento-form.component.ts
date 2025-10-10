@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -23,6 +24,8 @@ import { EventoService } from '../../../core/services/evento.service';
 import { ImagemService } from '../../../core/services/imagem.service';
 import { CategoriaService } from '../../../core/services/categoria.service';
 import { WorkoutService } from '../../../core/services/workout.service';
+import { TimelineService } from '../../../core/services/timeline.service';
+import { AnexoService } from '../../../core/services/anexo.service';
 import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../../../models/evento.model';
 import {
   CategoriaCreateRequest,
@@ -44,6 +47,8 @@ import {
   getUnidadeMedidaLabel
 } from '../../../models/workout.model';
 import { TipoParticipacao } from '../../../models';
+import { Timeline, TimelineCreateRequest, TimelineUpdateRequest } from '../../../models/timeline.model';
+import { Anexo } from '../../../models/anexo.model';
 
 @Component({
   selector: 'app-evento-form',
@@ -62,6 +67,7 @@ import { TipoParticipacao } from '../../../models';
     MatCardModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
+    MatProgressBarModule,
     MatExpansionModule,
     MatChipsModule,
     MatTooltipModule,
@@ -105,6 +111,19 @@ export class EventoFormComponent implements OnInit {
   mostrarFormularioWorkout = false;
   isSavingWorkout = false;
 
+  // Propriedades para controle de timeline
+  timeline: Timeline | null = null;
+  timelineExists = false;
+  formularioTimeline!: FormGroup;
+  isLoadingTimeline = false;
+  isSavingTimeline = false;
+
+  // Propriedades para controle de anexos
+  anexos: Anexo[] = [];
+  isLoadingAnexos = false;
+  isUploading = false;
+  isDragging = false;
+
   estadosBrasileiros = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
     'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
@@ -117,6 +136,8 @@ export class EventoFormComponent implements OnInit {
     private imagemService: ImagemService,
     private categoriaService: CategoriaService,
     private workoutService: WorkoutService,
+    private timelineService: TimelineService,
+    private anexoService: AnexoService,
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
@@ -128,11 +149,14 @@ export class EventoFormComponent implements OnInit {
     this.inicializarFormulario();
     this.inicializarFormularioCategoria();
     this.inicializarFormularioWorkout();
+    this.inicializarFormularioTimeline();
 
     if (this.modo === 'editar' && this.eventoId) {
       this.carregarEvento();
       this.carregarCategorias();
       this.carregarWorkouts();
+      this.carregarTimeline();
+      this.carregarAnexos();
     }
   }
 
@@ -904,5 +928,301 @@ export class EventoFormComponent implements OnInit {
    */
   getCategoriasAtivas(): CategoriaSummaryResponse[] {
     return this.categorias.filter(cat => cat.ativa);
+  }
+
+  // ==================== MÉTODOS DE TIMELINE ====================
+
+  /**
+   * Inicializa o formulário de timeline com validações
+   */
+  inicializarFormularioTimeline(): void {
+    this.formularioTimeline = this.fb.group({
+      descricaoDiaUm: ['', [Validators.maxLength(5000)]],
+      descricaoDiaDois: ['', [Validators.maxLength(5000)]],
+      descricaoDiaTres: ['', [Validators.maxLength(5000)]],
+      descricaoDiaQuatro: ['', [Validators.maxLength(5000)]]
+    });
+  }
+
+  /**
+   * Carrega timeline do evento
+   */
+  carregarTimeline(): void {
+    if (!this.eventoId) return;
+
+    this.isLoadingTimeline = true;
+    this.timelineService.buscarTimelinePorEvento(this.eventoId).subscribe({
+      next: (timeline) => {
+        this.timeline = timeline;
+        // Verifica se a timeline realmente existe (tem ID) ou é apenas um objeto vazio do backend
+        this.timelineExists = timeline.id !== null && timeline.id !== undefined;
+        if (this.timelineExists) {
+          this.preencherFormularioTimeline(timeline);
+        }
+        this.isLoadingTimeline = false;
+      },
+      error: (error) => {
+        // Se erro 404, timeline não existe ainda
+        if (error.status === 404) {
+          this.timelineExists = false;
+          this.timeline = null;
+        } else {
+          console.error('Erro ao carregar timeline:', error);
+        }
+        this.isLoadingTimeline = false;
+      }
+    });
+  }
+
+  /**
+   * Preenche formulário com dados da timeline
+   */
+  preencherFormularioTimeline(timeline: Timeline): void {
+    this.formularioTimeline.patchValue({
+      descricaoDiaUm: timeline.descricaoDiaUm || '',
+      descricaoDiaDois: timeline.descricaoDiaDois || '',
+      descricaoDiaTres: timeline.descricaoDiaTres || '',
+      descricaoDiaQuatro: timeline.descricaoDiaQuatro || ''
+    });
+  }
+
+  /**
+   * Salva timeline (cria ou atualiza)
+   */
+  salvarTimeline(): void {
+    if (this.formularioTimeline.invalid || !this.eventoId) {
+      this.formularioTimeline.markAllAsTouched();
+      this.showSnackBar('Por favor, verifique os campos', 'error');
+      return;
+    }
+
+    console.log('[DEBUG] timelineExists:', this.timelineExists);
+    console.log('[DEBUG] timeline:', this.timeline);
+
+    this.isSavingTimeline = true;
+    const formValue = this.formularioTimeline.value;
+
+    const timelineData: TimelineCreateRequest = {
+      descricaoDiaUm: formValue.descricaoDiaUm || null,
+      descricaoDiaDois: formValue.descricaoDiaDois || null,
+      descricaoDiaTres: formValue.descricaoDiaTres || null,
+      descricaoDiaQuatro: formValue.descricaoDiaQuatro || null
+    };
+
+    const operacao = this.timelineExists
+      ? this.timelineService.atualizarTimeline(this.eventoId, timelineData)
+      : this.timelineService.criarTimeline(this.eventoId, timelineData);
+
+    operacao.subscribe({
+      next: (timeline) => {
+        this.timeline = timeline;
+        this.timelineExists = true;
+        const mensagem = timeline.id && timeline.vazia === false
+          ? 'Timeline atualizada com sucesso!'
+          : 'Timeline criada com sucesso!';
+        this.showSnackBar(mensagem, 'success');
+        this.isSavingTimeline = false;
+      },
+      error: (error) => {
+        console.error('Erro ao salvar timeline:', error);
+        const mensagem = error.error?.message || 'Erro ao salvar timeline';
+        this.showSnackBar(mensagem, 'error');
+        this.isSavingTimeline = false;
+      }
+    });
+  }
+
+  /**
+   * Limpa formulário de timeline
+   */
+  limparFormularioTimeline(): void {
+    this.formularioTimeline.reset({
+      descricaoDiaUm: '',
+      descricaoDiaDois: '',
+      descricaoDiaTres: '',
+      descricaoDiaQuatro: ''
+    });
+  }
+
+  /**
+   * Retorna número de dias com descrição preenchida
+   */
+  getDiasPreenchidos(): number {
+    if (!this.timeline) return 0;
+    return this.timeline.totalDiasComDescricao || 0;
+  }
+
+  /**
+   * Verifica se um dia específico está preenchido
+   */
+  diaEstaPreenchido(dia: number): boolean {
+    if (!this.timeline) return false;
+
+    switch (dia) {
+      case 1: return this.timeline.temDescricaoDiaUm;
+      case 2: return this.timeline.temDescricaoDiaDois;
+      case 3: return this.timeline.temDescricaoDiaTres;
+      case 4: return this.timeline.temDescricaoDiaQuatro;
+      default: return false;
+    }
+  }
+
+  // ==================== MÉTODOS DE ANEXOS ====================
+
+  /**
+   * Carrega anexos do evento
+   */
+  carregarAnexos(): void {
+    if (!this.eventoId) return;
+
+    this.isLoadingAnexos = true;
+    this.anexoService.buscarAnexosPorEvento(this.eventoId).subscribe({
+      next: (anexos) => {
+        this.anexos = anexos;
+        this.isLoadingAnexos = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar anexos:', error);
+        this.isLoadingAnexos = false;
+        this.showSnackBar('Erro ao carregar anexos', 'error');
+      }
+    });
+  }
+
+  /**
+   * Valida arquivo antes do upload
+   */
+  validarArquivo(arquivo: File): boolean {
+    const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const tamanhoMaximo = 10 * 1024 * 1024; // 10 MB
+
+    if (!tiposPermitidos.includes(arquivo.type)) {
+      this.showSnackBar('Tipo de arquivo não permitido. Use PDF ou imagens (JPG, PNG, GIF)', 'error');
+      return false;
+    }
+
+    if (arquivo.size > tamanhoMaximo) {
+      this.showSnackBar('Arquivo muito grande. Tamanho máximo: 10 MB', 'error');
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Processa seleção de arquivos
+   */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.uploadArquivos(Array.from(input.files));
+      input.value = '';
+    }
+  }
+
+  /**
+   * Processa drag over
+   */
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  /**
+   * Processa drag leave
+   */
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  /**
+   * Processa drop de arquivos
+   */
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      this.uploadArquivos(Array.from(files));
+    }
+  }
+
+  /**
+   * Faz upload de múltiplos arquivos
+   */
+  uploadArquivos(arquivos: File[]): void {
+    if (!this.eventoId) return;
+
+    const arquivosValidos = arquivos.filter(arquivo => this.validarArquivo(arquivo));
+
+    if (arquivosValidos.length === 0) return;
+
+    this.isUploading = true;
+    let uploadsConcluidos = 0;
+
+    arquivosValidos.forEach(arquivo => {
+      this.anexoService.uploadAnexo(arquivo, this.eventoId!).subscribe({
+        next: () => {
+          uploadsConcluidos++;
+          if (uploadsConcluidos === arquivosValidos.length) {
+            this.isUploading = false;
+            this.showSnackBar(`${arquivosValidos.length} arquivo(s) enviado(s) com sucesso!`, 'success');
+            this.carregarAnexos();
+          }
+        },
+        error: (error) => {
+          console.error('Erro ao fazer upload:', error);
+          this.isUploading = false;
+          const mensagem = error.error?.message || 'Erro ao fazer upload do arquivo';
+          this.showSnackBar(mensagem, 'error');
+        }
+      });
+    });
+  }
+
+  /**
+   * Faz download de um anexo
+   */
+  downloadAnexo(anexo: Anexo): void {
+    this.anexoService.downloadAnexo(anexo.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = anexo.nomeArquivo;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Erro ao fazer download:', error);
+        this.showSnackBar('Erro ao fazer download do arquivo', 'error');
+      }
+    });
+  }
+
+  /**
+   * Remove um anexo
+   */
+  removerAnexo(anexo: Anexo): void {
+    const confirmacao = confirm(`Tem certeza que deseja remover o arquivo "${anexo.nomeArquivo}"?`);
+
+    if (!confirmacao) return;
+
+    this.anexoService.removerAnexo(anexo.id).subscribe({
+      next: () => {
+        this.showSnackBar('Arquivo removido com sucesso!', 'success');
+        this.carregarAnexos();
+      },
+      error: (error) => {
+        console.error('Erro ao remover anexo:', error);
+        const mensagem = error.error?.message || 'Erro ao remover arquivo';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
   }
 }

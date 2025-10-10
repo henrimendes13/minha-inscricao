@@ -578,26 +578,266 @@
             </div>
           </mat-tab>
 
-          <!-- Aba 5: Timeline (Placeholder) -->
+          <!-- Aba 5: Timeline -->
           <mat-tab label="Timeline" [disabled]="modo === 'criar'">
             <div class="tab-content">
-              <div class="placeholder-content">
-                <mat-icon class="placeholder-icon">schedule</mat-icon>
-                <h3>Cronograma do Evento</h3>
-                <p>Funcionalidade será implementada em breve.</p>
-                <p class="hint">Salve o evento primeiro para gerenciar o cronograma.</p>
+
+              <!-- Header da aba -->
+              <div class="section-header">
+                <div class="header-info">
+                  <mat-icon>schedule</mat-icon>
+                  <div>
+                    <h3>Cronograma do Evento</h3>
+                    <p>Defina a programação para cada dia do evento (até 4 dias)</p>
+                  </div>
+                </div>
+                <div class="header-stats" *ngIf="timeline">
+                  <mat-chip class="stat-chip">
+                    <mat-icon>event_note</mat-icon>
+                    {{ getDiasPreenchidos() }} de 4 dias preenchidos
+                  </mat-chip>
+                </div>
               </div>
+
+              <!-- Loading State -->
+              <div *ngIf="isLoadingTimeline" class="loading-state">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Carregando cronograma...</p>
+              </div>
+
+              <!-- Formulário de Timeline -->
+              <div *ngIf="!isLoadingTimeline" class="timeline-form">
+                <form [formGroup]="formularioTimeline">
+
+                  <mat-accordion class="timeline-accordion">
+
+                    <!-- Dia 1 -->
+                    <mat-expansion-panel [expanded]="true">
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon [color]="diaEstaPreenchido(1) ? 'primary' : ''">
+                            {{ diaEstaPreenchido(1) ? 'check_circle' : 'radio_button_unchecked' }}
+                          </mat-icon>
+                          <span>Dia 1</span>
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          {{ diaEstaPreenchido(1) ? 'Preenchido' : 'Vazio' }}
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Programação do Dia 1</mat-label>
+                        <textarea matInput formControlName="descricaoDiaUm" rows="6"
+                                  placeholder="Ex: 08:00 - Check-in | 09:00 - Aquecimento | 10:00 - Primeira prova"
+                                  maxlength="5000"></textarea>
+                        <mat-icon matPrefix>event_note</mat-icon>
+                        <mat-hint align="end">
+                          {{ formularioTimeline.get('descricaoDiaUm')?.value?.length || 0 }}/5000
+                        </mat-hint>
+                        <mat-error *ngIf="formularioTimeline.get('descricaoDiaUm')?.hasError('maxlength')">
+                          Máximo de 5000 caracteres
+                        </mat-error>
+                      </mat-form-field>
+                    </mat-expansion-panel>
+
+                    <!-- Dia 2 -->
+                    <mat-expansion-panel>
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon [color]="diaEstaPreenchido(2) ? 'primary' : ''">
+                            {{ diaEstaPreenchido(2) ? 'check_circle' : 'radio_button_unchecked' }}
+                          </mat-icon>
+                          <span>Dia 2</span>
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          {{ diaEstaPreenchido(2) ? 'Preenchido' : 'Vazio' }}
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Programação do Dia 2</mat-label>
+                        <textarea matInput formControlName="descricaoDiaDois" rows="6"
+                                  placeholder="Ex: 08:00 - Check-in | 09:00 - Aquecimento | 10:00 - Segunda prova"
+                                  maxlength="5000"></textarea>
+                        <mat-icon matPrefix>event_note</mat-icon>
+                        <mat-hint align="end">
+                          {{ formularioTimeline.get('descricaoDiaDois')?.value?.length || 0 }}/5000
+                        </mat-hint>
+                        <mat-error *ngIf="formularioTimeline.get('descricaoDiaDois')?.hasError('maxlength')">
+                          Máximo de 5000 caracteres
+                        </mat-error>
+                      </mat-form-field>
+                    </mat-expansion-panel>
+
+                    <!-- Dia 3 -->
+                    <mat-expansion-panel>
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon [color]="diaEstaPreenchido(3) ? 'primary' : ''">
+                            {{ diaEstaPreenchido(3) ? 'check_circle' : 'radio_button_unchecked' }}
+                          </mat-icon>
+                          <span>Dia 3</span>
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          {{ diaEstaPreenchido(3) ? 'Preenchido' : 'Vazio' }}
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Programação do Dia 3</mat-label>
+                        <textarea matInput formControlName="descricaoDiaTres" rows="6"
+                                  placeholder="Ex: 08:00 - Check-in | 09:00 - Aquecimento | 10:00 - Terceira prova"
+                                  maxlength="5000"></textarea>
+                        <mat-icon matPrefix>event_note</mat-icon>
+                        <mat-hint align="end">
+                          {{ formularioTimeline.get('descricaoDiaTres')?.value?.length || 0 }}/5000
+                        </mat-hint>
+                        <mat-error *ngIf="formularioTimeline.get('descricaoDiaTres')?.hasError('maxlength')">
+                          Máximo de 5000 caracteres
+                        </mat-error>
+                      </mat-form-field>
+                    </mat-expansion-panel>
+
+                    <!-- Dia 4 -->
+                    <mat-expansion-panel>
+                      <mat-expansion-panel-header>
+                        <mat-panel-title>
+                          <mat-icon [color]="diaEstaPreenchido(4) ? 'primary' : ''">
+                            {{ diaEstaPreenchido(4) ? 'check_circle' : 'radio_button_unchecked' }}
+                          </mat-icon>
+                          <span>Dia 4</span>
+                        </mat-panel-title>
+                        <mat-panel-description>
+                          {{ diaEstaPreenchido(4) ? 'Preenchido' : 'Vazio' }}
+                        </mat-panel-description>
+                      </mat-expansion-panel-header>
+
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Programação do Dia 4</mat-label>
+                        <textarea matInput formControlName="descricaoDiaQuatro" rows="6"
+                                  placeholder="Ex: 08:00 - Check-in | 09:00 - Aquecimento | 10:00 - Prova final | 16:00 - Premiação"
+                                  maxlength="5000"></textarea>
+                        <mat-icon matPrefix>event_note</mat-icon>
+                        <mat-hint align="end">
+                          {{ formularioTimeline.get('descricaoDiaQuatro')?.value?.length || 0 }}/5000
+                        </mat-hint>
+                        <mat-error *ngIf="formularioTimeline.get('descricaoDiaQuatro')?.hasError('maxlength')">
+                          Máximo de 5000 caracteres
+                        </mat-error>
+                      </mat-form-field>
+                    </mat-expansion-panel>
+
+                  </mat-accordion>
+
+                  <!-- Botões de Ação -->
+                  <div class="form-actions">
+                    <button mat-button type="button" (click)="limparFormularioTimeline()"
+                            [disabled]="isSavingTimeline">
+                      <mat-icon>clear</mat-icon>
+                      Limpar
+                    </button>
+                    <button mat-raised-button color="primary" type="button"
+                            (click)="salvarTimeline()"
+                            [disabled]="isSavingTimeline || formularioTimeline.invalid">
+                      <mat-icon *ngIf="!isSavingTimeline">save</mat-icon>
+                      <mat-icon *ngIf="isSavingTimeline" class="spinning">hourglass_empty</mat-icon>
+                      {{ timelineExists ? 'Atualizar Timeline' : 'Salvar Timeline' }}
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+
             </div>
           </mat-tab>
 
-          <!-- Aba 6: Anexos (Placeholder) -->
+          <!-- Aba 6: Anexos -->
           <mat-tab label="Anexos" [disabled]="modo === 'criar'">
-            <div class="tab-content">
-              <div class="placeholder-content">
-                <mat-icon class="placeholder-icon">attach_file</mat-icon>
-                <h3>Anexos e Documentos</h3>
-                <p>Funcionalidade será implementada em breve.</p>
-                <p class="hint">Salve o evento primeiro para adicionar anexos.</p>
+            <div class="tab-content anexos-content">
+              <!-- Header Section -->
+              <div class="anexos-header">
+                <div class="header-info">
+                  <mat-icon class="header-icon">attach_file</mat-icon>
+                  <div class="header-text">
+                    <h3>Anexos e Documentos</h3>
+                    <p>Upload de PDFs e imagens (JPG, PNG, GIF). Tamanho máximo: 10 MB</p>
+                  </div>
+                </div>
+                <div class="header-stats" *ngIf="anexos.length > 0">
+                  <mat-icon>description</mat-icon>
+                  <span>{{ anexos.length }} {{ anexos.length === 1 ? 'arquivo' : 'arquivos' }}</span>
+                </div>
+              </div>
+
+              <!-- Upload Section -->
+              <div class="upload-section">
+                <div class="upload-zone"
+                     [class.dragging]="isDragging"
+                     (dragover)="onDragOver($event)"
+                     (dragleave)="onDragLeave($event)"
+                     (drop)="onDrop($event)">
+                  <input #fileInput
+                         type="file"
+                         accept="application/pdf,image/jpeg,image/png,image/gif"
+                         multiple
+                         (change)="onFileSelected($event)"
+                         style="display: none;">
+
+                  <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                  <p class="upload-text">Arraste arquivos aqui ou</p>
+                  <button mat-raised-button color="primary" (click)="fileInput.click()" type="button">
+                    <mat-icon>add</mat-icon>
+                    Selecionar Arquivos
+                  </button>
+                  <p class="upload-hint">PDF, JPG, PNG ou GIF - Máximo 10 MB por arquivo</p>
+                </div>
+
+                <!-- Upload Progress -->
+                <div class="upload-progress" *ngIf="isUploading">
+                  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+                  <p>Enviando arquivo...</p>
+                </div>
+              </div>
+
+              <!-- Files List -->
+              <div class="anexos-list" *ngIf="anexos.length > 0">
+                <h4 class="list-title">Arquivos Anexados</h4>
+                <div class="anexo-item" *ngFor="let anexo of anexos">
+                  <div class="anexo-icon">
+                    <mat-icon *ngIf="anexo.tipoMime.includes('pdf')">picture_as_pdf</mat-icon>
+                    <mat-icon *ngIf="anexo.tipoMime.includes('image')">image</mat-icon>
+                  </div>
+                  <div class="anexo-info">
+                    <div class="anexo-name">{{ anexo.nomeArquivo }}</div>
+                    <div class="anexo-meta">
+                      <span class="anexo-size">{{ anexo.tamanhoFormatado }}</span>
+                      <span class="anexo-extension">{{ anexo.extensao?.toUpperCase() }}</span>
+                      <span class="anexo-description" *ngIf="anexo.descricao">{{ anexo.descricao }}</span>
+                    </div>
+                  </div>
+                  <div class="anexo-actions">
+                    <button mat-icon-button
+                            (click)="downloadAnexo(anexo)"
+                            matTooltip="Baixar arquivo"
+                            type="button">
+                      <mat-icon>download</mat-icon>
+                    </button>
+                    <button mat-icon-button
+                            color="warn"
+                            (click)="removerAnexo(anexo)"
+                            matTooltip="Remover arquivo"
+                            type="button">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty State -->
+              <div class="empty-state" *ngIf="anexos.length === 0 && !isUploading">
+                <mat-icon class="empty-icon">folder_open</mat-icon>
+                <p>Nenhum arquivo anexado ainda</p>
+                <p class="empty-hint">Adicione documentos, regulamentos ou imagens do evento</p>
               </div>
             </div>
           </mat-tab>

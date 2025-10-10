@@ -16,3 +16,17 @@ export interface Timeline {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TimelineCreateRequest {
+  descricaoDiaUm?: string | null;
+  descricaoDiaDois?: string | null;
+  descricaoDiaTres?: string | null;
+  descricaoDiaQuatro?: string | null;
+}
+
+export interface TimelineUpdateRequest {
+  descricaoDiaUm?: string | null;
+  descricaoDiaDois?: string | null;
+  descricaoDiaTres?: string | null;
+  descricaoDiaQuatro?: string | null;
+}
