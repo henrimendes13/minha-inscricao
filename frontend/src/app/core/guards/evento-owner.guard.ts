@@ -24,12 +24,18 @@ export class EventoOwnerGuard implements CanActivate {
   ): Observable<boolean> | boolean {
     // Verificar se está autenticado
     if (!this.authService.isAuthenticated()) {
+      console.debug('[EVENTO-OWNER-GUARD] Usuário não autenticado - redirecionando para login');
       this.router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
       return false;
     }
 
-    // Se for admin, pode acessar qualquer evento
-    if (AuthHelpers.isAdmin(this.authService)) {
+    // Se for admin (verificar pelo email), pode acessar qualquer evento
+    const currentUserEmail = AuthHelpers.getCurrentUserEmail(this.authService);
+    console.debug('[EVENTO-OWNER-GUARD] Email do usuário atual:', currentUserEmail);
+    console.debug('[EVENTO-OWNER-GUARD] Usuário atual completo:', this.authService.getCurrentUser());
+
+    if (currentUserEmail === 'admin@admin.com') {
+      console.debug('[EVENTO-OWNER-GUARD] Usuário é admin - acesso permitido');
       return true;
     }
 

@@ -28,6 +28,8 @@ public class InscricaoService implements IInscricaoService {
     private final EventoRepository eventoRepository;
     private final CategoriaRepository categoriaRepository;
     private final EquipeRepository equipeRepository;
+    private final AtletaRepository atletaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Cacheable(value = "inscricoes", key = "#id")
     @Transactional(readOnly = true)
@@ -46,6 +48,55 @@ public class InscricaoService implements IInscricaoService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "inscricoes", allEntries = true)
+    public InscricaoResponseDTO create(InscricaoCreateDTO inscricaoCreateDTO) {
+        // Validar que possui atleta OU equipe, nunca ambos
+        if (inscricaoCreateDTO.getAtletaId() != null && inscricaoCreateDTO.getEquipeId() != null) {
+            throw new RuntimeException("Inscrição deve ter apenas atleta OU equipe, não ambos");
+        }
+        if (inscricaoCreateDTO.getAtletaId() == null && inscricaoCreateDTO.getEquipeId() == null) {
+            throw new RuntimeException("Inscrição deve ter atleta ou equipe");
+        }
+
+        // Buscar entidades relacionadas
+        UsuarioEntity usuario = usuarioRepository.findById(inscricaoCreateDTO.getUsuarioInscricaoId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + inscricaoCreateDTO.getUsuarioInscricaoId()));
+
+        EventoEntity evento = eventoRepository.findById(inscricaoCreateDTO.getEventoId())
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + inscricaoCreateDTO.getEventoId()));
+
+        CategoriaEntity categoria = categoriaRepository.findById(inscricaoCreateDTO.getCategoriaId())
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + inscricaoCreateDTO.getCategoriaId()));
+
+        AtletaEntity atleta = null;
+        if (inscricaoCreateDTO.getAtletaId() != null) {
+            atleta = atletaRepository.findById(inscricaoCreateDTO.getAtletaId())
+                    .orElseThrow(() -> new RuntimeException("Atleta não encontrado com ID: " + inscricaoCreateDTO.getAtletaId()));
+        }
+
+        EquipeEntity equipe = null;
+        if (inscricaoCreateDTO.getEquipeId() != null) {
+            equipe = equipeRepository.findById(inscricaoCreateDTO.getEquipeId())
+                    .orElseThrow(() -> new RuntimeException("Equipe não encontrada com ID: " + inscricaoCreateDTO.getEquipeId()));
+        }
+
+        // Criar entidade de inscrição
+        InscricaoEntity inscricao = InscricaoEntity.builder()
+                .usuarioInscricao(usuario)
+                .evento(evento)
+                .categoria(categoria)
+                .atleta(atleta)
+                .equipe(equipe)
+                .valor(inscricaoCreateDTO.getValor())
+                .codigoDesconto(inscricaoCreateDTO.getCodigoDesconto())
+                .valorDesconto(inscricaoCreateDTO.getValorDesconto() != null ? inscricaoCreateDTO.getValorDesconto() : BigDecimal.ZERO)
+                .termosAceitos(inscricaoCreateDTO.getTermosAceitos())
+                .status(StatusInscricao.PENDENTE)
+                .build();
+
+        InscricaoEntity savedInscricao = inscricaoRepository.save(inscricao);
+        return convertToResponseDTO(savedInscricao);
+    }
 
     @CachePut(value = "inscricoes", key = "#id")
     @CacheEvict(value = "inscricoes", key = "'all'")

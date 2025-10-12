@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoUpdateDTO;
@@ -46,6 +47,12 @@ public class InscricaoController {
         return ResponseEntity.ok(inscricao);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
+    @PostMapping
+    public ResponseEntity<InscricaoResponseDTO> createInscricao(@Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO) {
+        InscricaoResponseDTO inscricao = inscricaoService.create(inscricaoCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(inscricao);
+    }
 
     @PreAuthorize("@inscricaoSecurityService.canManageInscricao(#id, authentication.name, authentication.authorities)")
     @PutMapping("/{id}")

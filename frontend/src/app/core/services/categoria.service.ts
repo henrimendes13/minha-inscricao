@@ -82,6 +82,13 @@ export class CategoriaService extends BaseHttpService {
   }
 
   /**
+   * Busca categorias por evento (para dialog de inscrição)
+   */
+  buscarPorEvento(eventoId: number): Observable<CategoriaSummaryResponse[]> {
+    return this.listarCategoriasPorEvento(eventoId);
+  }
+
+  /**
    * Ativa uma categoria
    */
   ativarCategoria(id: number): Observable<CategoriaApiResponse> {

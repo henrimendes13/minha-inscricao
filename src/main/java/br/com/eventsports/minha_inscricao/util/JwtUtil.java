@@ -174,9 +174,9 @@ public class JwtUtil {
         // Define authority baseada no tipoUsuario
         String authority;
         if (tipoUsuario != null) {
-            authority = tipoUsuario; // Usa diretamente: ADMIN, ORGANIZADOR, ATLETA
+            authority = "ROLE_" + tipoUsuario; // Adiciona prefixo ROLE_ para Spring Security
         } else {
-            authority = "admin@admin.com".equals(email) ? "ADMIN" : "ATLETA";
+            authority = "admin@admin.com".equals(email) ? "ROLE_ADMIN" : "ROLE_ATLETA";
         }
 
         return new UsernamePasswordAuthenticationToken(

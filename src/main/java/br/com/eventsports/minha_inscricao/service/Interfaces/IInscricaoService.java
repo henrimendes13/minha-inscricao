@@ -6,12 +6,13 @@ import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
 import java.util.List;
 
 public interface IInscricaoService {
-    
+
     InscricaoResponseDTO findById(Long id);
-    
+
     List<InscricaoSummaryDTO> findAll();
-    
-    
+
+    InscricaoResponseDTO create(InscricaoCreateDTO inscricaoCreateDTO);
+
     InscricaoResponseDTO update(Long id, InscricaoUpdateDTO inscricaoUpdateDTO);
     
     void deleteById(Long id);

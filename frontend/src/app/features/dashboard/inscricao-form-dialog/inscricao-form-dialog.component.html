@@ -1,0 +1,151 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>person_add</mat-icon>
+      Nova Inscrição
+    </h2>
+    <button mat-icon-button (click)="onCancel()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <div *ngIf="isLoadingData" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Carregando dados...</p>
+    </div>
+
+    <form [formGroup]="inscricaoForm" *ngIf="!isLoadingData">
+      <!-- Tipo de Inscrição -->
+      <div class="form-section">
+        <h3>Tipo de Inscrição</h3>
+        <mat-radio-group [(ngModel)]="tipoInscricao" [ngModelOptions]="{standalone: true}"
+                         (change)="onTipoInscricaoChange(tipoInscricao)">
+          <mat-radio-button value="individual">Individual</mat-radio-button>
+          <mat-radio-button value="equipe">Equipe</mat-radio-button>
+        </mat-radio-group>
+      </div>
+
+      <!-- Dados Principais -->
+      <div class="form-section">
+        <h3>Dados Principais</h3>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Usuário</mat-label>
+          <mat-select formControlName="usuarioInscricaoId" required>
+            <mat-option *ngFor="let usuario of usuarios" [value]="usuario.id">
+              {{ usuario.nome }} ({{ usuario.email }})
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="inscricaoForm.get('usuarioInscricaoId')?.hasError('required')">
+            Usuário é obrigatório
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Categoria</mat-label>
+          <mat-select formControlName="categoriaId" required>
+            <mat-option *ngFor="let categoria of categorias" [value]="categoria.id">
+              {{ categoria.nome }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="inscricaoForm.get('categoriaId')?.hasError('required')">
+            Categoria é obrigatória
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Campo Atleta (apenas se tipo individual) -->
+        <mat-form-field appearance="outline" *ngIf="tipoInscricao === 'individual'">
+          <mat-label>Atleta</mat-label>
+          <mat-select formControlName="atletaId" required>
+            <mat-option *ngFor="let atleta of atletas" [value]="atleta.id">
+              {{ atleta.nome }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="inscricaoForm.get('atletaId')?.hasError('required')">
+            Atleta é obrigatório
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Campo Equipe (apenas se tipo equipe) -->
+        <mat-form-field appearance="outline" *ngIf="tipoInscricao === 'equipe'">
+          <mat-label>Equipe</mat-label>
+          <mat-select formControlName="equipeId" required>
+            <mat-option *ngFor="let equipe of equipes" [value]="equipe.id">
+              {{ equipe.nome }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="inscricaoForm.get('equipeId')?.hasError('required')">
+            Equipe é obrigatória
+          </mat-error>
+        </mat-form-field>
+      </div>
+
+      <!-- Valores -->
+      <div class="form-section">
+        <h3>Valores</h3>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Valor da Inscrição</mat-label>
+          <input matInput type="number" formControlName="valor" min="0" step="0.01" required>
+          <span matPrefix>R$&nbsp;</span>
+          <mat-error *ngIf="inscricaoForm.get('valor')?.hasError('required')">
+            Valor é obrigatório
+          </mat-error>
+          <mat-error *ngIf="inscricaoForm.get('valor')?.hasError('min')">
+            Valor deve ser maior ou igual a zero
+          </mat-error>
+        </mat-form-field>
+
+        <div class="desconto-fields">
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Código de Desconto</mat-label>
+            <input matInput formControlName="codigoDesconto" placeholder="Ex: DESCONTO10">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="half-width">
+            <mat-label>Valor do Desconto</mat-label>
+            <input matInput type="number" formControlName="valorDesconto" min="0" step="0.01">
+            <span matPrefix>R$&nbsp;</span>
+            <mat-error *ngIf="inscricaoForm.get('valorDesconto')?.hasError('min')">
+              Valor deve ser maior ou igual a zero
+            </mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Observações -->
+      <div class="form-section">
+        <h3>Informações Adicionais</h3>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Observações</mat-label>
+          <textarea matInput formControlName="observacoes" rows="3"
+                    placeholder="Observações adicionais sobre a inscrição..."></textarea>
+        </mat-form-field>
+      </div>
+
+      <!-- Termos -->
+      <div class="form-section">
+        <mat-checkbox formControlName="termosAceitos" required>
+          Declaro que aceito os termos e condições do evento
+        </mat-checkbox>
+        <mat-error *ngIf="inscricaoForm.get('termosAceitos')?.touched && inscricaoForm.get('termosAceitos')?.hasError('required')"
+                   class="checkbox-error">
+          Você deve aceitar os termos para continuar
+        </mat-error>
+      </div>
+    </form>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()" [disabled]="isSubmitting">
+      Cancelar
+    </button>
+    <button mat-raised-button color="primary" (click)="onSubmit()"
+            [disabled]="isSubmitting || isLoadingData || inscricaoForm.invalid">
+      <mat-spinner diameter="20" *ngIf="isSubmitting"></mat-spinner>
+      <span *ngIf="!isSubmitting">Criar Inscrição</span>
+    </button>
+  </mat-dialog-actions>
+</div>

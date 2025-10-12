@@ -3,17 +3,13 @@ import { Observable, catchError, throwError } from 'rxjs';
 
 import { BaseHttpService } from './base-http.service';
 import { API_CONFIG } from '../constants/api.constants';
-import { AtletaInscricaoDTO, EquipeInscricaoDTO } from '../../models/inscricao.model';
-import { AtletaResponseDTO } from '../../models/atleta.model';
-import { EquipeResponseDTO } from '../../models/equipe.model';
-
-export interface ParticipanteDTO {
-  id: number;
-  nome: string;
-  nomeEquipe?: string;
-  genero?: string;
-  statusInscricao?: string;
-}
+import {
+  InscricaoCreateRequest,
+  InscricaoUpdateRequest,
+  InscricaoSummaryResponse,
+  InscricaoDetailedResponse,
+  StatusInscricao
+} from '../../models/inscricao.model';
 
 @Injectable({
   providedIn: 'root'
@@ -21,183 +17,269 @@ export interface ParticipanteDTO {
 export class InscricaoService extends BaseHttpService {
 
   /**
-   * Busca participantes (atletas/equipes) inscritos e confirmados em uma categoria
+   * Busca todas as inscrições
    */
-  getParticipantesByCategoria(eventoId: number, categoriaId: number): Observable<ParticipanteDTO[]> {
-    return this.get<ParticipanteDTO[]>(`/atletas/evento/${eventoId}/categoria/${categoriaId}`);
-  }
-
-  /**
-   * Busca todas as inscrições de uma categoria
-   */
-  getInscricoesByCategoria(categoriaId: number): Observable<any[]> {
-    return this.get<any[]>(`${API_CONFIG.endpoints.inscricoes.base}/categoria/${categoriaId}`);
-  }
-
-  /**
-   * Busca todas as inscrições de um evento
-   */
-  getInscricoesByEvento(eventoId: number): Observable<any[]> {
-    return this.get<any[]>(API_CONFIG.endpoints.inscricoes.byEvento(eventoId));
-  }
-
-  // ===============================================
-  // NOVOS MÉTODOS PARA CRIAÇÃO DE INSCRIÇÕES
-  // ===============================================
-
-  /**
-   * Cria inscrição individual (atleta)
-   */
-  criarInscricaoIndividual(eventoId: number, atletaData: AtletaInscricaoDTO): Observable<AtletaResponseDTO> {
-    const endpoint = `/atletas/evento/${eventoId}/inscricao/atletas`;
-    
-    return this.post<AtletaResponseDTO>(endpoint, atletaData)
+  buscarTodas(): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(API_CONFIG.endpoints.inscricoes.base)
       .pipe(
         catchError(error => {
-          console.error(`Erro ao criar inscrição individual para evento ${eventoId}:`, error);
+          console.error('Erro ao buscar todas as inscrições:', error);
           return throwError(() => error);
         })
       );
   }
 
   /**
-   * Cria inscrição de equipe
+   * Busca inscrição por ID
    */
-  criarInscricaoEquipe(eventoId: number, equipeData: EquipeInscricaoDTO, usuarioId?: number): Observable<EquipeResponseDTO> {
-    let endpoint = `/equipes/evento/${eventoId}/inscricao`;
-    
-    // Adicionar usuarioId como query param se fornecido
-    if (usuarioId) {
-      endpoint += `?usuarioLogadoId=${usuarioId}`;
-    }
-    
-    return this.post<EquipeResponseDTO>(endpoint, equipeData)
+  buscarPorId(id: number): Observable<InscricaoDetailedResponse> {
+    return this.get<InscricaoDetailedResponse>(`${API_CONFIG.endpoints.inscricoes.base}/${id}`)
       .pipe(
         catchError(error => {
-          console.error(`Erro ao criar inscrição de equipe para evento ${eventoId}:`, error);
+          console.error(`Erro ao buscar inscrição ${id}:`, error);
           return throwError(() => error);
         })
       );
   }
 
   /**
-   * Verifica se um CPF já está cadastrado
+   * Cria nova inscrição (manual pelo admin)
    */
-  verificarCpfExistente(cpf: string): Observable<{exists: boolean}> {
-    return this.get<{exists: boolean}>(`/atletas/cpf/${cpf}/exists`)
+  criar(inscricao: InscricaoCreateRequest): Observable<InscricaoDetailedResponse> {
+    return this.post<InscricaoDetailedResponse>(API_CONFIG.endpoints.inscricoes.base, inscricao)
       .pipe(
         catchError(error => {
-          console.error(`Erro ao verificar CPF ${cpf}:`, error);
+          console.error('Erro ao criar inscrição:', error);
           return throwError(() => error);
         })
       );
   }
 
   /**
-   * Lista atletas de um evento
+   * Atualiza inscrição
    */
-  buscarAtletasPorEvento(eventoId: number): Observable<AtletaResponseDTO[]> {
-    return this.get<AtletaResponseDTO[]>(`/atletas/evento/${eventoId}`)
+  atualizar(id: number, inscricao: InscricaoUpdateRequest): Observable<InscricaoDetailedResponse> {
+    return this.put<InscricaoDetailedResponse>(`${API_CONFIG.endpoints.inscricoes.base}/${id}`, inscricao)
       .pipe(
         catchError(error => {
-          console.error(`Erro ao buscar atletas do evento ${eventoId}:`, error);
+          console.error(`Erro ao atualizar inscrição ${id}:`, error);
           return throwError(() => error);
         })
       );
   }
 
   /**
-   * Lista equipes de um evento
+   * Deleta inscrição
    */
-  buscarEquipesPorEvento(eventoId: number): Observable<EquipeResponseDTO[]> {
-    return this.get<EquipeResponseDTO[]>(`/equipes/evento/${eventoId}`)
+  deletar(id: number): Observable<void> {
+    return this.delete<void>(`${API_CONFIG.endpoints.inscricoes.base}/${id}`)
       .pipe(
         catchError(error => {
-          console.error(`Erro ao buscar equipes do evento ${eventoId}:`, error);
+          console.error(`Erro ao deletar inscrição ${id}:`, error);
           return throwError(() => error);
         })
       );
   }
 
-  // ===============================================
-  // MÉTODOS DE VALIDAÇÃO E UTILITÁRIOS
-  // ===============================================
+  /**
+   * Busca inscrições por evento
+   */
+  buscarPorEvento(eventoId: number): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(API_CONFIG.endpoints.inscricoes.byEvento(eventoId))
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar inscrições do evento ${eventoId}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
 
   /**
-   * Valida formato de CPF
+   * Busca inscrições por categoria
    */
+  buscarPorCategoria(categoriaId: number): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(`${API_CONFIG.endpoints.inscricoes.base}/categoria/${categoriaId}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar inscrições da categoria ${categoriaId}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Busca inscrições por equipe
+   */
+  buscarPorEquipe(equipeId: number): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(`${API_CONFIG.endpoints.inscricoes.base}/equipe/${equipeId}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar inscrições da equipe ${equipeId}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Busca inscrições por status
+   */
+  buscarPorStatus(status: StatusInscricao): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(`${API_CONFIG.endpoints.inscricoes.base}/status/${status}`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar inscrições com status ${status}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Busca inscrições confirmadas
+   */
+  buscarConfirmadas(): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(`${API_CONFIG.endpoints.inscricoes.base}/confirmadas`)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao buscar inscrições confirmadas:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Busca inscrições pendentes
+   */
+  buscarPendentes(): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(`${API_CONFIG.endpoints.inscricoes.base}/pendentes`)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao buscar inscrições pendentes:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Busca inscrições canceladas
+   */
+  buscarCanceladas(): Observable<InscricaoSummaryResponse[]> {
+    return this.get<InscricaoSummaryResponse[]>(`${API_CONFIG.endpoints.inscricoes.base}/canceladas`)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao buscar inscrições canceladas:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Confirma uma inscrição
+   */
+  confirmar(id: number): Observable<InscricaoDetailedResponse> {
+    return this.patch<InscricaoDetailedResponse>(`${API_CONFIG.endpoints.inscricoes.base}/${id}/confirmar`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao confirmar inscrição ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Cancela uma inscrição
+   */
+  cancelar(id: number, motivo: string): Observable<InscricaoDetailedResponse> {
+    return this.patch<InscricaoDetailedResponse>(`${API_CONFIG.endpoints.inscricoes.base}/${id}/cancelar`, { motivo })
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao cancelar inscrição ${id}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Coloca inscrição em lista de espera
+   */
+  colocarEmListaEspera(id: number): Observable<InscricaoDetailedResponse> {
+    return this.patch<InscricaoDetailedResponse>(`${API_CONFIG.endpoints.inscricoes.base}/${id}/lista-espera`, {})
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao colocar inscrição ${id} em lista de espera:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Conta inscrições por evento e status
+   */
+  contarPorEventoEStatus(eventoId: number, status: StatusInscricao): Observable<{ count: number }> {
+    return this.get<{ count: number }>(`${API_CONFIG.endpoints.inscricoes.base}/evento/${eventoId}/status/${status}/count`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao contar inscrições do evento ${eventoId} com status ${status}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Conta inscrições por categoria e status
+   */
+  contarPorCategoriaEStatus(categoriaId: number, status: StatusInscricao): Observable<{ count: number }> {
+    return this.get<{ count: number }>(`${API_CONFIG.endpoints.inscricoes.base}/categoria/${categoriaId}/status/${status}/count`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao contar inscrições da categoria ${categoriaId} com status ${status}:`, error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  // ==================== LEGACY METHODS ====================
+
   validarCpf(cpf: string): boolean {
-    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-    return cpfRegex.test(cpf);
+    return !!(cpf && cpf.length >= 11);
   }
 
-  /**
-   * Valida formato de telefone
-   */
   validarTelefone(telefone: string): boolean {
-    const telefoneRegex = /^\(\d{2}\)\s\d{4,5}-\d{4}$/;
-    return telefoneRegex.test(telefone);
+    return !!(telefone && telefone.length >= 10);
   }
 
-  /**
-   * Formata CPF
-   */
   formatarCpf(cpf: string): string {
     const numeros = cpf.replace(/\D/g, '');
     return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   }
 
-  /**
-   * Formata telefone
-   */
   formatarTelefone(telefone: string): string {
     const numeros = telefone.replace(/\D/g, '');
-    if (numeros.length === 10) {
-      return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-    } else if (numeros.length === 11) {
+    if (numeros.length === 11) {
       return numeros.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     }
-    return telefone;
+    return numeros.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
   }
 
-  /**
-   * Calcula idade baseada na data de nascimento
-   */
-  calcularIdade(dataNascimento: string): number {
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-    const m = hoje.getMonth() - nascimento.getMonth();
-    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-      idade--;
-    }
-    return idade;
+  criarInscricaoIndividual(eventoId: number, atletaData: any): Observable<any> {
+    console.warn('Método criarInscricaoIndividual está deprecated. Use criar() com InscricaoCreateRequest');
+    return throwError(() => new Error('Método não implementado. Use criar() com InscricaoCreateRequest'));
   }
 
-  /**
-   * Valida se atleta atende critérios de idade da categoria
-   */
-  validarIdadeCategoria(dataNascimento: string, idadeMinima?: number, idadeMaxima?: number): boolean {
-    const idade = this.calcularIdade(dataNascimento);
-    
-    if (idadeMinima && idade < idadeMinima) {
-      return false;
-    }
-    
-    if (idadeMaxima && idade > idadeMaxima) {
-      return false;
-    }
-    
-    return true;
+  criarInscricaoEquipe(eventoId: number, equipeData: any): Observable<any> {
+    console.warn('Método criarInscricaoEquipe está deprecated. Use criar() com InscricaoCreateRequest');
+    return throwError(() => new Error('Método não implementado. Use criar() com InscricaoCreateRequest'));
   }
 
-  /**
-   * Valida se atleta atende critério de gênero da categoria
-   */
-  validarGeneroCategoria(genero: string, generoCategoria?: string): boolean {
-    if (!generoCategoria || generoCategoria === 'MISTO') {
-      return true;
-    }
-    return genero === generoCategoria;
+  getParticipantesByCategoria(eventoId: number, categoriaId: number): Observable<ParticipanteDTO[]> {
+    console.warn('Método getParticipantesByCategoria está deprecated');
+    return throwError(() => new Error('Método não implementado'));
   }
 }
+
+export interface ParticipanteDTO {
+  id: number;
+  nome: string;
+  tipo: string;
+  nomeEquipe?: string;
+}
+ 

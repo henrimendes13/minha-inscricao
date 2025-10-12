@@ -842,6 +842,178 @@
             </div>
           </mat-tab>
 
+          <!-- Aba 7: Inscrições -->
+          <mat-tab label="Inscrições" [disabled]="modo === 'criar'">
+            <div class="tab-content inscricoes-content">
+              <!-- Header com Estatísticas -->
+              <div class="inscricoes-header">
+                <div class="header-info">
+                  <mat-icon class="header-icon">how_to_reg</mat-icon>
+                  <div class="header-text">
+                    <h3>Inscrições do Evento</h3>
+                    <p>Gerencie as inscrições dos participantes</p>
+                  </div>
+                </div>
+                <button mat-raised-button color="primary" (click)="abrirDialogNovaInscricao()" type="button" class="btn-nova-inscricao">
+                  <mat-icon>add</mat-icon>
+                  Nova Inscrição
+                </button>
+              </div>
+
+              <!-- Estatísticas -->
+              <div class="inscricoes-stats-container">
+                <div class="header-stats" *ngIf="estatisticasInscricoes">
+                  <div class="stat-card total">
+                    <mat-icon>people</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-value">{{ estatisticasInscricoes.total }}</span>
+                      <span class="stat-label">Total</span>
+                    </div>
+                  </div>
+                  <div class="stat-card confirmadas">
+                    <mat-icon>check_circle</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-value">{{ estatisticasInscricoes.confirmadas }}</span>
+                      <span class="stat-label">Confirmadas</span>
+                    </div>
+                  </div>
+                  <div class="stat-card pendentes">
+                    <mat-icon>schedule</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-value">{{ estatisticasInscricoes.pendentes }}</span>
+                      <span class="stat-label">Pendentes</span>
+                    </div>
+                  </div>
+                  <div class="stat-card canceladas">
+                    <mat-icon>cancel</mat-icon>
+                    <div class="stat-info">
+                      <span class="stat-value">{{ estatisticasInscricoes.canceladas }}</span>
+                      <span class="stat-label">Canceladas</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Filtros -->
+              <div class="inscricoes-filters">
+                <mat-form-field appearance="outline" class="filter-field">
+                  <mat-label>Status</mat-label>
+                  <mat-select [(ngModel)]="filtrosInscricoes.status" (selectionChange)="aplicarFiltrosInscricoes()">
+                    <mat-option [value]="null">Todos</mat-option>
+                    <mat-option value="PENDENTE">Pendente</mat-option>
+                    <mat-option value="CONFIRMADA">Confirmada</mat-option>
+                    <mat-option value="CANCELADA">Cancelada</mat-option>
+                    <mat-option value="RECUSADA">Recusada</mat-option>
+                    <mat-option value="EXPIRADA">Expirada</mat-option>
+                    <mat-option value="LISTA_ESPERA">Lista de Espera</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="filter-field">
+                  <mat-label>Categoria</mat-label>
+                  <mat-select [(ngModel)]="filtrosInscricoes.categoriaId" (selectionChange)="aplicarFiltrosInscricoes()">
+                    <mat-option [value]="null">Todas</mat-option>
+                    <mat-option *ngFor="let cat of categorias" [value]="cat.id">
+                      {{ cat.nome }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="filter-field filter-search">
+                  <mat-label>Buscar participante</mat-label>
+                  <input matInput [(ngModel)]="filtrosInscricoes.nomeParticipante"
+                         (input)="aplicarFiltrosInscricoes()"
+                         placeholder="Digite o nome...">
+                  <mat-icon matPrefix>search</mat-icon>
+                </mat-form-field>
+
+                <button mat-raised-button (click)="limparFiltrosInscricoes()" type="button">
+                  <mat-icon>clear</mat-icon>
+                  Limpar Filtros
+                </button>
+              </div>
+
+              <!-- Loading State -->
+              <div *ngIf="isLoadingInscricoes" class="loading-state">
+                <mat-spinner diameter="50"></mat-spinner>
+                <p>Carregando inscrições...</p>
+              </div>
+
+              <!-- Lista de Inscrições -->
+              <div *ngIf="!isLoadingInscricoes && inscricoesFiltradas.length > 0" class="inscricoes-list">
+                <div class="inscricao-item" *ngFor="let inscricao of inscricoesFiltradas">
+                  <div class="inscricao-main">
+                    <div class="inscricao-id">
+                      <span class="id-label">ID</span>
+                      <span class="id-value">#{{ inscricao.id }}</span>
+                    </div>
+                    <div class="inscricao-participante">
+                      <div class="participante-nome">{{ inscricao.nomeParticipante }}</div>
+                      <div class="participante-meta">
+                        <span class="meta-item">
+                          <mat-icon>category</mat-icon>
+                          {{ inscricao.nomeCategoria }}
+                        </span>
+                        <span class="meta-item">
+                          <mat-icon>{{ inscricao.tipoInscricao === 'Individual' ? 'person' : 'groups' }}</mat-icon>
+                          {{ inscricao.tipoInscricao }}
+                        </span>
+                        <span class="meta-item" *ngIf="inscricao.nomeEquipe">
+                          <mat-icon>group</mat-icon>
+                          {{ inscricao.nomeEquipe }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="inscricao-status">
+                      <mat-chip [class]="'status-chip ' + getStatusClass(inscricao.status)">
+                        {{ inscricao.descricaoStatus }}
+                      </mat-chip>
+                    </div>
+                    <div class="inscricao-valor">
+                      <div class="valor-label">Valor Total</div>
+                      <div class="valor-value">{{ inscricao.valorTotal | currency:'BRL' }}</div>
+                    </div>
+                    <div class="inscricao-data">
+                      <div class="data-label">Data Inscrição</div>
+                      <div class="data-value">{{ inscricao.dataInscricao | date:'dd/MM/yyyy HH:mm' }}</div>
+                    </div>
+                  </div>
+                  <div class="inscricao-actions">
+                    <button mat-icon-button
+                            (click)="abrirDetalhesInscricao(inscricao)"
+                            matTooltip="Ver detalhes"
+                            type="button">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button mat-icon-button
+                            color="primary"
+                            *ngIf="inscricao.status === 'PENDENTE'"
+                            (click)="confirmarInscricao(inscricao.id)"
+                            matTooltip="Confirmar inscrição"
+                            type="button">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                    <button mat-icon-button
+                            color="warn"
+                            *ngIf="inscricao.podeSerCancelada"
+                            (click)="cancelarInscricao(inscricao.id)"
+                            matTooltip="Cancelar inscrição"
+                            type="button">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Estado Vazio -->
+              <div *ngIf="!isLoadingInscricoes && inscricoesFiltradas.length === 0" class="empty-state">
+                <mat-icon class="empty-icon">event_busy</mat-icon>
+                <p>{{ inscricoes.length === 0 ? 'Nenhuma inscrição cadastrada ainda' : 'Nenhuma inscrição encontrada com os filtros aplicados' }}</p>
+                <p class="empty-hint">As inscrições aparecerão aqui conforme forem realizadas</p>
+              </div>
+            </div>
+          </mat-tab>
+
         </mat-tab-group>
       </mat-card-content>
     </mat-card>

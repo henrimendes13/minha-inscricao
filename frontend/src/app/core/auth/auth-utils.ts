@@ -42,7 +42,7 @@ export function decodeJwtPayload(token: string | null): JwtPayload | null {
   try {
     // JWT tem formato: header.payload.signature
     const parts = token.split('.');
-    
+
     if (parts.length !== 3) {
       console.warn('[AUTH-UTILS] Token JWT inválido - formato incorreto');
       return null;
@@ -50,20 +50,34 @@ export function decodeJwtPayload(token: string | null): JwtPayload | null {
 
     // Decodifica a parte do payload (segunda parte)
     const payload = parts[1];
-    
+
     // Decodifica de base64url
     const decodedPayload = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-    
-    const parsedPayload: JwtPayload = JSON.parse(decodedPayload);
-    
+
+    const parsedPayload: any = JSON.parse(decodedPayload);
+
+    // Mapear campos do backend para estrutura esperada
+    // Backend usa: sub (email), tipoUsuario, userId, nome
+    // Frontend espera: email, role, name
+    const mappedPayload: JwtPayload = {
+      sub: parsedPayload.sub,
+      email: parsedPayload.sub || parsedPayload.email, // sub é o email no backend
+      name: parsedPayload.nome || parsedPayload.name,
+      role: parsedPayload.tipoUsuario || parsedPayload.role, // tipoUsuario é a role
+      tipoUsuario: parsedPayload.tipoUsuario,
+      exp: parsedPayload.exp,
+      iat: parsedPayload.iat,
+      iss: parsedPayload.iss
+    };
+
     console.debug('[AUTH-UTILS] Token decodificado com sucesso:', {
-      email: parsedPayload.email,
-      role: parsedPayload.role,
-      exp: parsedPayload.exp ? new Date(parsedPayload.exp * 1000) : 'N/A'
+      email: mappedPayload.email,
+      role: mappedPayload.role,
+      exp: mappedPayload.exp ? new Date(mappedPayload.exp * 1000) : 'N/A'
     });
-    
-    return parsedPayload;
-    
+
+    return mappedPayload;
+
   } catch (error) {
     console.error('[AUTH-UTILS] Erro ao decodificar token JWT:', error);
     return null;

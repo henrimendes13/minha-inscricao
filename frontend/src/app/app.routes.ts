@@ -59,6 +59,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/evento-form/evento-form.component').then(c => c.EventoFormComponent)
       },
       {
+        path: 'eventos/:eventoId',
+        loadComponent: () => import('./features/dashboard/evento-form/evento-form.component').then(c => c.EventoFormComponent),
+        canActivate: [EventoOwnerGuard]
+      },
+      {
         path: 'eventos/:id/editar',
         loadComponent: () => import('./features/dashboard/evento-form/evento-form.component').then(c => c.EventoFormComponent)
       }

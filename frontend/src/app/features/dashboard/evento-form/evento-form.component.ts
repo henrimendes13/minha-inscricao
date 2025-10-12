@@ -18,7 +18,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 import { EventoService } from '../../../core/services/evento.service';
 import { ImagemService } from '../../../core/services/imagem.service';
@@ -26,6 +26,8 @@ import { CategoriaService } from '../../../core/services/categoria.service';
 import { WorkoutService } from '../../../core/services/workout.service';
 import { TimelineService } from '../../../core/services/timeline.service';
 import { AnexoService } from '../../../core/services/anexo.service';
+import { InscricaoService } from '../../../core/services/inscricao.service';
+import { InscricaoFormDialogComponent } from '../inscricao-form-dialog/inscricao-form-dialog.component';
 import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../../../models/evento.model';
 import {
   CategoriaCreateRequest,
@@ -49,6 +51,8 @@ import {
 import { TipoParticipacao } from '../../../models';
 import { Timeline, TimelineCreateRequest, TimelineUpdateRequest } from '../../../models/timeline.model';
 import { Anexo } from '../../../models/anexo.model';
+import { InscricaoSummaryResponse, StatusInscricao } from '../../../models/inscricao.model';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-evento-form',
@@ -56,6 +60,7 @@ import { Anexo } from '../../../models/anexo.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatTabsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -71,7 +76,8 @@ import { Anexo } from '../../../models/anexo.model';
     MatExpansionModule,
     MatChipsModule,
     MatTooltipModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatDialogModule
   ],
   templateUrl: './evento-form.component.html',
   styleUrl: './evento-form.component.scss'
@@ -124,6 +130,22 @@ export class EventoFormComponent implements OnInit {
   isUploading = false;
   isDragging = false;
 
+  // Propriedades para controle de inscrições
+  inscricoes: InscricaoSummaryResponse[] = [];
+  inscricoesFiltradas: InscricaoSummaryResponse[] = [];
+  isLoadingInscricoes = false;
+  filtrosInscricoes = {
+    status: null as StatusInscricao | null,
+    categoriaId: null as number | null,
+    nomeParticipante: ''
+  };
+  estatisticasInscricoes = {
+    total: 0,
+    confirmadas: 0,
+    pendentes: 0,
+    canceladas: 0
+  };
+
   estadosBrasileiros = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
     'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
@@ -138,6 +160,7 @@ export class EventoFormComponent implements OnInit {
     private workoutService: WorkoutService,
     private timelineService: TimelineService,
     private anexoService: AnexoService,
+    private inscricaoService: InscricaoService,
     private route: ActivatedRoute,
     private router: Router,
     private snackBar: MatSnackBar,
@@ -157,12 +180,13 @@ export class EventoFormComponent implements OnInit {
       this.carregarWorkouts();
       this.carregarTimeline();
       this.carregarAnexos();
+      this.carregarInscricoes();
     }
   }
 
   detectarModo(): void {
-    // Verifica se existe :id na rota para determinar modo
-    this.eventoId = this.route.snapshot.params['id'];
+    // Verifica se existe :id ou :eventoId na rota para determinar modo
+    this.eventoId = this.route.snapshot.params['id'] || this.route.snapshot.params['eventoId'];
 
     if (this.eventoId) {
       this.modo = 'editar';
@@ -1221,6 +1245,173 @@ export class EventoFormComponent implements OnInit {
       error: (error) => {
         console.error('Erro ao remover anexo:', error);
         const mensagem = error.error?.message || 'Erro ao remover arquivo';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  // ==================== MÉTODOS DE INSCRIÇÕES ====================
+
+  /**
+   * Carrega inscrições do evento
+   */
+  carregarInscricoes(): void {
+    if (!this.eventoId) return;
+
+    this.isLoadingInscricoes = true;
+    this.inscricaoService.buscarPorEvento(this.eventoId).subscribe({
+      next: (inscricoes) => {
+        this.inscricoes = inscricoes;
+        this.inscricoesFiltradas = inscricoes;
+        this.calcularEstatisticasInscricoes();
+        this.isLoadingInscricoes = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar inscrições:', error);
+        this.isLoadingInscricoes = false;
+        this.showSnackBar('Erro ao carregar inscrições', 'error');
+      }
+    });
+  }
+
+  /**
+   * Calcula estatísticas das inscrições
+   */
+  calcularEstatisticasInscricoes(): void {
+    this.estatisticasInscricoes = {
+      total: this.inscricoes.length,
+      confirmadas: this.inscricoes.filter(i => i.status === 'CONFIRMADA').length,
+      pendentes: this.inscricoes.filter(i => i.status === 'PENDENTE').length,
+      canceladas: this.inscricoes.filter(i => i.status === 'CANCELADA').length
+    };
+  }
+
+  /**
+   * Aplica filtros nas inscrições
+   */
+  aplicarFiltrosInscricoes(): void {
+    this.inscricoesFiltradas = this.inscricoes.filter(inscricao => {
+      // Filtro por status
+      if (this.filtrosInscricoes.status && inscricao.status !== this.filtrosInscricoes.status) {
+        return false;
+      }
+
+      // Filtro por categoria
+      if (this.filtrosInscricoes.categoriaId && inscricao.nomeCategoria) {
+        const categoria = this.categorias.find(c => c.id === this.filtrosInscricoes.categoriaId);
+        if (categoria && inscricao.nomeCategoria !== categoria.nome) {
+          return false;
+        }
+      }
+
+      // Filtro por nome do participante
+      if (this.filtrosInscricoes.nomeParticipante) {
+        const nome = this.filtrosInscricoes.nomeParticipante.toLowerCase();
+        return inscricao.nomeParticipante.toLowerCase().includes(nome);
+      }
+
+      return true;
+    });
+  }
+
+  /**
+   * Limpa todos os filtros
+   */
+  limparFiltrosInscricoes(): void {
+    this.filtrosInscricoes = {
+      status: null,
+      categoriaId: null,
+      nomeParticipante: ''
+    };
+    this.inscricoesFiltradas = this.inscricoes;
+  }
+
+  /**
+   * Abre detalhes da inscrição (TODO: implementar modal)
+   */
+  abrirDetalhesInscricao(inscricao: InscricaoSummaryResponse): void {
+    console.log('Detalhes da inscrição:', inscricao);
+    this.showSnackBar(`Visualizando detalhes da inscrição #${inscricao.id}`, 'success');
+  }
+
+  /**
+   * Confirma uma inscrição
+   */
+  confirmarInscricao(inscricaoId: number): void {
+    const confirmacao = confirm('Tem certeza que deseja confirmar esta inscrição?');
+    if (!confirmacao) return;
+
+    this.inscricaoService.confirmar(inscricaoId).subscribe({
+      next: () => {
+        this.showSnackBar('Inscrição confirmada com sucesso!', 'success');
+        this.carregarInscricoes();
+      },
+      error: (error) => {
+        console.error('Erro ao confirmar inscrição:', error);
+        const mensagem = error.error?.message || 'Erro ao confirmar inscrição';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  /**
+   * Cancela uma inscrição
+   */
+  cancelarInscricao(inscricaoId: number): void {
+    const motivo = prompt('Informe o motivo do cancelamento:');
+    if (!motivo) return;
+
+    this.inscricaoService.cancelar(inscricaoId, motivo).subscribe({
+      next: () => {
+        this.showSnackBar('Inscrição cancelada com sucesso!', 'success');
+        this.carregarInscricoes();
+      },
+      error: (error) => {
+        console.error('Erro ao cancelar inscrição:', error);
+        const mensagem = error.error?.message || 'Erro ao cancelar inscrição';
+        this.showSnackBar(mensagem, 'error');
+      }
+    });
+  }
+
+  /**
+   * Retorna classe CSS para o status
+   */
+  getStatusClass(status: string): string {
+    const classes: Record<string, string> = {
+      'PENDENTE': 'status-pendente',
+      'CONFIRMADA': 'status-confirmada',
+      'CANCELADA': 'status-cancelada',
+      'RECUSADA': 'status-recusada',
+      'EXPIRADA': 'status-expirada',
+      'LISTA_ESPERA': 'status-lista-espera'
+    };
+    return classes[status] || '';
+  }
+
+  /**
+   * Abre dialog para criar nova inscrição
+   */
+  abrirDialogNovaInscricao(): void {
+    if (!this.eventoId) {
+      this.showSnackBar('Evento não identificado', 'error');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(InscricaoFormDialogComponent, {
+      width: '600px',
+      disableClose: false,
+      data: {
+        eventoId: this.eventoId
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.showSnackBar('Inscrição criada com sucesso!', 'success');
+        this.carregarInscricoes();
+      } else if (result?.error) {
+        const mensagem = result.error?.error?.message || 'Erro ao criar inscrição';
         this.showSnackBar(mensagem, 'error');
       }
     });

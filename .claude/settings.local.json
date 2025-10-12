@@ -88,7 +88,8 @@
       "Bash(start http://localhost:4200/dashboard)",
       "Bash(start http://localhost:4200/dashboard/eventos)",
       "Bash(python:*)",
-      "Bash(npx ng:*)"
+      "Bash(npx ng:*)",
+      "Bash(Set-Content 'C:\\Users\\Henrique\\source\\repos\\minha-inscricao\\frontend\\src\\app\\features\\dashboard\\evento-form\\evento-form.component.ts' \")"
     ],
     "deny": [],
     "ask": []
