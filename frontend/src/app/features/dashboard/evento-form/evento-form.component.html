@@ -1068,8 +1068,8 @@
       </mat-card-content>
     </mat-card>
 
-    <!-- Action Buttons -->
-    <div class="action-buttons">
+    <!-- Action Buttons (hidden in Gerenciar Resultados tab) -->
+    <div class="action-buttons" *ngIf="selectedTabIndex !== 7">
       <button mat-button (click)="voltarParaLista()" [disabled]="isSaving">
         <mat-icon>cancel</mat-icon>
         Cancelar

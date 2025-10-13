@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -40,6 +40,7 @@ import { EditResultadoDialogComponent } from '../edit-resultado-dialog/edit-resu
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
@@ -150,132 +151,85 @@ import { EditResultadoDialogComponent } from '../edit-resultado-dialog/edit-resu
                   </mat-card-content>
                 </mat-card>
 
-                <!-- Add Result Form -->
-                <mat-card class="add-result-card">
+                <!-- Bulk Result Entry -->
+                <mat-card class="bulk-result-card">
                   <mat-card-header>
                     <mat-card-title>
-                      <mat-icon>add</mat-icon>
-                      Adicionar Resultado
+                      <mat-icon>format_list_bulleted</mat-icon>
+                      Gerenciar Resultados ({{ getPreenchidosCount(workout.id) }}/{{ participantes.length }})
                     </mat-card-title>
+                    <div class="header-actions">
+                      <button
+                        mat-stroked-button
+                        (click)="limparTodos(workout.id)"
+                        [disabled]="isSaving">
+                        <mat-icon>clear_all</mat-icon>
+                        Limpar Tudo
+                      </button>
+                      <button
+                        mat-raised-button
+                        color="primary"
+                        (click)="salvarTodos(workout)"
+                        [disabled]="!temAlteracoes(workout.id) || isSaving">
+                        <mat-icon>save</mat-icon>
+                        {{ isSaving ? 'Salvando...' : 'Salvar Todos' }}
+                      </button>
+                    </div>
                   </mat-card-header>
                   <mat-card-content>
-                    <form [formGroup]="resultForm" (ngSubmit)="adicionarResultado(workout)" class="result-form">
-                      <div class="form-row">
-                        <mat-form-field appearance="outline" class="participant-field">
-                          <mat-label>Participante</mat-label>
-                          <mat-select formControlName="participanteId" (selectionChange)="onParticipanteChange($event.value)">
-                            <mat-option value="">Selecione um participante...</mat-option>
-                            <mat-option *ngFor="let participante of participantes" [value]="participante.inscricaoId">
-                              {{ participante.nome }}
-                              <span *ngIf="participante.nomeEquipe" class="team-indicator"> ({{ participante.nomeEquipe }})</span>
-                            </mat-option>
-                          </mat-select>
-                          <mat-error *ngIf="resultForm.get('participanteId')?.hasError('required')">
-                            Participante é obrigatório
-                          </mat-error>
-                        </mat-form-field>
-
-                        <mat-form-field appearance="outline" class="result-field">
-                          <mat-label>Resultado ({{ workout.unidadeMedida }})</mat-label>
-                          <input matInput formControlName="resultadoValor">
-                          <mat-error *ngIf="resultForm.get('resultadoValor')?.hasError('required')">
-                            Resultado é obrigatório
-                          </mat-error>
-                        </mat-form-field>
-
-                        <button 
-                          mat-raised-button 
-                          color="primary" 
-                          type="submit"
-                          [disabled]="resultForm.invalid || isSubmitting"
-                          class="add-button">
-                          <mat-icon>add</mat-icon>
-                          {{ isSubmitting ? 'Adicionando...' : 'Adicionar' }}
-                        </button>
-                      </div>
-                    </form>
-                  </mat-card-content>
-                </mat-card>
-
-                <!-- Results Table -->
-                <mat-card class="results-table-card">
-                  <mat-card-header>
-                    <mat-card-title>
-                      <mat-icon>list</mat-icon>
-                      Resultados Atuais
-                    </mat-card-title>
-                  </mat-card-header>
-                  <mat-card-content>
-                    <div class="table-loading" *ngIf="loadingResults[workout.id]">
-                      <mat-spinner diameter="40"></mat-spinner>
-                      <p>Carregando resultados...</p>
-                    </div>
-
-                    <div class="no-results" *ngIf="!loadingResults[workout.id] && (!workoutResults[workout.id] || workoutResults[workout.id].length === 0)">
-                      <mat-icon>info</mat-icon>
-                      <p>Nenhum resultado cadastrado ainda</p>
-                    </div>
-
-                    <div class="results-table" *ngIf="!loadingResults[workout.id] && workoutResults[workout.id] && workoutResults[workout.id].length > 0">
-                      <table mat-table [dataSource]="workoutResults[workout.id]" class="mat-elevation-z2">
-                        
-                        <ng-container matColumnDef="posicao">
-                          <th mat-header-cell *matHeaderCellDef>Posição</th>
-                          <td mat-cell *matCellDef="let result">{{ result.posicaoWorkout }}º</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="participante">
-                          <th mat-header-cell *matHeaderCellDef>Participante</th>
-                          <td mat-cell *matCellDef="let result">
-                            <div class="participant-cell">
-                              {{ result.nomeParticipante }}
-                              <mat-icon *ngIf="result.isEquipe" class="team-icon">groups</mat-icon>
-                            </div>
-                          </td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="resultado">
-                          <th mat-header-cell *matHeaderCellDef>Resultado</th>
-                          <td mat-cell *matCellDef="let result">{{ result.resultadoFormatado }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="pontuacao">
-                          <th mat-header-cell *matHeaderCellDef>Pontos</th>
-                          <td mat-cell *matCellDef="let result">{{ result.pontuacaoWorkout }}</td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="status">
-                          <th mat-header-cell *matHeaderCellDef>Status</th>
-                          <td mat-cell *matCellDef="let result">
-                            <span [class.finalizado]="result.finalizado" [class.pendente]="!result.finalizado">
-                              {{ result.finalizado ? 'Finalizado' : 'Pendente' }}
-                            </span>
-                          </td>
-                        </ng-container>
-
-                        <ng-container matColumnDef="actions">
-                          <th mat-header-cell *matHeaderCellDef>Ações</th>
-                          <td mat-cell *matCellDef="let result">
-                            <button 
-                              mat-icon-button 
-                              color="primary"
-                              matTooltip="Editar resultado"
-                              (click)="editarResultado(result)">
-                              <mat-icon>edit</mat-icon>
-                            </button>
-                            <button 
-                              mat-icon-button 
-                              color="warn"
-                              matTooltip="Remover resultado"
-                              (click)="removerResultado(workout, result)">
-                              <mat-icon>delete</mat-icon>
-                            </button>
-                          </td>
-                        </ng-container>
-
-                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+                    <div class="bulk-result-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th class="col-participante">Participante</th>
+                            <th class="col-resultado">Resultado ({{ workout.unidadeMedida }})</th>
+                            <th class="col-status">Status</th>
+                            <th class="col-actions">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let participante of participantes; let i = index"
+                              [class.has-result]="getResultadoExistente(workout.id, participante)"
+                              [class.has-changes]="resultadosTemp[getParticipanteKey(workout.id, participante)]">
+                            <td class="col-participante">
+                              <div class="participant-info">
+                                <span class="participant-name">{{ participante.nome }}</span>
+                                <mat-icon *ngIf="participante.nomeEquipe" class="team-icon" matTooltip="Equipe">groups</mat-icon>
+                              </div>
+                            </td>
+                            <td class="col-resultado">
+                              <input
+                                type="text"
+                                class="result-input"
+                                [placeholder]="getPlaceholderByType(workout.tipo)"
+                                [(ngModel)]="resultadosTemp[getParticipanteKey(workout.id, participante)]"
+                                (focus)="onInputFocus(i)"
+                                [disabled]="isSaving">
+                            </td>
+                            <td class="col-status">
+                              <span class="status-badge" [class]="getStatusClass(workout.id, participante)">
+                                {{ getStatusLabel(workout.id, participante) }}
+                              </span>
+                            </td>
+                            <td class="col-actions">
+                              <button
+                                mat-icon-button
+                                color="warn"
+                                *ngIf="getResultadoExistente(workout.id, participante)"
+                                (click)="removerResultadoRapido(workout, participante)"
+                                matTooltip="Remover resultado"
+                                [disabled]="isSaving">
+                                <mat-icon>delete</mat-icon>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
                       </table>
+                    </div>
+
+                    <div class="bulk-result-info" *ngIf="participantes.length === 0">
+                      <mat-icon>info</mat-icon>
+                      <p>Nenhum participante inscrito nesta categoria</p>
                     </div>
                   </mat-card-content>
                 </mat-card>
@@ -317,12 +271,16 @@ export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
   isLoading = false;
   hasError = false;
   isSubmitting = false;
+  isSaving = false;
   selectedWorkoutIndex = 0;
 
   // Results data
   workoutResults: { [workoutId: number]: LeaderboardSummaryDTO[] } = {};
   workoutStatus: { [workoutId: number]: WorkoutResultStatusDTO } = {};
   loadingResults: { [workoutId: number]: boolean } = {};
+
+  // Bulk result management
+  resultadosTemp: { [key: string]: string } = {}; // Key format: "workoutId_participanteId_isEquipe"
 
   // Form
   resultForm: FormGroup;
@@ -444,7 +402,9 @@ export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
 
   carregarResultadosWorkout(workout: Workout): void {
     if (this.workoutResults[workout.id] && this.workoutStatus[workout.id]) {
-      return; // Cache
+      // Cache já existe, apenas preencher campos se necessário
+      this.preencherCamposComResultadosExistentes(workout.id);
+      return;
     }
 
     this.loadingResults[workout.id] = true;
@@ -457,10 +417,40 @@ export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
         this.workoutResults[workout.id] = data.resultados;
         this.workoutStatus[workout.id] = data.status;
         this.loadingResults[workout.id] = false;
+
+        // Pré-preencher campos com resultados existentes
+        this.preencherCamposComResultadosExistentes(workout.id);
       },
       error: (error) => {
         this.loadingResults[workout.id] = false;
         console.error(`Erro ao carregar resultados do workout ${workout.id}:`, error);
+      }
+    });
+  }
+
+  /**
+   * Preenche os campos temporários com os resultados existentes
+   */
+  private preencherCamposComResultadosExistentes(workoutId: number): void {
+    const resultados = this.workoutResults[workoutId];
+    if (!resultados) return;
+
+    resultados.forEach(resultado => {
+      // Encontrar participante correspondente
+      const participante = this.participantes.find(p => {
+        if (resultado.isEquipe) {
+          return p.id === resultado.equipeId && p.nomeEquipe;
+        } else {
+          return p.id === resultado.atletaId && !p.nomeEquipe;
+        }
+      });
+
+      if (participante) {
+        const key = this.getParticipanteKey(workoutId, participante);
+        // Preencher apenas se não houver valor digitado pelo usuário
+        if (!this.resultadosTemp[key]) {
+          this.resultadosTemp[key] = resultado.resultadoValor || '';
+        }
       }
     });
   }
@@ -747,6 +737,281 @@ export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
       default:
         return tipo;
     }
+  }
+
+  // ===============================================
+  // BULK RESULT MANAGEMENT METHODS
+  // ===============================================
+
+  /**
+   * Gera chave única para identificar resultado de participante em workout
+   */
+  getParticipanteKey(workoutId: number, participante: ParticipanteDTO): string {
+    const isEquipe = !!(participante.nomeEquipe && participante.nomeEquipe.trim());
+    return `${workoutId}_${participante.id}_${isEquipe}`;
+  }
+
+  /**
+   * Retorna placeholder baseado no tipo de workout
+   */
+  getPlaceholderByType(tipo: WorkoutType): string {
+    switch (tipo) {
+      case WorkoutType.REPS:
+        return 'Ex: 150';
+      case WorkoutType.TEMPO:
+        return 'Ex: 10:30 ou 05:45:12';
+      case WorkoutType.PESO:
+        return 'Ex: 85.5';
+      default:
+        return 'Digite o resultado';
+    }
+  }
+
+  /**
+   * Busca resultado existente para um participante
+   */
+  getResultadoExistente(workoutId: number, participante: ParticipanteDTO): LeaderboardSummaryDTO | null {
+    const resultados = this.workoutResults[workoutId];
+    if (!resultados) return null;
+
+    const isEquipe = !!(participante.nomeEquipe && participante.nomeEquipe.trim());
+
+    return resultados.find(r => {
+      if (isEquipe) {
+        return r.isEquipe && r.equipeId === participante.id;
+      } else {
+        return !r.isEquipe && r.atletaId === participante.id;
+      }
+    }) || null;
+  }
+
+  /**
+   * Retorna classe CSS baseada no status
+   */
+  getStatusClass(workoutId: number, participante: ParticipanteDTO): string {
+    const resultado = this.getResultadoExistente(workoutId, participante);
+    const key = this.getParticipanteKey(workoutId, participante);
+    const temAlteracao = this.resultadosTemp[key];
+
+    if (resultado && resultado.finalizado) {
+      return 'status-finalizado';
+    } else if (resultado && !resultado.finalizado) {
+      return 'status-pendente';
+    } else if (temAlteracao) {
+      return 'status-preenchido';
+    } else {
+      return 'status-vazio';
+    }
+  }
+
+  /**
+   * Retorna label do status
+   */
+  getStatusLabel(workoutId: number, participante: ParticipanteDTO): string {
+    const resultado = this.getResultadoExistente(workoutId, participante);
+    const key = this.getParticipanteKey(workoutId, participante);
+    const temAlteracao = this.resultadosTemp[key];
+
+    if (resultado && resultado.finalizado) {
+      return 'Finalizado';
+    } else if (resultado && !resultado.finalizado) {
+      return 'Pendente';
+    } else if (temAlteracao) {
+      return 'Preenchido';
+    } else {
+      return 'Sem resultado';
+    }
+  }
+
+  /**
+   * Conta quantos resultados foram preenchidos
+   */
+  getPreenchidosCount(workoutId: number): number {
+    const resultados = this.workoutResults[workoutId] || [];
+    const resultadosExistentes = resultados.length;
+
+    // Conta campos temporários preenchidos para participantes que ainda não têm resultado
+    const camposNovos = this.participantes.filter(p => {
+      const key = this.getParticipanteKey(workoutId, p);
+      const temResultado = this.getResultadoExistente(workoutId, p);
+      return !temResultado && this.resultadosTemp[key];
+    }).length;
+
+    return resultadosExistentes + camposNovos;
+  }
+
+  /**
+   * Verifica se há alterações pendentes
+   */
+  temAlteracoes(workoutId: number): boolean {
+    return this.participantes.some(p => {
+      const key = this.getParticipanteKey(workoutId, p);
+      const temValor = this.resultadosTemp[key] && this.resultadosTemp[key].trim() !== '';
+      const resultado = this.getResultadoExistente(workoutId, p);
+
+      // Tem alteração se:
+      // 1. Campo preenchido e não há resultado existente
+      // 2. Campo preenchido e valor diferente do resultado existente
+      if (temValor) {
+        if (!resultado) {
+          return true; // Novo resultado
+        }
+        // Verifica se valor mudou
+        return this.resultadosTemp[key] !== resultado.resultadoValor;
+      }
+      return false;
+    });
+  }
+
+  /**
+   * Limpa todos os campos temporários de um workout
+   */
+  limparTodos(workoutId: number): void {
+    this.participantes.forEach(p => {
+      const key = this.getParticipanteKey(workoutId, p);
+      delete this.resultadosTemp[key];
+    });
+  }
+
+  /**
+   * Handler para focus em input
+   */
+  onInputFocus(index: number): void {
+    // Pode adicionar lógica adicional aqui se necessário
+  }
+
+  /**
+   * Salva todos os resultados preenchidos
+   */
+  salvarTodos(workout: Workout): void {
+    if (!this.temAlteracoes(workout.id)) {
+      this.snackBar.open('Nenhuma alteração detectada', 'Fechar', { duration: 3000 });
+      return;
+    }
+
+    this.isSaving = true;
+    const promises: Promise<any>[] = [];
+    let sucessos = 0;
+    let erros = 0;
+
+    this.participantes.forEach(participante => {
+      const key = this.getParticipanteKey(workout.id, participante);
+      const valorDigitado = this.resultadosTemp[key];
+
+      if (!valorDigitado || valorDigitado.trim() === '') {
+        return; // Pula se não tem valor
+      }
+
+      const resultadoExistente = this.getResultadoExistente(workout.id, participante);
+      const isEquipe = !!(participante.nomeEquipe && participante.nomeEquipe.trim());
+
+      // Converter valor baseado no tipo
+      let resultadoValor: string | number = valorDigitado;
+      if (workout.tipo === 'REPS') {
+        resultadoValor = parseInt(valorDigitado, 10);
+      } else if (workout.tipo === 'PESO') {
+        resultadoValor = parseFloat(valorDigitado);
+      }
+
+      if (resultadoExistente) {
+        // Atualizar resultado existente
+        const updateDTO: WorkoutResultUpdateDTO = {
+          resultadoValor: resultadoValor.toString(),
+          finalizado: true
+        };
+
+        const updateMethod = isEquipe
+          ? this.workoutService.atualizarResultadoEquipe(workout.id, participante.id, updateDTO)
+          : this.workoutService.atualizarResultadoAtleta(workout.id, participante.id, updateDTO);
+
+        const promise = updateMethod.toPromise()
+          .then(() => {
+            sucessos++;
+            delete this.resultadosTemp[key];
+          })
+          .catch(error => {
+            erros++;
+            console.error(`Erro ao atualizar resultado de ${participante.nome}:`, error);
+          });
+
+        promises.push(promise);
+      } else {
+        // Criar novo resultado
+        const createDTO: WorkoutResultCreateDTO = {
+          eventoId: this.eventoId,
+          categoriaId: this.categoriaId,
+          participanteId: participante.id,
+          isEquipe: isEquipe,
+          resultadoValor: resultadoValor,
+          finalizado: true,
+          observacoes: undefined
+        };
+
+        const promise = this.workoutService.adicionarResultado(workout.id, createDTO).toPromise()
+          .then(() => {
+            sucessos++;
+            delete this.resultadosTemp[key];
+          })
+          .catch(error => {
+            erros++;
+            console.error(`Erro ao adicionar resultado de ${participante.nome}:`, error);
+          });
+
+        promises.push(promise);
+      }
+    });
+
+    Promise.all(promises).finally(() => {
+      this.isSaving = false;
+
+      if (sucessos > 0) {
+        this.snackBar.open(
+          `✅ ${sucessos} resultado(s) salvos com sucesso${erros > 0 ? ` (${erros} erro(s))` : ''}`,
+          'Fechar',
+          { duration: 4000 }
+        );
+        this.recarregarResultadosWorkout(workout);
+      } else if (erros > 0) {
+        this.snackBar.open(
+          `❌ Erro ao salvar resultados (${erros} erro(s))`,
+          'Fechar',
+          { duration: 5000 }
+        );
+      }
+    });
+  }
+
+  /**
+   * Remove resultado rapidamente (sem confirmação para lista)
+   */
+  removerResultadoRapido(workout: Workout, participante: ParticipanteDTO): void {
+    if (!confirm(`Remover resultado de ${participante.nome}?`)) {
+      return;
+    }
+
+    const resultado = this.getResultadoExistente(workout.id, participante);
+    if (!resultado) return;
+
+    const isEquipe = !!(participante.nomeEquipe && participante.nomeEquipe.trim());
+    const removerMethod = isEquipe
+      ? this.workoutService.removerResultadoEquipe(workout.id, participante.id)
+      : this.workoutService.removerResultadoAtleta(workout.id, participante.id);
+
+    removerMethod.subscribe({
+      next: () => {
+        this.snackBar.open(`Resultado de ${participante.nome} removido`, 'Fechar', { duration: 3000 });
+
+        // Limpar campo temporário se existir
+        const key = this.getParticipanteKey(workout.id, participante);
+        delete this.resultadosTemp[key];
+
+        this.recarregarResultadosWorkout(workout);
+      },
+      error: (error) => {
+        console.error('Erro ao remover resultado:', error);
+        this.snackBar.open('Erro ao remover resultado', 'Fechar', { duration: 5000 });
+      }
+    });
   }
 
   voltar(): void {
