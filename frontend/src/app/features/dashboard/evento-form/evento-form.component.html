@@ -21,13 +21,94 @@
 
   <!-- Form Content -->
   <div *ngIf="!isLoading" class="form-content">
-    <mat-card>
-      <mat-card-content>
-        <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="300ms">
+    <!-- Layout de duas colunas: menu lateral + conteúdo -->
+    <div class="layout-with-sidebar">
+      <!-- Menu Lateral das Abas -->
+      <div class="tabs-sidebar">
+        <mat-nav-list class="tabs-nav-list">
+          <div class="tabs-nav-header">
+            <h3>Seções</h3>
+          </div>
 
-          <!-- Aba 1: Informações Básicas -->
-          <mat-tab label="Informações Básicas">
-            <div class="tab-content">
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 0"
+            (click)="selectedTabIndex = 0">
+            <mat-icon matListItemIcon>info</mat-icon>
+            <span matListItemTitle>Informações Básicas</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 1"
+            (click)="selectedTabIndex = 1">
+            <mat-icon matListItemIcon>image</mat-icon>
+            <span matListItemTitle>Imagem</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 2"
+            [class.disabled]="modo === 'criar'"
+            (click)="modo !== 'criar' && (selectedTabIndex = 2)">
+            <mat-icon matListItemIcon>category</mat-icon>
+            <span matListItemTitle>Categorias</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 3"
+            [class.disabled]="modo === 'criar'"
+            (click)="modo !== 'criar' && (selectedTabIndex = 3)">
+            <mat-icon matListItemIcon>fitness_center</mat-icon>
+            <span matListItemTitle>Workouts</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 4"
+            [class.disabled]="modo === 'criar'"
+            (click)="modo !== 'criar' && (selectedTabIndex = 4)">
+            <mat-icon matListItemIcon>schedule</mat-icon>
+            <span matListItemTitle>Timeline</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 5"
+            [class.disabled]="modo === 'criar'"
+            (click)="modo !== 'criar' && (selectedTabIndex = 5)">
+            <mat-icon matListItemIcon>attach_file</mat-icon>
+            <span matListItemTitle>Anexos</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 6"
+            [class.disabled]="modo === 'criar'"
+            (click)="modo !== 'criar' && (selectedTabIndex = 6)">
+            <mat-icon matListItemIcon>how_to_reg</mat-icon>
+            <span matListItemTitle>Inscrições</span>
+          </mat-list-item>
+
+          <mat-list-item
+            class="tab-nav-item"
+            [class.active]="selectedTabIndex === 7"
+            [class.disabled]="modo === 'criar'"
+            (click)="modo !== 'criar' && (selectedTabIndex = 7)">
+            <mat-icon matListItemIcon>assessment</mat-icon>
+            <span matListItemTitle>Gerenciar Resultados</span>
+          </mat-list-item>
+        </mat-nav-list>
+      </div>
+
+      <!-- Conteúdo da Aba Selecionada -->
+      <div class="tab-content-container">
+        <mat-card>
+          <mat-card-content>
+
+            <!-- Aba 0: Informações Básicas -->
+            <div *ngIf="selectedTabIndex === 0" class="tab-content">
               <form [formGroup]="eventoForm">
 
                 <!-- Nome do Evento -->
@@ -104,11 +185,9 @@
 
               </form>
             </div>
-          </mat-tab>
 
-          <!-- Aba 2: Imagem -->
-          <mat-tab label="Imagem">
-            <div class="tab-content">
+            <!-- Aba 1: Imagem -->
+            <div *ngIf="selectedTabIndex === 1" class="tab-content">
 
               <!-- Hidden file input -->
               <input type="file" id="imagem-input" accept="image/jpeg,image/jpg,image/png,image/webp"
@@ -208,11 +287,9 @@
               </div>
 
             </div>
-          </mat-tab>
 
-          <!-- Aba 3: Categorias -->
-          <mat-tab label="Categorias" [disabled]="modo === 'criar'">
-            <div class="tab-content">
+            <!-- Aba 2: Categorias -->
+            <div *ngIf="selectedTabIndex === 2" class="tab-content">
 
               <!-- Loading State -->
               <div *ngIf="isLoadingCategorias" class="loading-container">
@@ -419,11 +496,9 @@
 
               </div>
             </div>
-          </mat-tab>
 
-          <!-- Aba 4: Workouts -->
-          <mat-tab label="Workouts" [disabled]="modo === 'criar'">
-            <div class="tab-content">
+            <!-- Aba 3: Workouts -->
+            <div *ngIf="selectedTabIndex === 3" class="tab-content">
 
               <!-- Loading State -->
               <div *ngIf="isLoadingWorkouts" class="loading-container">
@@ -576,11 +651,9 @@
 
               </div>
             </div>
-          </mat-tab>
 
-          <!-- Aba 5: Timeline -->
-          <mat-tab label="Timeline" [disabled]="modo === 'criar'">
-            <div class="tab-content">
+            <!-- Aba 4: Timeline -->
+            <div *ngIf="selectedTabIndex === 4" class="tab-content">
 
               <!-- Header da aba -->
               <div class="section-header">
@@ -749,11 +822,9 @@
               </div>
 
             </div>
-          </mat-tab>
 
-          <!-- Aba 6: Anexos -->
-          <mat-tab label="Anexos" [disabled]="modo === 'criar'">
-            <div class="tab-content anexos-content">
+            <!-- Aba 5: Anexos -->
+            <div *ngIf="selectedTabIndex === 5" class="tab-content anexos-content">
               <!-- Header Section -->
               <div class="anexos-header">
                 <div class="header-info">
@@ -840,11 +911,9 @@
                 <p class="empty-hint">Adicione documentos, regulamentos ou imagens do evento</p>
               </div>
             </div>
-          </mat-tab>
 
-          <!-- Aba 7: Inscrições -->
-          <mat-tab label="Inscrições" [disabled]="modo === 'criar'">
-            <div class="tab-content inscricoes-content">
+            <!-- Aba 6: Inscrições -->
+            <div *ngIf="selectedTabIndex === 6" class="tab-content inscricoes-content">
               <!-- Header com Estatísticas -->
               <div class="inscricoes-header">
                 <div class="header-info">
@@ -1012,11 +1081,9 @@
                 <p class="empty-hint">As inscrições aparecerão aqui conforme forem realizadas</p>
               </div>
             </div>
-          </mat-tab>
 
-          <!-- Aba Gerenciar Resultados -->
-          <mat-tab label="Gerenciar Resultados" [disabled]="modo === 'criar'">
-            <div class="tab-content resultados-tab">
+            <!-- Aba 7: Gerenciar Resultados -->
+            <div *ngIf="selectedTabIndex === 7" class="tab-content resultados-tab">
               <!-- Header da aba -->
               <div class="tab-header">
                 <h2>
@@ -1062,11 +1129,11 @@
                 <p>Selecione uma categoria acima para gerenciar resultados</p>
               </div>
             </div>
-          </mat-tab>
 
-        </mat-tab-group>
-      </mat-card-content>
-    </mat-card>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
 
     <!-- Action Buttons (hidden in Gerenciar Resultados tab) -->
     <div class="action-buttons" *ngIf="selectedTabIndex !== 7">

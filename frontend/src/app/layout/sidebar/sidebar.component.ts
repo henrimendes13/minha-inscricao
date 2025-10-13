@@ -99,27 +99,6 @@ export class SidebarComponent {
       icon: 'event_note',
       route: '/dashboard/eventos',
       roles: [TipoUsuario.ADMIN]
-    },
-    {
-      label: 'Minhas Inscrições',
-      icon: 'assignment',
-      route: '/inscricoes',
-      roles: [TipoUsuario.ATLETA]
-    },
-    {
-      label: 'Atletas',
-      icon: 'group',
-      route: '/atletas'
-    },
-    {
-      label: 'Equipes',
-      icon: 'groups',
-      route: '/equipes'
-    },
-    {
-      label: 'Leaderboard',
-      icon: 'leaderboard',
-      route: '/leaderboard'
     }
   ];
 

@@ -19,6 +19,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatListModule } from '@angular/material/list';
 
 import { EventoService } from '../../../core/services/evento.service';
 import { ImagemService } from '../../../core/services/imagem.service';
@@ -79,12 +80,14 @@ import { FormsModule } from '@angular/forms';
     MatTooltipModule,
     MatCheckboxModule,
     MatDialogModule,
+    MatListModule,
     WorkoutResultadosManageComponent
   ],
   templateUrl: './evento-form.component.html',
   styleUrl: './evento-form.component.scss'
 })
 export class EventoFormComponent implements OnInit {
+
   modo: 'criar' | 'editar' = 'criar';
   eventoId: number | null = null;
   evento: EventoApiResponse | null = null;
