@@ -128,13 +128,30 @@ public class LeaderboardService implements ILeaderboardService {
     }
 
     private LeaderboardSummaryDTO convertToSummaryDTO(LeaderboardEntity leaderboard) {
+        // Obter resultado bruto baseado no tipo do workout
+        String resultadoValor = "";
+        if (leaderboard.getWorkout() != null) {
+            Object resultado = leaderboard.getResultadoPrincipal();
+            if (resultado != null) {
+                resultadoValor = resultado.toString();
+            }
+        }
+
         return LeaderboardSummaryDTO.builder()
                 .id(leaderboard.getId())
+                .eventoId(leaderboard.getEvento() != null ? leaderboard.getEvento().getId() : null)
+                .workoutId(leaderboard.getWorkout() != null ? leaderboard.getWorkout().getId() : null)
+                .categoriaId(leaderboard.getCategoria() != null ? leaderboard.getCategoria().getId() : null)
+                .atletaId(leaderboard.getAtleta() != null ? leaderboard.getAtleta().getId() : null)
+                .equipeId(leaderboard.getEquipe() != null ? leaderboard.getEquipe().getId() : null)
                 .posicaoWorkout(leaderboard.getPosicaoWorkout())
                 .nomeParticipante(leaderboard.getNomeParticipante())
                 .nomeWorkout(leaderboard.getNomeWorkout())
                 .nomeCategoria(leaderboard.getNomeCategoria())
+                .resultadoValor(resultadoValor)
                 .resultadoFormatado(leaderboard.getResultadoFormatado())
+                .pontuacaoWorkout(null) // Pontuação será calculada posteriormente se necessário
+                .isEquipe(leaderboard.getEquipe() != null)
                 .finalizado(leaderboard.getFinalizado())
                 .isPodioWorkout(leaderboard.isPodioWorkout())
                 .medalhaWorkout(leaderboard.getMedalhaWorkout())

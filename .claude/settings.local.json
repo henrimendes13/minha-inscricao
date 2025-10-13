@@ -13,7 +13,15 @@
       "Bash(timeout:*)",
       "Bash(python:*)",
       "Bash(/dev/null)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(dir /b srcmainjavabrcomeventsportsminha_inscricaoentity*.java)",
+      "Bash(dir /b srcmainjavabrcomeventsportsminha_inscricaoconfig*.java)",
+      "Bash(cat:*)",
+      "Bash(test:*)",
+      "mcp_playwright_browser_tools",
+      "mcp_playwright_browser_click",
+      "mcp_playwright_browser_navigate",
+      "mcp_playwright_browser_wait_for"
     ],
     "deny": [],
     "ask": []

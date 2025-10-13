@@ -188,7 +188,15 @@ public class WorkoutResultService {
                     .orElseThrow(() -> new RuntimeException("Resultado não encontrado para este atleta"));
         }
 
+        Long categoriaId = leaderboard.getCategoria().getId();
+
         leaderboardService.deletarLeaderboardResultado(leaderboard.getId());
+
+        // Recalcular posições do workout após remoção
+        leaderboardService.calcularRankingWorkout(categoriaId, workoutId);
+
+        // Recalcular pontuações totais após remover resultado
+        pontuacaoService.recalcularTodasPontuacoesPorCategoria(categoriaId);
     }
 
     /**

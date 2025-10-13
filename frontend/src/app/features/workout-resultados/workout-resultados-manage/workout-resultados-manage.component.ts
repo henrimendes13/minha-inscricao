@@ -28,9 +28,12 @@ import {
   LeaderboardSummaryDTO,
   Workout,
   WorkoutResultCreateDTO,
+  WorkoutResultUpdateDTO,
   WorkoutResultStatusDTO,
   WorkoutType
 } from '../../../models/workout.model';
+
+import { EditResultadoDialogComponent } from '../edit-resultado-dialog/edit-resultado-dialog.component';
 
 @Component({
   selector: 'app-workout-resultados-manage',
@@ -519,14 +522,165 @@ export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
   }
 
   editarResultado(result: LeaderboardSummaryDTO): void {
-    // TODO: Implementar dialog de edição
-    console.log('Editar resultado:', result);
+    // Find the current workout
+    const workout = this.workouts[this.selectedWorkoutIndex];
+    if (!workout) {
+      console.error('❌ Workout não encontrado');
+      return;
+    }
+
+    console.log('🔍 [EDITAR] Iniciando edição de resultado:', {
+      workout: { id: workout.id, nome: workout.nome, tipo: workout.tipo },
+      result: {
+        id: result.id,
+        nomeParticipante: result.nomeParticipante,
+        atletaId: result.atletaId,
+        equipeId: result.equipeId,
+        isEquipe: result.isEquipe,
+        resultadoAtual: result.resultadoFormatado
+      }
+    });
+
+    // Open edit dialog
+    const dialogRef = this.dialog.open(EditResultadoDialogComponent, {
+      width: '500px',
+      data: {
+        result: result,
+        workout: workout
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(updatedData => {
+      console.log('🔍 [EDITAR] Dialog fechado. Dados retornados:', updatedData);
+
+      if (updatedData) {
+        this.atualizarResultado(workout, result, updatedData);
+      } else {
+        console.log('ℹ️ [EDITAR] Edição cancelada pelo usuário');
+      }
+    });
+  }
+
+  private atualizarResultado(
+    workout: Workout,
+    result: LeaderboardSummaryDTO,
+    updatedData: { resultadoValor: string, finalizado: boolean }
+  ): void {
+    console.log('🔄 [ATUALIZAR] Preparando atualização:', {
+      workoutId: workout.id,
+      workoutTipo: workout.tipo,
+      isEquipe: result.isEquipe,
+      participanteId: result.isEquipe ? result.equipeId : result.atletaId,
+      dadosAntigos: result.resultadoFormatado,
+      dadosNovos: updatedData
+    });
+
+    // Validar IDs antes de enviar
+    if (result.isEquipe && !result.equipeId) {
+      console.error('❌ [ATUALIZAR] equipeId não encontrado para equipe');
+      this.snackBar.open('Erro: ID da equipe não encontrado', 'Fechar', { duration: 5000 });
+      return;
+    }
+
+    if (!result.isEquipe && !result.atletaId) {
+      console.error('❌ [ATUALIZAR] atletaId não encontrado para atleta');
+      this.snackBar.open('Erro: ID do atleta não encontrado', 'Fechar', { duration: 5000 });
+      return;
+    }
+
+    // Converter tipo de dado baseado no tipo do workout
+    let resultadoParaEnviar: string | number = updatedData.resultadoValor;
+
+    if (workout.tipo === 'REPS') {
+      resultadoParaEnviar = parseInt(updatedData.resultadoValor, 10);
+      console.log('🔢 [ATUALIZAR] Convertendo para REPS (Integer):', resultadoParaEnviar);
+    } else if (workout.tipo === 'PESO') {
+      resultadoParaEnviar = parseFloat(updatedData.resultadoValor);
+      console.log('⚖️ [ATUALIZAR] Convertendo para PESO (Float):', resultadoParaEnviar);
+    } else {
+      console.log('⏱️ [ATUALIZAR] Mantendo como TEMPO (String):', resultadoParaEnviar);
+    }
+
+    const updateDTO: WorkoutResultUpdateDTO = {
+      resultadoValor: resultadoParaEnviar.toString(),
+      finalizado: updatedData.finalizado
+    };
+
+    console.log('📤 [ATUALIZAR] Enviando DTO para backend:', updateDTO);
+
+    const updateMethod = result.isEquipe
+      ? this.workoutService.atualizarResultadoEquipe(workout.id, result.equipeId!, updateDTO)
+      : this.workoutService.atualizarResultadoAtleta(workout.id, result.atletaId!, updateDTO);
+
+    updateMethod.subscribe({
+      next: (response) => {
+        console.log('✅ [ATUALIZAR] Sucesso! Resposta do backend:', response);
+        this.snackBar.open(
+          `✅ Resultado de ${result.nomeParticipante} atualizado com sucesso!`,
+          'Fechar',
+          { duration: 3000 }
+        );
+        this.recarregarResultadosWorkout(workout);
+      },
+      error: (error) => {
+        console.error('❌ [ATUALIZAR] Erro ao atualizar resultado:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          error: error.error
+        });
+
+        let mensagem = 'Erro ao atualizar resultado';
+
+        if (error.status === 404) {
+          mensagem = 'Resultado não encontrado';
+        } else if (error.status === 403) {
+          mensagem = 'Você não tem permissão para editar este resultado';
+        } else if (error.status === 400) {
+          mensagem = 'Dados inválidos: ' + (error.error?.message || 'formato incorreto');
+        }
+
+        this.snackBar.open(mensagem, 'Fechar', { duration: 5000 });
+      }
+    });
   }
 
   removerResultado(workout: Workout, result: LeaderboardSummaryDTO): void {
+    console.log('🗑️ [REMOVER] Solicitando remoção de resultado:', {
+      workout: { id: workout.id, nome: workout.nome },
+      result: {
+        id: result.id,
+        nomeParticipante: result.nomeParticipante,
+        atletaId: result.atletaId,
+        equipeId: result.equipeId,
+        isEquipe: result.isEquipe,
+        resultado: result.resultadoFormatado
+      }
+    });
+
     if (!confirm(`Tem certeza que deseja remover o resultado de ${result.nomeParticipante}?`)) {
+      console.log('ℹ️ [REMOVER] Remoção cancelada pelo usuário');
       return;
     }
+
+    // Validar IDs antes de enviar
+    if (result.isEquipe && !result.equipeId) {
+      console.error('❌ [REMOVER] equipeId não encontrado para equipe');
+      this.snackBar.open('Erro: ID da equipe não encontrado', 'Fechar', { duration: 5000 });
+      return;
+    }
+
+    if (!result.isEquipe && !result.atletaId) {
+      console.error('❌ [REMOVER] atletaId não encontrado para atleta');
+      this.snackBar.open('Erro: ID do atleta não encontrado', 'Fechar', { duration: 5000 });
+      return;
+    }
+
+    console.log('📤 [REMOVER] Chamando service para remover:', {
+      workoutId: workout.id,
+      participanteId: result.isEquipe ? result.equipeId : result.atletaId,
+      tipoParticipante: result.isEquipe ? 'equipe' : 'atleta'
+    });
 
     const removerMethod = result.isEquipe
       ? this.workoutService.removerResultadoEquipe(workout.id, result.equipeId!)
@@ -534,12 +688,33 @@ export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
 
     removerMethod.subscribe({
       next: () => {
-        this.snackBar.open('Resultado removido com sucesso!', 'Fechar', { duration: 3000 });
+        console.log('✅ [REMOVER] Resultado removido com sucesso!');
+        this.snackBar.open(
+          `🗑️ Resultado de ${result.nomeParticipante} removido com sucesso!`,
+          'Fechar',
+          { duration: 3000 }
+        );
         this.recarregarResultadosWorkout(workout);
       },
       error: (error) => {
-        this.snackBar.open('Erro ao remover resultado', 'Fechar', { duration: 5000 });
-        console.error('Erro ao remover resultado:', error);
+        console.error('❌ [REMOVER] Erro ao remover resultado:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.message,
+          error: error.error
+        });
+
+        let mensagem = 'Erro ao remover resultado';
+
+        if (error.status === 404) {
+          mensagem = 'Resultado não encontrado no banco de dados';
+        } else if (error.status === 403) {
+          mensagem = 'Você não tem permissão para remover este resultado';
+        } else if (error.status === 400) {
+          mensagem = 'Erro na requisição: ' + (error.error?.message || 'dados inválidos');
+        }
+
+        this.snackBar.open(mensagem, 'Fechar', { duration: 5000 });
       }
     });
   }

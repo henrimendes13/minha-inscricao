@@ -238,20 +238,26 @@ public interface LeaderboardRepository extends JpaRepository<LeaderboardEntity, 
 
     /**
      * Busca equipes de uma categoria SEM ordenação (para aplicar critérios de desempate customizados)
+     * Usa a tabela inscricoes para encontrar equipes inscritas na categoria
      */
     @Query(value = """
-        SELECT e.* FROM equipes e 
-        WHERE e.categoria_id = :categoriaId 
+        SELECT DISTINCT e.* FROM equipes e
+        INNER JOIN inscricoes i ON i.equipe_id = e.id
+        WHERE i.categoria_id = :categoriaId
+        AND i.status = 'CONFIRMADA'
         AND e.pontuacao_total IS NOT NULL
         """, nativeQuery = true)
     List<EquipeEntity> findEquipesByCategoriaSemOrdenacao(@Param("categoriaId") Long categoriaId);
 
     /**
      * Busca atletas de uma categoria SEM ordenação (para aplicar critérios de desempate customizados)
+     * Usa a tabela inscricoes para encontrar atletas inscritos na categoria
      */
     @Query(value = """
-        SELECT a.* FROM atletas a 
-        WHERE a.categoria_id = :categoriaId 
+        SELECT DISTINCT a.* FROM atletas a
+        INNER JOIN inscricoes i ON i.atleta_id = a.id
+        WHERE i.categoria_id = :categoriaId
+        AND i.status = 'CONFIRMADA'
         AND a.pontuacao_total IS NOT NULL
         """, nativeQuery = true)
     List<AtletaEntity> findAtletasByCategoriaSemOrdenacao(@Param("categoriaId") Long categoriaId);
