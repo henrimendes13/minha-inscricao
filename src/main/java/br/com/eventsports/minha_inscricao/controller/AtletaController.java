@@ -113,6 +113,12 @@ public class AtletaController {
         return ResponseEntity.ok(atletas);
     }
 
+    @GetMapping("/buscar-por-termo")
+    public ResponseEntity<List<AtletaSummaryDTO>> buscarPorNomeOuCpf(@RequestParam String termo) {
+        List<AtletaSummaryDTO> atletas = atletaService.buscarPorNomeOuCpf(termo);
+        return ResponseEntity.ok(atletas);
+    }
+
     @GetMapping("/genero/{genero}")
     public ResponseEntity<List<AtletaSummaryDTO>> getAtletasByGenero(@PathVariable Genero genero) {
         List<AtletaSummaryDTO> atletas = atletaService.findByGenero(genero);

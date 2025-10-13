@@ -13,6 +13,8 @@ public interface IInscricaoService {
 
     InscricaoResponseDTO create(InscricaoCreateDTO inscricaoCreateDTO);
 
+    InscricaoResponseDTO createSimplificada(InscricaoSimplificadaCreateDTO dto);
+
     InscricaoResponseDTO update(Long id, InscricaoUpdateDTO inscricaoUpdateDTO);
     
     void deleteById(Long id);
@@ -38,6 +40,8 @@ public interface IInscricaoService {
     InscricaoResponseDTO colocarEmListaEspera(Long id);
     
     long countByEventoIdAndStatus(Long eventoId, StatusInscricao status);
-    
+
     long countByCategoriaIdAndStatus(Long categoriaId, StatusInscricao status);
+
+    List<ParticipanteDTO> findParticipantesByEventoAndCategoria(Long eventoId, Long categoriaId);
 }

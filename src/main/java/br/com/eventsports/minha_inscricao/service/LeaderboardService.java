@@ -9,6 +9,7 @@ import br.com.eventsports.minha_inscricao.repository.AtletaRepository;
 import br.com.eventsports.minha_inscricao.repository.CategoriaRepository;
 import br.com.eventsports.minha_inscricao.repository.EquipeRepository;
 import br.com.eventsports.minha_inscricao.repository.EventoRepository;
+import br.com.eventsports.minha_inscricao.repository.InscricaoRepository;
 import br.com.eventsports.minha_inscricao.repository.LeaderboardRepository;
 import br.com.eventsports.minha_inscricao.repository.WorkoutRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.ILeaderboardService;
@@ -35,6 +36,7 @@ public class LeaderboardService implements ILeaderboardService {
     private final AtletaRepository atletaRepository;
     private final EquipeRepository equipeRepository;
     private final EventoRepository eventoRepository;
+    private final InscricaoRepository inscricaoRepository;
     private final IPontuacaoService pontuacaoService;
 
 
@@ -244,17 +246,27 @@ public class LeaderboardService implements ILeaderboardService {
             // Buscar atleta diretamente no repositório
             AtletaEntity atleta = atletaRepository.findById(dto.getAtletaId())
                     .orElseThrow(() -> new RuntimeException("Atleta não encontrado com ID: " + dto.getAtletaId()));
-            
-            // Verificar se atleta pertence à categoria
-            if (atleta.getCategoria() == null || !atleta.getCategoria().getId().equals(dto.getCategoriaId())) {
-                throw new RuntimeException("Atleta não pertence a esta categoria");
+
+            // Verificar se existe uma inscrição confirmada do atleta nesta categoria
+            java.util.List<InscricaoEntity> inscricoes = inscricaoRepository
+                    .findByEventoIdAndCategoriaIdAndStatus(dto.getEventoId(), dto.getCategoriaId(),
+                        br.com.eventsports.minha_inscricao.enums.StatusInscricao.CONFIRMADA);
+
+            boolean temInscricaoConfirmada = inscricoes.stream()
+                    .anyMatch(inscricao ->
+                        inscricao.getAtleta() != null &&
+                        inscricao.getAtleta().getId().equals(dto.getAtletaId())
+                    );
+
+            if (!temInscricaoConfirmada) {
+                throw new RuntimeException("Atleta não possui inscrição confirmada nesta categoria");
             }
-            
+
             // Verificar se atleta está ativo (aceita termos)
             if (atleta.getAceitaTermos() == null || !atleta.getAceitaTermos()) {
                 throw new RuntimeException("Não é possível registrar resultados para atleta inativo: " + atleta.getNome());
             }
-            
+
             leaderboard.setAtleta(atleta);
         } else {
             throw new RuntimeException("Deve informar equipeId para categoria EQUIPE ou atletaId para categoria INDIVIDUAL");

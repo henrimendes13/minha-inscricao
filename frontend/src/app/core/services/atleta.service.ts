@@ -35,4 +35,13 @@ export class AtletaService extends BaseHttpService {
   buscarPorEvento(eventoId: number): Observable<AtletaSummary[]> {
     return this.get<AtletaSummary[]>(`${API_CONFIG.endpoints.atletas.base}/evento/${eventoId}`);
   }
+
+  /**
+   * Busca atletas por nome ou CPF
+   */
+  buscarPorNomeOuCpf(termo: string): Observable<AtletaSummary[]> {
+    return this.get<AtletaSummary[]>(
+      `${API_CONFIG.endpoints.atletas.base}/buscar-por-termo?termo=${encodeURIComponent(termo)}`
+    );
+  }
 }

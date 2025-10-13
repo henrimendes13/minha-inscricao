@@ -1,6 +1,7 @@
 package br.com.eventsports.minha_inscricao.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -72,6 +73,30 @@ public class UsuarioController {
         log.info("GET /api/usuarios/email/{} - Buscando usuário por email", email);
         UsuarioResponseDTO usuario = usuarioService.buscarPorEmail(email);
         return ResponseEntity.ok(usuario);
+    }
+
+    @GetMapping("/verificar-email")
+    public ResponseEntity<Map<String, Object>> verificarEmail(@RequestParam String email) {
+        log.info("GET /api/usuarios/verificar-email?email={} - Verificando existência de email", email);
+        boolean existe = usuarioService.existeEmail(email);
+
+        Map<String, Object> response = new java.util.HashMap<>();
+        response.put("exists", existe);
+
+        if (existe) {
+            try {
+                UsuarioResponseDTO usuario = usuarioService.buscarPorEmail(email);
+                response.put("usuario", Map.of(
+                    "id", usuario.getId(),
+                    "nome", usuario.getNome(),
+                    "email", usuario.getEmail()
+                ));
+            } catch (Exception e) {
+                log.warn("Erro ao buscar usuário por email: {}", e.getMessage());
+            }
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping

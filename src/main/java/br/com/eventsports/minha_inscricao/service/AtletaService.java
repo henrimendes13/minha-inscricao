@@ -18,6 +18,7 @@ import br.com.eventsports.minha_inscricao.repository.InscricaoRepository;
 import br.com.eventsports.minha_inscricao.repository.UsuarioRepository;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IAtletaService;
 import lombok.RequiredArgsConstructor;
+import java.util.ArrayList;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -180,6 +181,30 @@ public class AtletaService implements IAtletaService {
     @Transactional(readOnly = true)
     public List<AtletaSummaryDTO> findByNome(String nome) {
         List<AtletaEntity> atletas = atletaRepository.findByNomeContainingIgnoreCase(nome);
+        return atletas.stream()
+                .map(this::convertToSummaryDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Cacheable(value = "atletas", key = "'byTermo:' + #termo")
+    @Transactional(readOnly = true)
+    public List<AtletaSummaryDTO> buscarPorNomeOuCpf(String termo) {
+        List<AtletaEntity> atletas = new ArrayList<>();
+
+        // Buscar por CPF exato (se o termo parece ser um CPF)
+        if (termo.matches("\\d{11}") || termo.matches("\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}")) {
+            String cpfLimpo = termo.replaceAll("[^0-9]", "");
+            atletaRepository.findByCpf(cpfLimpo).ifPresent(atletas::add);
+        }
+
+        // Buscar por nome (sempre faz essa busca)
+        List<AtletaEntity> porNome = atletaRepository.findByNomeContainingIgnoreCase(termo);
+        for (AtletaEntity atleta : porNome) {
+            if (!atletas.contains(atleta)) {
+                atletas.add(atleta);
+            }
+        }
+
         return atletas.stream()
                 .map(this::convertToSummaryDTO)
                 .collect(Collectors.toList());

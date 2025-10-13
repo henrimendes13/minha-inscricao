@@ -30,23 +30,34 @@
       <div class="form-section">
         <h3>Dados Principais</h3>
 
+        <!-- Campo Email do Usuário (texto livre) -->
         <mat-form-field appearance="outline">
-          <mat-label>Usuário</mat-label>
-          <mat-select formControlName="usuarioInscricaoId" required>
-            <mat-option *ngFor="let usuario of usuarios" [value]="usuario.id">
-              {{ usuario.nome }} ({{ usuario.email }})
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="inscricaoForm.get('usuarioInscricaoId')?.hasError('required')">
-            Usuário é obrigatório
+          <mat-label>Email do Usuário</mat-label>
+          <input matInput
+                 formControlName="usuarioEmail"
+                 placeholder="Digite o email (ex: admin@admin.com)"
+                 required>
+          <mat-icon matPrefix>email</mat-icon>
+          <mat-error *ngIf="inscricaoForm.get('usuarioEmail')?.hasError('required')">
+            Email do usuário é obrigatório
           </mat-error>
+          <mat-error *ngIf="inscricaoForm.get('usuarioEmail')?.hasError('email')">
+            Email inválido
+          </mat-error>
+          <mat-hint>Pode ser seu próprio email ou de quem está inscrevendo</mat-hint>
         </mat-form-field>
 
+        <!-- Campo Categoria (mantém dropdown) -->
         <mat-form-field appearance="outline">
           <mat-label>Categoria</mat-label>
-          <mat-select formControlName="categoriaId" required>
-            <mat-option *ngFor="let categoria of categorias" [value]="categoria.id">
+          <mat-select formControlName="categoriaId"
+                      (selectionChange)="onCategoriaChange($event.value)"
+                      required>
+            <mat-option *ngFor="let categoria of getCategoriasFiltradasPorTipo()" [value]="categoria.id">
               {{ categoria.nome }}
+              <span *ngIf="tipoInscricao === 'equipe' && categoria.quantidadeDeAtletasPorEquipe">
+                ({{ categoria.quantidadeDeAtletasPorEquipe }} atletas)
+              </span>
             </mat-option>
           </mat-select>
           <mat-error *ngIf="inscricaoForm.get('categoriaId')?.hasError('required')">
@@ -54,31 +65,96 @@
           </mat-error>
         </mat-form-field>
 
-        <!-- Campo Atleta (apenas se tipo individual) -->
+        <!-- Campo Atleta Individual (texto livre) -->
         <mat-form-field appearance="outline" *ngIf="tipoInscricao === 'individual'">
-          <mat-label>Atleta</mat-label>
-          <mat-select formControlName="atletaId" required>
-            <mat-option *ngFor="let atleta of atletas" [value]="atleta.id">
-              {{ atleta.nome }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="inscricaoForm.get('atletaId')?.hasError('required')">
-            Atleta é obrigatório
+          <mat-label>Nome do Atleta (para exibição)</mat-label>
+          <input matInput
+                 formControlName="atletaNome"
+                 placeholder="Digite o nome completo (ex: Henrique Mendes Cruz)"
+                 required>
+          <mat-icon matPrefix>person</mat-icon>
+          <mat-error *ngIf="inscricaoForm.get('atletaNome')?.hasError('required')">
+            Nome do atleta é obrigatório
           </mat-error>
+          <mat-hint>Nome que será exibido no leaderboard do evento</mat-hint>
         </mat-form-field>
 
-        <!-- Campo Equipe (apenas se tipo equipe) -->
-        <mat-form-field appearance="outline" *ngIf="tipoInscricao === 'equipe'">
-          <mat-label>Equipe</mat-label>
-          <mat-select formControlName="equipeId" required>
-            <mat-option *ngFor="let equipe of equipes" [value]="equipe.id">
-              {{ equipe.nome }}
-            </mat-option>
-          </mat-select>
-          <mat-error *ngIf="inscricaoForm.get('equipeId')?.hasError('required')">
-            Equipe é obrigatória
-          </mat-error>
-        </mat-form-field>
+        <!-- Gestão de Equipe -->
+        <div *ngIf="tipoInscricao === 'equipe'" class="equipe-section">
+          <!-- Nome da Equipe -->
+          <mat-form-field appearance="outline">
+            <mat-label>Nome da Equipe</mat-label>
+            <input matInput formControlName="nomeEquipe" placeholder="Ex: Team Alpha" required>
+            <mat-icon matPrefix>groups</mat-icon>
+            <mat-error *ngIf="inscricaoForm.get('nomeEquipe')?.hasError('required')">
+              Nome da equipe é obrigatório
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Lista de Atletas da Equipe -->
+          <div class="atletas-equipe-container">
+            <div class="atletas-header">
+              <h4>Atletas da Equipe</h4>
+              <span class="atletas-count">{{ atletasEquipe.length }}/{{ quantidadeAtletasRequerida }} atletas</span>
+            </div>
+
+            <div formArrayName="atletasEquipe" class="atletas-list">
+              <div *ngFor="let atletaControl of atletasEquipe.controls; let i = index"
+                   [formGroupName]="i"
+                   class="atleta-item">
+                <div class="atleta-item-content">
+                  <mat-form-field appearance="outline" class="atleta-nome-field">
+                    <mat-label>Atleta {{ i + 1 }}</mat-label>
+                    <input matInput
+                           formControlName="nome"
+                           placeholder="Digite o nome completo do atleta..."
+                           required>
+                    <mat-icon matPrefix>person</mat-icon>
+                    <mat-error>Nome do atleta é obrigatório</mat-error>
+                  </mat-form-field>
+
+                  <div class="atleta-actions">
+                    <button mat-icon-button
+                            type="button"
+                            [color]="atletaControl.get('isCapitao')?.value ? 'primary' : ''"
+                            (click)="setCapitao(i)"
+                            matTooltip="Definir como capitão">
+                      <mat-icon>{{ atletaControl.get('isCapitao')?.value ? 'star' : 'star_border' }}</mat-icon>
+                    </button>
+                    <button mat-icon-button
+                            type="button"
+                            color="warn"
+                            (click)="removerAtletaEquipe(i)"
+                            [disabled]="!podeRemoverAtleta"
+                            matTooltip="Remover atleta">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button mat-stroked-button
+                    type="button"
+                    (click)="adicionarAtletaEquipe()"
+                    [disabled]="!podeAdicionarAtleta"
+                    class="add-atleta-btn">
+              <mat-icon>add</mat-icon>
+              Adicionar Atleta
+            </button>
+
+            <mat-hint *ngIf="categoriaSelecionada && tipoInscricao === 'equipe'" class="categoria-hint">
+              Esta categoria requer exatamente {{ quantidadeAtletasRequerida }} atleta(s)
+            </mat-hint>
+
+            <div *ngIf="atletasEquipe.length < 2" class="error-hint">
+              A equipe deve ter no mínimo 2 atletas
+            </div>
+            <div *ngIf="!temCapitao()" class="error-hint">
+              Selecione um capitão para a equipe (clique na estrela)
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Valores -->

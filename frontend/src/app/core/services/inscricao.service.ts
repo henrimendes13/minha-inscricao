@@ -5,6 +5,7 @@ import { BaseHttpService } from './base-http.service';
 import { API_CONFIG } from '../constants/api.constants';
 import {
   InscricaoCreateRequest,
+  InscricaoSimplificadaCreateRequest,
   InscricaoUpdateRequest,
   InscricaoSummaryResponse,
   InscricaoDetailedResponse,
@@ -50,6 +51,19 @@ export class InscricaoService extends BaseHttpService {
       .pipe(
         catchError(error => {
           console.error('Erro ao criar inscrição:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+   * Cria nova inscrição simplificada (aceita email e nome em vez de IDs)
+   */
+  criarSimplificada(inscricao: InscricaoSimplificadaCreateRequest): Observable<InscricaoDetailedResponse> {
+    return this.post<InscricaoDetailedResponse>(`${API_CONFIG.endpoints.inscricoes.base}/simplificada`, inscricao)
+      .pipe(
+        catchError(error => {
+          console.error('Erro ao criar inscrição simplificada:', error);
           return throwError(() => error);
         })
       );
@@ -270,13 +284,22 @@ export class InscricaoService extends BaseHttpService {
     return throwError(() => new Error('Método não implementado. Use criar() com InscricaoCreateRequest'));
   }
 
+  /**
+   * Busca participantes (atletas e equipes) por categoria para gerenciamento de resultados
+   */
   getParticipantesByCategoria(eventoId: number, categoriaId: number): Observable<ParticipanteDTO[]> {
-    console.warn('Método getParticipantesByCategoria está deprecated');
-    return throwError(() => new Error('Método não implementado'));
+    return this.get<ParticipanteDTO[]>(`${API_CONFIG.endpoints.inscricoes.base}/evento/${eventoId}/categoria/${categoriaId}/participantes`)
+      .pipe(
+        catchError(error => {
+          console.error(`Erro ao buscar participantes da categoria ${categoriaId} do evento ${eventoId}:`, error);
+          return throwError(() => error);
+        })
+      );
   }
 }
 
 export interface ParticipanteDTO {
+  inscricaoId: number;
   id: number;
   nome: string;
   tipo: string;

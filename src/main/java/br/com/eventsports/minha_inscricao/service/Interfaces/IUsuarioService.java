@@ -16,7 +16,9 @@ public interface IUsuarioService {
     UsuarioResponseDTO buscarPorId(Long id);
     
     UsuarioResponseDTO buscarPorEmail(String email);
-    
+
+    boolean existeEmail(String email);
+
     Page<UsuarioSummaryDTO> listarAtivos(Pageable pageable);
     
     List<UsuarioSummaryDTO> listarPorTipo(TipoUsuario tipo);

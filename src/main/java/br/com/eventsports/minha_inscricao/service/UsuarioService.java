@@ -151,11 +151,20 @@ public class UsuarioService implements IUsuarioService {
     @Transactional(readOnly = true)
     public UsuarioResponseDTO buscarPorEmail(String email) {
         log.debug("Buscando usuário por email: {}", email);
-        
+
         UsuarioEntity usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com email: " + email));
-        
+
         return mapToResponseDTO(usuario);
+    }
+
+    /**
+     * Verifica se existe um usuário com o email fornecido
+     */
+    @Transactional(readOnly = true)
+    public boolean existeEmail(String email) {
+        log.debug("Verificando existência de email: {}", email);
+        return usuarioRepository.existsByEmail(email);
     }
 
     /**

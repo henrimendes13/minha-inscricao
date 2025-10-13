@@ -15,6 +15,22 @@ export interface InscricaoCreateRequest {
   observacoes?: string;
 }
 
+// DTO simplificado que aceita email e nome em vez de IDs
+export interface InscricaoSimplificadaCreateRequest {
+  usuarioEmail: string;
+  eventoId: number;
+  categoriaId: number;
+  atletaNome?: string;
+  nomeEquipe?: string;
+  atletasNomes?: string[];
+  capitaoIndex?: number;
+  valor: number;
+  codigoDesconto?: string;
+  valorDesconto?: number;
+  termosAceitos: boolean;
+  observacoes?: string;
+}
+
 export interface InscricaoUpdateRequest {
   categoriaId?: number;
   status?: StatusInscricao;

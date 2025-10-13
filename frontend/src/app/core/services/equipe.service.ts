@@ -34,4 +34,11 @@ export class EquipeService extends BaseHttpService {
   buscarPorEvento(eventoId: number): Observable<EquipeSummary[]> {
     return this.get<EquipeSummary[]>(`${API_CONFIG.endpoints.equipes.base}/evento/${eventoId}`);
   }
+
+  /**
+   * Cria uma nova equipe
+   */
+  criar(equipeData: any): Observable<any> {
+    return this.post<any>(API_CONFIG.endpoints.equipes.base, equipeData);
+  }
 }

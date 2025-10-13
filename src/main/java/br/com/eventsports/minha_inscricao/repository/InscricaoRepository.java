@@ -102,4 +102,10 @@ public interface InscricaoRepository extends JpaRepository<InscricaoEntity, Long
 
     @Query("SELECT COUNT(i) > 0 FROM InscricaoEntity i WHERE i.atleta.id = :atletaId AND i.evento.id = :eventoId")
     boolean existsByAtletaIdAndEventoId(@Param("atletaId") Long atletaId, @Param("eventoId") Long eventoId);
+
+    @Query("SELECT i FROM InscricaoEntity i WHERE i.evento.id = :eventoId AND i.categoria.id = :categoriaId AND i.status = :status")
+    List<InscricaoEntity> findByEventoIdAndCategoriaIdAndStatus(@Param("eventoId") Long eventoId, @Param("categoriaId") Long categoriaId, @Param("status") StatusInscricao status);
+
+    @Query(value = "SELECT * FROM inscricoes WHERE evento_id = :eventoId AND categoria_id = :categoriaId", nativeQuery = true)
+    List<InscricaoEntity> findByEventoIdAndCategoriaId(@Param("eventoId") Long eventoId, @Param("categoriaId") Long categoriaId);
 }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -72,8 +72,8 @@ import {
 
       <!-- Main Content -->
       <div class="main-content" *ngIf="evento && categoria && !isLoading && !hasError">
-        <!-- Header -->
-        <div class="header-section">
+        <!-- Header (only for standalone mode) -->
+        <div class="header-section" *ngIf="!isEmbedded">
           <button mat-icon-button (click)="voltar()" class="back-button">
             <mat-icon>arrow_back</mat-icon>
           </button>
@@ -84,6 +84,12 @@ import {
               <span class="category-name"> → {{ categoria.nome }}</span>
             </div>
           </div>
+        </div>
+
+        <!-- Simple Header (for embedded mode) -->
+        <div class="embedded-header" *ngIf="isEmbedded">
+          <h3>{{ categoria?.nome }}</h3>
+          <p class="embedded-description">Gerencie os resultados dos participantes desta categoria</p>
         </div>
 
         <!-- Workout Tabs -->
@@ -156,7 +162,7 @@ import {
                           <mat-label>Participante</mat-label>
                           <mat-select formControlName="participanteId" (selectionChange)="onParticipanteChange($event.value)">
                             <mat-option value="">Selecione um participante...</mat-option>
-                            <mat-option *ngFor="let participante of participantes" [value]="participante.id">
+                            <mat-option *ngFor="let participante of participantes" [value]="participante.inscricaoId">
                               {{ participante.nome }}
                               <span *ngIf="participante.nomeEquipe" class="team-indicator"> ({{ participante.nomeEquipe }})</span>
                             </mat-option>
@@ -287,7 +293,12 @@ import {
   `,
   styleUrl: './workout-resultados-manage.component.scss'
 })
-export class WorkoutResultadosManageComponent implements OnInit {
+export class WorkoutResultadosManageComponent implements OnInit, OnChanges {
+  // Inputs for embedded mode
+  @Input() eventoIdInput?: number;
+  @Input() categoriaIdInput?: number;
+  @Input() isEmbedded: boolean = false;
+
   // Route params
   eventoId: number = 0;
   categoriaId: number = 0;
@@ -295,6 +306,7 @@ export class WorkoutResultadosManageComponent implements OnInit {
   // Data
   evento: EventoApiResponse | null = null;
   categoria: Categoria | null = null;
+  categoriasDisponiveis: Categoria[] = [];
   workouts: Workout[] = [];
   participantes: ParticipanteDTO[] = [];
 
@@ -336,16 +348,38 @@ export class WorkoutResultadosManageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.eventoId = +params['eventoId'];
-      this.categoriaId = +params['categoriaId'];
+    // Check if component is embedded (inputs provided)
+    if (this.isEmbedded && this.eventoIdInput && this.categoriaIdInput) {
+      this.eventoId = this.eventoIdInput;
+      this.categoriaId = this.categoriaIdInput;
+      this.carregarDados();
+    } else {
+      // Standalone mode: get params from route
+      this.route.params.subscribe(params => {
+        this.eventoId = +params['eventoId'];
+        this.categoriaId = +params['categoriaId'];
 
-      if (this.eventoId && this.categoriaId) {
+        if (this.eventoId && this.categoriaId) {
+          this.carregarDados();
+        } else {
+          this.hasError = true;
+        }
+      });
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Detectar mudança em categoriaIdInput (somente no modo embedded)
+    if (this.isEmbedded && changes['categoriaIdInput'] && !changes['categoriaIdInput'].firstChange) {
+      const novaCategoriaId = changes['categoriaIdInput'].currentValue;
+
+      if (novaCategoriaId && novaCategoriaId !== this.categoriaId) {
+        console.log('🔄 Categoria alterada:', this.categoriaId, '->', novaCategoriaId);
+        this.categoriaId = novaCategoriaId;
+        this.limparCache();
         this.carregarDados();
-      } else {
-        this.hasError = true;
       }
-    });
+    }
   }
 
   carregarDados(): void {
@@ -373,6 +407,7 @@ export class WorkoutResultadosManageComponent implements OnInit {
         });
 
         this.evento = data.evento;
+        this.categoriasDisponiveis = data.categorias;
         this.categoria = data.categorias.find(c => c.id === this.categoriaId) || null;
         this.workouts = data.workouts.filter(w => w.nomesCategorias.includes(this.categoria?.nome || ''));
         this.participantes = data.participantes;
@@ -427,14 +462,14 @@ export class WorkoutResultadosManageComponent implements OnInit {
     });
   }
 
-  onParticipanteChange(participanteId: number): void {
-    const participante = this.participantes.find(p => p.id === participanteId);
+  onParticipanteChange(inscricaoId: number): void {
+    const participante = this.participantes.find(p => p.inscricaoId === inscricaoId);
     if (participante) {
       // Se o participante tem nomeEquipe preenchido, é uma equipe
       // Se não tem nomeEquipe, é um atleta individual
       const isEquipe = !!(participante.nomeEquipe && participante.nomeEquipe.trim());
       this.resultForm.patchValue({
-        participanteId: participanteId,
+        participanteId: participante.id,  // Use athlete/team ID for the backend
         isEquipe: isEquipe
       });
     }
@@ -446,13 +481,26 @@ export class WorkoutResultadosManageComponent implements OnInit {
     this.isSubmitting = true;
     const formValues = this.resultForm.value;
 
+    // Converter o valor do resultado baseado no tipo do workout
+    let resultadoValor: string | number = formValues.resultadoValor;
+
+    if (workout.tipo === 'REPS') {
+      // Para repetições, converter para Integer
+      resultadoValor = parseInt(formValues.resultadoValor, 10);
+    } else if (workout.tipo === 'PESO') {
+      // Para peso, converter para Double/Float
+      resultadoValor = parseFloat(formValues.resultadoValor);
+    }
+    // Para TEMPO, manter como string
+
     const novoResultado: WorkoutResultCreateDTO = {
       eventoId: this.eventoId,
       categoriaId: this.categoriaId,
       participanteId: formValues.participanteId,
       isEquipe: formValues.isEquipe,
-      resultadoValor: formValues.resultadoValor,
-      finalizado: formValues.finalizado
+      resultadoValor: resultadoValor,
+      finalizado: formValues.finalizado,
+      observacoes: undefined
     };
 
     this.workoutService.adicionarResultado(workout.id, novoResultado).subscribe({
@@ -502,6 +550,17 @@ export class WorkoutResultadosManageComponent implements OnInit {
     this.carregarResultadosWorkout(workout);
   }
 
+  private limparCache(): void {
+    console.log('🧹 Limpando cache de resultados e participantes');
+    this.workoutResults = {};
+    this.workoutStatus = {};
+    this.loadingResults = {};
+    this.selectedWorkoutIndex = 0;
+    this.participantes = [];
+    this.workouts = [];
+    this.resultForm.reset({ isEquipe: false, finalizado: true });
+  }
+
   getWorkoutTypeLabel(tipo: WorkoutType): string {
     switch (tipo) {
       case WorkoutType.REPS:
@@ -516,6 +575,11 @@ export class WorkoutResultadosManageComponent implements OnInit {
   }
 
   voltar(): void {
+    if (this.isEmbedded) {
+      // Embedded mode: just return (parent component handles navigation)
+      return;
+    }
+    // Standalone mode: navigate back to event details
     this.router.navigate(['/eventos', this.eventoId]);
   }
 }

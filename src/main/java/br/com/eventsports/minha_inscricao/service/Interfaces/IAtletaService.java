@@ -35,7 +35,9 @@ public interface IAtletaService {
     Optional<AtletaEntity> findEntityByCpf(String cpf);
     
     List<AtletaSummaryDTO> findByNome(String nome);
-    
+
+    List<AtletaSummaryDTO> buscarPorNomeOuCpf(String termo);
+
     List<AtletaSummaryDTO> findByGenero(Genero genero);
     
     List<AtletaSummaryDTO> findByEventoId(Long eventoId);

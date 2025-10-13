@@ -98,6 +98,87 @@ public class InscricaoService implements IInscricaoService {
         return convertToResponseDTO(savedInscricao);
     }
 
+    @CacheEvict(value = "inscricoes", allEntries = true)
+    public InscricaoResponseDTO createSimplificada(InscricaoSimplificadaCreateDTO dto) {
+        // 1. Buscar ou criar usuário pelo email
+        UsuarioEntity usuario = usuarioRepository.findByEmail(dto.getUsuarioEmail())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com email: " + dto.getUsuarioEmail()));
+
+        // 2. Buscar evento e categoria
+        EventoEntity evento = eventoRepository.findById(dto.getEventoId())
+                .orElseThrow(() -> new RuntimeException("Evento não encontrado com ID: " + dto.getEventoId()));
+
+        CategoriaEntity categoria = categoriaRepository.findById(dto.getCategoriaId())
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + dto.getCategoriaId()));
+
+        AtletaEntity atleta = null;
+        EquipeEntity equipe = null;
+
+        // 3. Verificar se é inscrição individual ou em equipe
+        if (dto.getAtletaNome() != null && !dto.getAtletaNome().isBlank()) {
+            // Inscrição individual: criar atleta com nome apenas
+            AtletaEntity novoAtleta = AtletaEntity.builder()
+                    .nome(dto.getAtletaNome())
+                    .dataNascimento(java.time.LocalDate.now().minusYears(18)) // Default: 18 anos
+                    .genero(br.com.eventsports.minha_inscricao.enums.Genero.MASCULINO)
+                    .aceitaTermos(true)
+                    .build();
+
+            atleta = atletaRepository.save(novoAtleta);
+        } else if (dto.getNomeEquipe() != null && !dto.getNomeEquipe().isBlank()) {
+            // Inscrição em equipe: criar equipe e atletas
+            EquipeEntity novaEquipe = EquipeEntity.builder()
+                    .nome(dto.getNomeEquipe())
+                    .evento(evento)
+                    .categoria(categoria)
+                    .build();
+
+            equipe = equipeRepository.save(novaEquipe);
+
+            // Criar atletas da equipe
+            if (dto.getAtletasNomes() != null && !dto.getAtletasNomes().isEmpty()) {
+                for (int i = 0; i < dto.getAtletasNomes().size(); i++) {
+                    String nomeAtleta = dto.getAtletasNomes().get(i);
+                    boolean isCapitao = dto.getCapitaoIndex() != null && dto.getCapitaoIndex() == i;
+
+                    AtletaEntity atletaEquipe = AtletaEntity.builder()
+                            .nome(nomeAtleta)
+                            .dataNascimento(java.time.LocalDate.now().minusYears(18))
+                            .genero(br.com.eventsports.minha_inscricao.enums.Genero.MASCULINO)
+                            .equipe(equipe)
+                            .aceitaTermos(true)
+                            .build();
+
+                    AtletaEntity savedAtleta = atletaRepository.save(atletaEquipe);
+
+                    if (isCapitao) {
+                        equipe.setCapitao(savedAtleta);
+                        equipeRepository.save(equipe);
+                    }
+                }
+            }
+        } else {
+            throw new RuntimeException("Inscrição deve ter atleta (individual) ou equipe com atletas");
+        }
+
+        // 4. Criar a inscrição
+        InscricaoEntity inscricao = InscricaoEntity.builder()
+                .usuarioInscricao(usuario)
+                .evento(evento)
+                .categoria(categoria)
+                .atleta(atleta)
+                .equipe(equipe)
+                .valor(dto.getValor())
+                .codigoDesconto(dto.getCodigoDesconto())
+                .valorDesconto(dto.getValorDesconto() != null ? dto.getValorDesconto() : BigDecimal.ZERO)
+                .termosAceitos(dto.getTermosAceitos())
+                .status(StatusInscricao.PENDENTE)
+                .build();
+
+        InscricaoEntity savedInscricao = inscricaoRepository.save(inscricao);
+        return convertToResponseDTO(savedInscricao);
+    }
+
     @CachePut(value = "inscricoes", key = "#id")
     @CacheEvict(value = "inscricoes", key = "'all'")
     public InscricaoResponseDTO update(Long id, InscricaoUpdateDTO inscricaoUpdateDTO) {
@@ -218,6 +299,38 @@ public class InscricaoService implements IInscricaoService {
     @Transactional(readOnly = true)
     public long countByCategoriaIdAndStatus(Long categoriaId, StatusInscricao status) {
         return inscricaoRepository.countByCategoriaIdAndStatus(categoriaId, status);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ParticipanteDTO> findParticipantesByEventoAndCategoria(Long eventoId, Long categoriaId) {
+        // Buscar inscrições confirmadas do evento e categoria
+        List<InscricaoEntity> inscricoes = inscricaoRepository
+                .findByEventoIdAndCategoriaIdAndStatus(eventoId, categoriaId, StatusInscricao.CONFIRMADA);
+
+        return inscricoes.stream()
+                .map(inscricao -> {
+                    if (inscricao.getAtleta() != null) {
+                        // Inscrição individual
+                        return ParticipanteDTO.builder()
+                                .inscricaoId(inscricao.getId())
+                                .id(inscricao.getAtleta().getId())
+                                .nome(inscricao.getAtleta().getNome())
+                                .tipo("ATLETA")
+                                .build();
+                    } else if (inscricao.getEquipe() != null) {
+                        // Inscrição de equipe
+                        return ParticipanteDTO.builder()
+                                .inscricaoId(inscricao.getId())
+                                .id(inscricao.getEquipe().getId())
+                                .nome(inscricao.getEquipe().getNome())
+                                .tipo("EQUIPE")
+                                .nomeEquipe(inscricao.getEquipe().getNome())
+                                .build();
+                    }
+                    return null;
+                })
+                .filter(p -> p != null)
+                .collect(Collectors.toList());
     }
 
     // Métodos de conversão

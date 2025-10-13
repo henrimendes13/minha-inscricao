@@ -18,9 +18,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoCreateDTO;
+import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoSimplificadaCreateDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoResponseDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoSummaryDTO;
 import br.com.eventsports.minha_inscricao.dto.inscricao.InscricaoUpdateDTO;
+import br.com.eventsports.minha_inscricao.dto.inscricao.ParticipanteDTO;
 import br.com.eventsports.minha_inscricao.enums.StatusInscricao;
 import br.com.eventsports.minha_inscricao.service.Interfaces.IInscricaoService;
 import jakarta.validation.Valid;
@@ -51,6 +53,13 @@ public class InscricaoController {
     @PostMapping
     public ResponseEntity<InscricaoResponseDTO> createInscricao(@Valid @RequestBody InscricaoCreateDTO inscricaoCreateDTO) {
         InscricaoResponseDTO inscricao = inscricaoService.create(inscricaoCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(inscricao);
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
+    @PostMapping("/simplificada")
+    public ResponseEntity<InscricaoResponseDTO> createInscricaoSimplificada(@Valid @RequestBody InscricaoSimplificadaCreateDTO dto) {
+        InscricaoResponseDTO inscricao = inscricaoService.createSimplificada(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(inscricao);
     }
 
@@ -146,6 +155,15 @@ public class InscricaoController {
             @PathVariable StatusInscricao status) {
         long count = inscricaoService.countByCategoriaIdAndStatus(categoriaId, status);
         return ResponseEntity.ok(Map.of("count", count));
+    }
+
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ORGANIZADOR')")
+    @GetMapping("/evento/{eventoId}/categoria/{categoriaId}/participantes")
+    public ResponseEntity<List<ParticipanteDTO>> getParticipantesByEventoAndCategoria(
+            @PathVariable Long eventoId,
+            @PathVariable Long categoriaId) {
+        List<ParticipanteDTO> participantes = inscricaoService.findParticipantesByEventoAndCategoria(eventoId, categoriaId);
+        return ResponseEntity.ok(participantes);
     }
 
     @ExceptionHandler(RuntimeException.class)

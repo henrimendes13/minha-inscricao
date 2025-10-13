@@ -28,6 +28,7 @@ import { TimelineService } from '../../../core/services/timeline.service';
 import { AnexoService } from '../../../core/services/anexo.service';
 import { InscricaoService } from '../../../core/services/inscricao.service';
 import { InscricaoFormDialogComponent } from '../inscricao-form-dialog/inscricao-form-dialog.component';
+import { WorkoutResultadosManageComponent } from '../../workout-resultados/workout-resultados-manage/workout-resultados-manage.component';
 import { EventoApiResponse, EventoCreateRequest, EventoUpdateRequest } from '../../../models/evento.model';
 import {
   CategoriaCreateRequest,
@@ -77,7 +78,8 @@ import { FormsModule } from '@angular/forms';
     MatChipsModule,
     MatTooltipModule,
     MatCheckboxModule,
-    MatDialogModule
+    MatDialogModule,
+    WorkoutResultadosManageComponent
   ],
   templateUrl: './evento-form.component.html',
   styleUrl: './evento-form.component.scss'
@@ -145,6 +147,9 @@ export class EventoFormComponent implements OnInit {
     pendentes: 0,
     canceladas: 0
   };
+
+  // Propriedades para controle de resultados
+  categoriaSelecionadaResultados: number | null = null;
 
   estadosBrasileiros = [
     'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -341,6 +346,10 @@ export class EventoFormComponent implements OnInit {
       return 'Criar Novo Evento';
     }
     return this.evento ? `Editar Evento: ${this.evento.nome}` : 'Editar Evento';
+  }
+
+  onCategoriaResultadosChange(categoriaId: number): void {
+    this.categoriaSelecionadaResultados = categoriaId;
   }
 
   getErrorMessage(fieldName: string): string {

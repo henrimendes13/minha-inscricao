@@ -59,8 +59,9 @@ export interface WorkoutResultCreateDTO {
   categoriaId: number;
   participanteId: number;
   isEquipe: boolean;
-  resultadoValor: string;
+  resultadoValor: string | number;
   finalizado: boolean;
+  observacoes?: string;
 }
 
 export interface WorkoutResultUpdateDTO {

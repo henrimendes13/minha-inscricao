@@ -331,6 +331,7 @@ public class WorkoutResultService {
             // Criar novo resultado
             LeaderboardResultadoCreateDTO.LeaderboardResultadoCreateDTOBuilder dtoBuilder = LeaderboardResultadoCreateDTO
                     .builder()
+                    .eventoId(eventoId)
                     .categoriaId(categoriaId)
                     .workoutId(workoutId)
                     .finalizado(finalizado != null ? finalizado : false);

@@ -325,31 +325,19 @@ import { Workout, WorkoutsByCategory } from '../../../models/workout.model';
                 <!-- Leaderboard Content -->
                 <div *ngIf="!leaderboardLoading && !leaderboardError" class="leaderboard-content">
                   
-                  <!-- Filtros e Ações -->
+                  <!-- Filtros -->
                   <div class="leaderboard-header" *ngIf="categorias.length > 0">
                     <div class="filter-group">
                       <label for="categoria-select">Categoria:</label>
-                      <select 
-                        id="categoria-select" 
-                        [(ngModel)]="selectedCategoriaId" 
+                      <select
+                        id="categoria-select"
+                        [(ngModel)]="selectedCategoriaId"
                         (ngModelChange)="onCategoriaChange($event)"
                         class="categoria-select">
                         <option *ngFor="let categoria of categorias" [value]="categoria.id">
                           {{ categoria.nome }}
                         </option>
                       </select>
-                    </div>
-                    
-                    <!-- Botão Gerenciar Resultados -->
-                    <div class="management-actions" *ngIf="podeGerenciarResultados() && selectedCategoriaId">
-                      <button 
-                        mat-raised-button 
-                        color="accent" 
-                        (click)="gerenciarResultados()"
-                        class="manage-results-button">
-                        <mat-icon>add_task</mat-icon>
-                        Adicionar Resultados
-                      </button>
                     </div>
                   </div>
 
@@ -1045,44 +1033,6 @@ export class EventoDetalhesComponent implements OnInit {
       default:
         return tipo;
     }
-  }
-
-  // ===============================================
-  // MÉTODOS PARA GERENCIAMENTO DE RESULTADOS
-  // ===============================================
-
-  /**
-   * Verifica se o usuário pode gerenciar resultados do evento
-   * (apenas criador do evento ou admin)
-   */
-  podeGerenciarResultados(): boolean {
-    if (!this.authService.isAuthenticated()) {
-      return false;
-    }
-
-    // Admin sempre pode gerenciar
-    if (AuthHelpers.isAdmin(this.authService)) {
-      return true;
-    }
-
-    // Verificar se é o criador do evento
-    const userEmail = AuthHelpers.getCurrentUserEmail(this.authService);
-    return this.evento?.organizadorEmail === userEmail;
-  }
-
-  /**
-   * Navega para a página de gerenciamento de resultados da categoria selecionada
-   */
-  gerenciarResultados(): void {
-    if (!this.podeGerenciarResultados() || !this.selectedCategoriaId) {
-      this.snackBar.open('Você não tem permissão para gerenciar resultados', 'Fechar', {
-        duration: 3000
-      });
-      return;
-    }
-
-    // Navegar para a página de gerenciamento
-    this.router.navigate(['/eventos', this.eventoId, 'categoria', this.selectedCategoriaId, 'resultados']);
   }
 
   // ===============================================

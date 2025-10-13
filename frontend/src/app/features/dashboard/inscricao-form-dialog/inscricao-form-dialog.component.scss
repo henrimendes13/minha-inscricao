@@ -99,6 +99,126 @@
           font-size: 0.75rem;
           margin-top: 0.25rem;
         }
+
+        // Estilos para autocomplete
+        .autocomplete-option {
+          display: flex;
+          flex-direction: column;
+          padding: 0.25rem 0;
+
+          strong {
+            font-size: 0.95rem;
+            color: #333;
+          }
+
+          small {
+            font-size: 0.8rem;
+            color: #666;
+          }
+        }
+
+        // Estilos para gestão de equipe
+        .equipe-section {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-top: 1rem;
+
+          .atletas-equipe-container {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 1rem;
+
+            .atletas-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 1rem;
+
+              h4 {
+                margin: 0;
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: #555;
+              }
+
+              .atletas-count {
+                font-size: 0.85rem;
+                color: #666;
+                background-color: #e0e0e0;
+                padding: 0.25rem 0.75rem;
+                border-radius: 12px;
+              }
+            }
+
+            .atletas-list {
+              display: flex;
+              flex-direction: column;
+              gap: 0.75rem;
+              margin-bottom: 1rem;
+
+              .atleta-item {
+                background-color: white;
+                border-radius: 6px;
+                padding: 0.75rem;
+                border: 1px solid #e0e0e0;
+
+                .atleta-item-content {
+                  display: flex;
+                  gap: 0.5rem;
+                  align-items: flex-start;
+
+                  .atleta-nome-field {
+                    flex: 1;
+                    margin: 0;
+                  }
+
+                  .atleta-actions {
+                    display: flex;
+                    gap: 0.25rem;
+                    padding-top: 0.5rem;
+
+                    button {
+                      width: 40px;
+                      height: 40px;
+
+                      mat-icon {
+                        font-size: 20px;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+
+            .add-atleta-btn {
+              width: 100%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 0.5rem;
+              padding: 0.75rem;
+              border: 2px dashed #2196f3;
+              color: #2196f3;
+
+              &:hover:not([disabled]) {
+                background-color: #e3f2fd;
+              }
+
+              &[disabled] {
+                border-color: #ccc;
+                color: #ccc;
+              }
+            }
+
+            .error-hint {
+              color: #f44336;
+              font-size: 0.75rem;
+              margin-top: 0.5rem;
+              display: block;
+            }
+          }
+        }
       }
     }
   }

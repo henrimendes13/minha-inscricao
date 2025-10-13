@@ -1014,6 +1014,56 @@
             </div>
           </mat-tab>
 
+          <!-- Aba Gerenciar Resultados -->
+          <mat-tab label="Gerenciar Resultados" [disabled]="modo === 'criar'">
+            <div class="tab-content resultados-tab">
+              <!-- Header da aba -->
+              <div class="tab-header">
+                <h2>
+                  <mat-icon>assessment</mat-icon>
+                  Gerenciar Resultados dos Workouts
+                </h2>
+                <p class="description">Gerencie os resultados dos participantes por categoria e workout</p>
+              </div>
+
+              <!-- Selector de Categoria -->
+              <div class="categoria-selector-container" *ngIf="categorias && categorias.length > 0">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Selecione uma Categoria</mat-label>
+                  <mat-select [(value)]="categoriaSelecionadaResultados" (selectionChange)="onCategoriaResultadosChange($event.value)">
+                    <mat-option *ngFor="let categoria of categorias" [value]="categoria.id">
+                      {{ categoria.nome }} - {{ categoria.tipoParticipacao }}
+                    </mat-option>
+                  </mat-select>
+                  <mat-icon matPrefix>category</mat-icon>
+                  <mat-hint>Escolha a categoria para gerenciar seus resultados</mat-hint>
+                </mat-form-field>
+              </div>
+
+              <!-- No Categories State -->
+              <div class="empty-state" *ngIf="!categorias || categorias.length === 0">
+                <mat-icon class="empty-icon">category</mat-icon>
+                <p>Nenhuma categoria cadastrada</p>
+                <p class="empty-hint">Adicione categorias na aba "Categorias" antes de gerenciar resultados</p>
+              </div>
+
+              <!-- Embedded Results Manager -->
+              <div *ngIf="categoriaSelecionadaResultados && evento" class="results-manager-container">
+                <app-workout-resultados-manage
+                  [eventoIdInput]="evento.id"
+                  [categoriaIdInput]="categoriaSelecionadaResultados"
+                  [isEmbedded]="true">
+                </app-workout-resultados-manage>
+              </div>
+
+              <!-- No Category Selected State -->
+              <div class="empty-state" *ngIf="categorias && categorias.length > 0 && !categoriaSelecionadaResultados">
+                <mat-icon class="empty-icon">info</mat-icon>
+                <p>Selecione uma categoria acima para gerenciar resultados</p>
+              </div>
+            </div>
+          </mat-tab>
+
         </mat-tab-group>
       </mat-card-content>
     </mat-card>
